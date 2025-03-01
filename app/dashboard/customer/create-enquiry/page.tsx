@@ -113,11 +113,11 @@ function VesselCard({vesselInfo, setVesselInfo}) {
 
         for (let i = 0; i < memberProfiles.data!.length; i++) {
             const member = memberProfiles.data![i];
-            const branch = await supabase.from("branch").select("*").eq("id", member.data!.branch).single();
-            allVessels = [...allVessels, ...branch.data.vessels];
+            const branch = await supabase.from("branch").select("*").eq("id", member!.branch).single();
+            allVessels.push(branch.data.vessels)
         }
 
-        setVessels([...allVessels])
+        setVessels(allVessels)
     }
 
     useEffect(() => {
@@ -410,11 +410,11 @@ export default function CreateEnquiryPage() {
         const brands = await supabase.from("brand").select("*").eq("is_active", true);
         setBrands([...brands.data!]);
 
-        const models = await supabase.from("model").select("*")/*.eq("is_active", true)*/;
+        const models = await supabase.from("model").select("*").eq("is_active", true);
         console.log(models);
         setModels([...models.data!]);
 
-        const categories = await supabase.from("category").select("*")/*.eq("is_active", true)*/;
+        const categories = await supabase.from("category").select("*").eq("is_active", true);
         setCategory([...categories.data!]);
 
         const {data: {user}} = await supabase.auth.getUser();
