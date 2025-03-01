@@ -15,7 +15,7 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar"
-import { createClient } from "@/utils/supabase/client";
+import  createClient  from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
