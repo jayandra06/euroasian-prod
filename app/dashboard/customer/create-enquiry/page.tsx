@@ -1,5 +1,5 @@
 "use client";
-import { Button } from "@/components/ui/button"
+import {Button} from "@/components/ui/button"
 import {
     Card,
     CardContent,
@@ -7,8 +7,8 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import {Input} from "@/components/ui/input"
+import {Label} from "@/components/ui/label"
 import {
     Table,
     TableBody,
@@ -18,9 +18,9 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
-import { Textarea } from "@/components/ui/textarea"
-import { useEffect, useState } from "react";
-import { createClient } from "@/utils/supabase/client";
+import {Textarea} from "@/components/ui/textarea"
+import {useEffect, useState} from "react";
+import {createClient} from "@/utils/supabase/client";
 import {
     Select,
     SelectContent,
@@ -28,8 +28,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
-import { Trash2 } from "lucide-react";
-
+import {Trash2} from "lucide-react";
 
 
 // function InfoCard() {
@@ -58,7 +57,7 @@ import { Trash2 } from "lucide-react";
 // }
 
 // @ts-ignore
-function RFQInfoCard({ rfqInfo, setRfqInfo }) {
+function RFQInfoCard({rfqInfo, setRfqInfo}) {
     return (
         <Card>
             <CardHeader>
@@ -68,14 +67,16 @@ function RFQInfoCard({ rfqInfo, setRfqInfo }) {
             <CardContent>
                 <div className="grid w-full max-w-sm items-center gap-1.5 mt-4">
                     <Label htmlFor="clientName">Lead Date</Label>
-                    <Input type="date" id="clientName" placeholder="Enter Lead Date..." className="grid" value={rfqInfo.lead_date} onChange={(e) => setRfqInfo({ ...rfqInfo, lead_date: e.target.value })} />
+                    <Input type="date" id="clientName" placeholder="Enter Lead Date..." className="grid"
+                           value={rfqInfo.lead_date}
+                           onChange={(e) => setRfqInfo({...rfqInfo, lead_date: e.target.value})}/>
                 </div>
                 <div className="grid w-full max-w-sm items-center gap-1.5 mt-4">
                     <Label htmlFor="clientName">Supply Port</Label>
                     {/* <Input type="text" id="clientName" placeholder="Enter Supply Port..." value={rfqInfo.supply_port} onChange={(e) => setRfqInfo({ ...rfqInfo, supply_port: e.target.value })} /> */}
-                    <Select onValueChange={(e) => setRfqInfo({ ...rfqInfo, supply_port: e })}>
+                    <Select onValueChange={(e) => setRfqInfo({...rfqInfo, supply_port: e})}>
                         <SelectTrigger>
-                            <SelectValue placeholder="Select Supply Port" />
+                            <SelectValue placeholder="Select Supply Port"/>
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="Bussan">Bussan</SelectItem>
@@ -88,7 +89,9 @@ function RFQInfoCard({ rfqInfo, setRfqInfo }) {
                 </div>
                 <div className="grid w-full max-w-sm items-center gap-1.5 mt-4">
                     <Label htmlFor="clientName">Expire Date</Label>
-                    <Input type="date" id="clientName" className="grid" placeholder="Enter Expire Date..." value={rfqInfo.expire_date} onChange={(e) => setRfqInfo({ ...rfqInfo, expire_date: e.target.value })} />
+                    <Input type="date" id="clientName" className="grid" placeholder="Enter Expire Date..."
+                           value={rfqInfo.expire_date}
+                           onChange={(e) => setRfqInfo({...rfqInfo, expire_date: e.target.value})}/>
                 </div>
             </CardContent>
         </Card>
@@ -96,7 +99,7 @@ function RFQInfoCard({ rfqInfo, setRfqInfo }) {
 }
 
 // @ts-ignore
-function VesselCard({ vesselInfo, setVesselInfo }) {
+function VesselCard({vesselInfo, setVesselInfo}) {
     const [vessels, setVessels] = useState<any[]>([]);
 
     async function fetchVessels() {
@@ -122,7 +125,6 @@ function VesselCard({ vesselInfo, setVesselInfo }) {
     }, []);
 
 
-
     return (
         <Card>
             <CardHeader>
@@ -133,27 +135,28 @@ function VesselCard({ vesselInfo, setVesselInfo }) {
                 <div className="grid w-full max-w-sm items-center gap-1.5">
                     <Label htmlFor="clientName">Vessel Name</Label>
                     {/* <Input type="text" id="clientName" placeholder="Enter Vessel Name..." value={vesselInfo.name} onChange={(e) => setVesselInfo({ ...vesselInfo, name: e.target.value })} /> */}
-                    <Select onValueChange={(e) => setVesselInfo({ ...vesselInfo, name: e })}>
+                    <Select onValueChange={(e) => setVesselInfo({...vesselInfo, name: e})}>
                         <SelectTrigger>
-                            <SelectValue placeholder="Select Vessel" />
+                            <SelectValue placeholder="Select Vessel"/>
                         </SelectTrigger>
                         <SelectContent>
                             {vessels.map((vessel, i) =>
-                            <SelectItem value={vessel} key={i}>{vessel}</SelectItem>
+                                <SelectItem value={vessel} key={i}>{vessel}</SelectItem>
                             )}
                         </SelectContent>
                     </Select>
                 </div>
                 <div className="grid w-full max-w-sm items-center gap-1.5 mt-4">
                     <Label htmlFor="clientName">IMO No</Label>
-                    <Input type="text" id="clientName" placeholder="Enter IMO No." value={vesselInfo.imo_no} onChange={(e) => setVesselInfo({ ...vesselInfo, imo_no: e.target.value })} />
+                    <Input type="text" id="clientName" placeholder="Enter IMO No." value={vesselInfo.imo_no}
+                           onChange={(e) => setVesselInfo({...vesselInfo, imo_no: e.target.value})}/>
                 </div>
                 <div className="grid w-full max-w-sm items-center gap-1.5 mt-4">
                     <Label htmlFor="clientName">Port</Label>
                     {/* <Input type="text" id="clientName" placeholder="Enter Port..." value={vesselInfo.port} onChange={(e) => setVesselInfo({ ...vesselInfo, port: e.target.value })} /> */}
-                    <Select onValueChange={(e) => setVesselInfo({ ...vesselInfo, port: e })}>
+                    <Select onValueChange={(e) => setVesselInfo({...vesselInfo, port: e})}>
                         <SelectTrigger>
-                            <SelectValue placeholder="Select Port" />
+                            <SelectValue placeholder="Select Port"/>
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="Bussan">Bussan</SelectItem>
@@ -166,7 +169,8 @@ function VesselCard({ vesselInfo, setVesselInfo }) {
                 </div>
                 <div className="grid w-full max-w-sm items-center gap-1.5 mt-4">
                     <Label htmlFor="clientName">Hull No</Label>
-                    <Input type="text" id="clientName" placeholder="Enter HULL No." value={vesselInfo.hull_no} onChange={(e) => setVesselInfo({ ...vesselInfo, hull_no: e.target.value })} />
+                    <Input type="text" id="clientName" placeholder="Enter HULL No." value={vesselInfo.hull_no}
+                           onChange={(e) => setVesselInfo({...vesselInfo, hull_no: e.target.value})}/>
                 </div>
             </CardContent>
         </Card>
@@ -174,7 +178,7 @@ function VesselCard({ vesselInfo, setVesselInfo }) {
 }
 
 // @ts-ignore
-function EquipmentCard({ equipmentTags, setEquipmentTags, models, brands, category }) {
+function EquipmentCard({equipmentTags, setEquipmentTags, models, brands, category}) {
     const [tags, setTags] = useState([]);
     const [currentTag, setCurrentTag] = useState("");
 
@@ -195,16 +199,20 @@ function EquipmentCard({ equipmentTags, setEquipmentTags, models, brands, catego
                 <div className="grid gap-4">
                     <div className="grid w-full items-center gap-1.5">
                         <Label htmlFor="clientName">Equipments Tags</Label>
-                        <Input type="text" id="clientName" placeholder="Enter Equipment Tags" value={currentTag} onChange={(e) => setCurrentTag(e.target.value)} />
-                        <Button onClick={() => { setEquipmentTags({ ...equipmentTags, tags: [...equipmentTags.tags, currentTag] }); setCurrentTag("") }}>
+                        <Input type="text" id="clientName" placeholder="Enter Equipment Tags" value={currentTag}
+                               onChange={(e) => setCurrentTag(e.target.value)}/>
+                        <Button onClick={() => {
+                            setEquipmentTags({...equipmentTags, tags: [...equipmentTags.tags, currentTag]});
+                            setCurrentTag("")
+                        }}>
                             Add
                         </Button>
                     </div>
                     <div className="grid w-full items-center gap-1.5">
                         <Label htmlFor="clientName">Brand</Label>
-                        <Select onValueChange={(v) => setEquipmentTags({ ...equipmentTags, brand: v })}>
+                        <Select onValueChange={(v) => setEquipmentTags({...equipmentTags, brand: v})}>
                             <SelectTrigger>
-                                <SelectValue placeholder="Select Brand" />
+                                <SelectValue placeholder="Select Brand"/>
                             </SelectTrigger>
                             <SelectContent>
                                 {brands.map((brand: any, i: number) =>
@@ -216,9 +224,9 @@ function EquipmentCard({ equipmentTags, setEquipmentTags, models, brands, catego
                     </div>
                     <div className="grid w-full items-center gap-1.5">
                         <Label htmlFor="clientName">Model</Label>
-                        <Select onValueChange={(v) => setEquipmentTags({ ...equipmentTags, model: v })}>
+                        <Select onValueChange={(v) => setEquipmentTags({...equipmentTags, model: v})}>
                             <SelectTrigger>
-                                <SelectValue placeholder="Select Model" />
+                                <SelectValue placeholder="Select Model"/>
                             </SelectTrigger>
                             <SelectContent>
                                 {models.map((brand: any, i: number) =>
@@ -229,9 +237,9 @@ function EquipmentCard({ equipmentTags, setEquipmentTags, models, brands, catego
                     </div>
                     <div className="grid w-full items-center gap-1.5">
                         <Label htmlFor="clientName">Category</Label>
-                        <Select onValueChange={(v) => setEquipmentTags({ ...equipmentTags, category: v })}>
+                        <Select onValueChange={(v) => setEquipmentTags({...equipmentTags, category: v})}>
                             <SelectTrigger>
-                                <SelectValue placeholder="Select Category" />
+                                <SelectValue placeholder="Select Category"/>
                             </SelectTrigger>
                             <SelectContent>
                                 {category.map((brand: any, i: number) =>
@@ -248,9 +256,9 @@ function EquipmentCard({ equipmentTags, setEquipmentTags, models, brands, catego
 
 
 // @ts-ignore
-function Item({ item, handleUpdateItem, handleRemove }) {
+function Item({item, handleUpdateItem, handleRemove}) {
     const handleChange = (e: any) => {
-        const { name, value } = e.target;
+        const {name, value} = e.target;
         handleUpdateItem(item.id, name, value); // Update the parent state
     };
 
@@ -261,27 +269,32 @@ function Item({ item, handleUpdateItem, handleRemove }) {
                 <TableCell colSpan={3}>
                     <div className="grid gap-2 grid-cols-4">
                         <div className="col-span-4">
-                            <Textarea placeholder="Enter Item Description..." value={item.description} name="description" onChange={handleChange} />
+                            <Textarea placeholder="Enter Item Description..." value={item.description}
+                                      name="description" onChange={handleChange}/>
                         </div>
                         <div className="col-span-4 sm:col-span-2">
-                            <Input type="text" placeholder="Enter Part No." value={item.part_no} name="part_no" onChange={handleChange} />
+                            <Input type="text" placeholder="Enter Part No." value={item.part_no} name="part_no"
+                                   onChange={handleChange}/>
                         </div>
                         <div className="col-span-4 sm:col-span-2">
-                            <Input type="text" placeholder="Enter Position No." value={item.position_no} name="position_no" onChange={handleChange} />
+                            <Input type="text" placeholder="Enter Position No." value={item.position_no}
+                                   name="position_no" onChange={handleChange}/>
                         </div>
                         <div className="col-span-4 sm:col-span-4">
-                            <Input type="text" placeholder="Enter Alternate Part No." value={item.alternative_part_no} name="alternative_part_no" onChange={handleChange} />
+                            <Input type="text" placeholder="Enter Alternate Part No." value={item.alternative_part_no}
+                                   name="alternative_part_no" onChange={handleChange}/>
                         </div>
                     </div>
                 </TableCell>
                 <TableCell>
-                    <Input type="number" placeholder="Enter Required Quanity" value={item.req_qty} name="req_qty" onChange={handleChange} />
+                    <Input type="number" placeholder="Enter Required Quanity" value={item.req_qty} name="req_qty"
+                           onChange={handleChange}/>
                 </TableCell>
                 <TableCell>
                     {/* <Input type="text" placeholder="Enter UOM..." value={item.uom} name="uom" onChange={} /> */}
                     <Select name="uom" onValueChange={(v) => handleUpdateItem(item.id, "uom", v)}>
                         <SelectTrigger>
-                            <SelectValue placeholder="Select UOM" />
+                            <SelectValue placeholder="Select UOM"/>
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="Pieces">Pieces</SelectItem>
@@ -291,8 +304,9 @@ function Item({ item, handleUpdateItem, handleRemove }) {
                     </Select>
                 </TableCell>
                 <TableCell className="text-right relative">
-                    <Button onClick={() => handleRemove(item.id)} className="absolute top-4 right-4" variant={"outline"}>
-                        <Trash2 />
+                    <Button onClick={() => handleRemove(item.id)} className="absolute top-4 right-4"
+                            variant={"outline"}>
+                        <Trash2/>
                     </Button>
                     PENDING
                 </TableCell>
@@ -308,16 +322,25 @@ export default function CreateEnquiryPage() {
     const [category, setCategory] = useState<any[]>([]);
     const [model, setModels] = useState<any[]>([]);
 
-    const [rfqInfo, setRfqInfo] = useState({ lead_date: "", supply_port: "", expire_date: "", rfq_no: "" });
-    const [vesselInfo, setVesselInfo] = useState({ name: "", imo_no: "", hull_no: "", port: "" });
-    const [equipmentTags, setEquipmentTags] = useState({ tags: [], brand: "", model: "", category: "" });
-    const [items, setItems] = useState([{ id: 1, description: "", part_no: "", position_no: "", alternative_part_no: "", uom: "", req_qty: "", offered_qty: "0" }]);
+    const [rfqInfo, setRfqInfo] = useState({lead_date: "", supply_port: "", expire_date: "", rfq_no: ""});
+    const [vesselInfo, setVesselInfo] = useState({name: "", imo_no: "", hull_no: "", port: ""});
+    const [equipmentTags, setEquipmentTags] = useState({tags: [], brand: "", model: "", category: ""});
+    const [items, setItems] = useState([{
+        id: 1,
+        description: "",
+        part_no: "",
+        position_no: "",
+        alternative_part_no: "",
+        uom: "",
+        req_qty: "",
+        offered_qty: "0"
+    }]);
     const [isMem, setIsMem] = useState(false);
 
     const handleUpdateItem = (id: number, key: any, value: any) => {
         setItems((prevItems) =>
             prevItems.map((item) =>
-                item.id === id ? { ...item, [key]: value } : item
+                item.id === id ? {...item, [key]: value} : item
             )
         );
     };
@@ -326,15 +349,43 @@ export default function CreateEnquiryPage() {
         const supabase = createClient();
 
         try {
-            const { data: { user } } = await supabase.auth.getUser();
+            const {data: {user}} = await supabase.auth.getUser();
 
             const member = await supabase.from("member").select("*").eq("member_profile", user!.id).single();
 
-            const rfq = await supabase.from("rfq").insert({ client_profile: user!.id, lead_date: rfqInfo.lead_date, supply_port: rfqInfo.supply_port, expire_date: rfqInfo.expire_date, vessel_name: vesselInfo.name, imo_no: vesselInfo.imo_no, port: vesselInfo.port, hull_no: vesselInfo.hull_no, equipment_tags: equipmentTags.tags, brand: equipmentTags.brand, model: equipmentTags.model, category: equipmentTags.category, created_at: new Date().toISOString(), branch: member.data.branch }).select().single();
+            const rfq = await supabase.from("rfq").insert({
+                client_profile: user!.id,
+                lead_date: rfqInfo.lead_date,
+                supply_port: rfqInfo.supply_port,
+                expire_date: rfqInfo.expire_date,
+                vessel_name: vesselInfo.name,
+                imo_no: vesselInfo.imo_no,
+                port: vesselInfo.port,
+                hull_no: vesselInfo.hull_no,
+                equipment_tags: equipmentTags.tags,
+                brand: equipmentTags.brand,
+                model: equipmentTags.model,
+                category: equipmentTags.category,
+                created_at: new Date().toISOString(),
+                branch: member.data.branch
+            }).select().single();
 
             for (let i = 0; i < items.length; i++) {
                 const item = items[i];
-                await supabase.from("item").insert({ rfq: rfq.data!.id, part_no: item.part_no, position_no: item.position_no, alternative_part_no: item.alternative_part_no, description: item.description, req_qty: item.req_qty, offered_qty: item.offered_qty, uom: item.uom, quoted_price: 0, margin: 0, quoted: false, status: "processing" });
+                await supabase.from("item").insert({
+                    rfq: rfq.data!.id,
+                    part_no: item.part_no,
+                    position_no: item.position_no,
+                    alternative_part_no: item.alternative_part_no,
+                    description: item.description,
+                    req_qty: item.req_qty,
+                    offered_qty: item.offered_qty,
+                    uom: item.uom,
+                    quoted_price: 0,
+                    margin: 0,
+                    quoted: false,
+                    status: "processing"
+                });
             }
 
             console.log("RFQ Created! ", rfq.data);
@@ -359,23 +410,24 @@ export default function CreateEnquiryPage() {
         const brands = await supabase.from("brand").select("*").eq("is_active", true);
         setBrands([...brands.data!]);
 
-        const models = await supabase.from("model").select("*").eq("is_active", true);
+        const models = await supabase.from("model").select("*")/*.eq("is_active", true)*/;
+        console.log(models);
         setModels([...models.data!]);
 
-        const categories = await supabase.from("category").select("*").eq("is_active", true);
+        const categories = await supabase.from("category").select("*")/*.eq("is_active", true)*/;
         setCategory([...categories.data!]);
 
-        const { data: { user } } = await supabase.auth.getUser();
+        const {data: {user}} = await supabase.auth.getUser();
 
         const member = await supabase.from("member").select("*").eq("member_profile", user!.id);
-        // console.log(member);
-        if (member.data!.length) {
+        console.log(member);
+        if (member.data) {
             setIsMem(true);
         }
     }
 
     useEffect(() => {
-        fetchDetails();
+        void fetchDetails();
     }, []);
 
     if (!isMem) return "Create a Branch or be the Part of any Branch to Create Enquiry..."
@@ -391,9 +443,10 @@ export default function CreateEnquiryPage() {
             </div>
 
             <main className="grid justify-self-center max-w-6xl w-full md:grid-cols-3 gap-4 mt-4">
-                <RFQInfoCard rfqInfo={rfqInfo} setRfqInfo={setRfqInfo} />
-                <VesselCard vesselInfo={vesselInfo} setVesselInfo={setVesselInfo} />
-                <EquipmentCard equipmentTags={equipmentTags} setEquipmentTags={setEquipmentTags} models={model} brands={brands} category={category} />
+                <RFQInfoCard rfqInfo={rfqInfo} setRfqInfo={setRfqInfo}/>
+                <VesselCard vesselInfo={vesselInfo} setVesselInfo={setVesselInfo}/>
+                <EquipmentCard equipmentTags={equipmentTags} setEquipmentTags={setEquipmentTags} models={model}
+                               brands={brands} category={category}/>
             </main>
 
             <div className="grid justify-self-center max-w-6xl w-full mt-8">
@@ -402,7 +455,18 @@ export default function CreateEnquiryPage() {
                         Items
                     </h1>
 
-                    <Button onClick={() => { setItems([...items, { id: items.length + 1, description: "", part_no: "", position_no: "", alternative_part_no: "", uom: "", req_qty: "", offered_qty: "0" }]); }}>
+                    <Button onClick={() => {
+                        setItems([...items, {
+                            id: items.length + 1,
+                            description: "",
+                            part_no: "",
+                            position_no: "",
+                            alternative_part_no: "",
+                            uom: "",
+                            req_qty: "",
+                            offered_qty: "0"
+                        }]);
+                    }}>
                         Add Item
                     </Button>
                 </div>
@@ -422,7 +486,8 @@ export default function CreateEnquiryPage() {
                             </TableHeader>
                             <TableBody>
                                 {items.map((item, i) =>
-                                    <Item key={i} item={item} handleRemove={handleRemove} handleUpdateItem={handleUpdateItem} />
+                                    <Item key={i} item={item} handleRemove={handleRemove}
+                                          handleUpdateItem={handleUpdateItem}/>
                                 )}
                             </TableBody>
                         </Table>
