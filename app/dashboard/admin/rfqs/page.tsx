@@ -8,7 +8,7 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card"
-import { createClient } from "@/utils/supabase/client";
+import createClient from "@/utils/supabase/client";
 import Link from "next/link"
 import { useEffect, useState } from "react"
 

@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/table"
 import {Textarea} from "@/components/ui/textarea"
 import {useEffect, useState} from "react";
-import {createClient} from "@/utils/supabase/client";
+import createClient from "@/utils/supabase/client";
 import {
     Select,
     SelectContent,
