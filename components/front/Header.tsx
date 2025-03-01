@@ -127,36 +127,39 @@ export function Header() {
 
           {/* Desktop login dropdown */}
           <div className="hidden md:relative md:flex">
-            <Link href="/sign-in"
+            <button
               onClick={() => setIsLoginOpen(!isLoginOpen)}
               className="flex items-center space-x-2 bg-cyan-600 text-white px-4 py-2 rounded-md hover:bg-cyan-700 login-dropdown"
             >
               <User className="h-4 w-4" />
               <span>Login</span>
               <ChevronDown className="h-4 w-4" />
-            </Link>
+            </button>
 
-            {isLoginOpen && (
-              <div className="absolute right-0 mt-12 w-48 bg-gray-800 rounded-md shadow-lg py-1 z-50 login-dropdown">
-                <Link href="/sign-up"
-                    className="block px-4 py-2 text-sm text-cyan-100 hover:bg-gray-700 w-full text-left"
-                  >
-                    Buy With Us
-                  </Link>
-                  <Link href="/dashboard/become-a-seller/"
-                    className="block px-4 py-2 text-sm text-cyan-100 hover:bg-gray-700 w-full text-left"
-                  >
-                    Sell With Us
-                  </Link>
-                  <Link
-                    href={"/sign-in-admin"}
-                    className="block px-4 py-2 text-sm text-cyan-100 hover:bg-gray-700 w-full text-left"
-                  >
-                    Admin Login
-                  </Link>
-              </div>
-            )}
-          </div>
+  {isLoginOpen && (
+    <div className="absolute right-0 mt-12 w-48 bg-gray-800 rounded-md shadow-lg py-1 z-50 login-dropdown">
+      <Link
+        href="/sign-up"
+        className="block px-4 py-2 text-sm text-cyan-100 hover:bg-gray-700 w-full text-left"
+      >
+        Buy With Us
+      </Link>
+      <Link
+        href="/dashboard/become-a-seller/"
+        className="block px-4 py-2 text-sm text-cyan-100 hover:bg-gray-700 w-full text-left"
+      >
+        Sell With Us
+      </Link>
+      <Link
+        href="/sign-in-admin"
+        className="block px-4 py-2 text-sm text-cyan-100 hover:bg-gray-700 w-full text-left"
+      >
+        Admin Login
+      </Link>
+    </div>
+  )}
+</div>
+
         </div>
 
         {/* Categories Mega Menu */}

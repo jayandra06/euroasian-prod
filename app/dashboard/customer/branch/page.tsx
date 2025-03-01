@@ -75,7 +75,7 @@ function BranchCard({ branch }: { branch: any }) {
         // console.log(admin);
         setAdmin(admin.data);
 
-        const res = await fetch("/api/all-user", { method: "POST", body: JSON.stringify({ userID: admin.data.member_profile }) });
+        const res = await fetch("/api/all-user", { method: "POST", body: JSON.stringify({ userID: admin?.data?.member_profile }) });
         const data = await res.json();
 
         setAdminProfile(data.userData);
