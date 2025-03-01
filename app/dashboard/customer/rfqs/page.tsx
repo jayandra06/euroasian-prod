@@ -9,7 +9,7 @@ import {
     CardTitle,
 } from "@/components/ui/card"
 import Link from "next/link"
-import { createClient } from "@/utils/supabase/client";
+import  createClient  from "@/utils/supabase/client";
 import { useEffect, useState } from "react";
 
 
