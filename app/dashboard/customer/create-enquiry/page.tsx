@@ -57,45 +57,71 @@ import {Trash2} from "lucide-react";
 // }
 
 // @ts-ignore
-function RFQInfoCard({rfqInfo, setRfqInfo}) {
-    return (
-        <Card>
-            <CardHeader>
-                <CardTitle>RFQ Info</CardTitle>
-                <CardDescription></CardDescription>
-            </CardHeader>
-            <CardContent>
-                <div className="grid w-full max-w-sm items-center gap-1.5 mt-4">
-                    <Label htmlFor="clientName">Lead Date</Label>
-                    <Input type="date" id="clientName" placeholder="Enter Lead Date..." className="grid"
-                           value={rfqInfo.lead_date}
-                           onChange={(e) => setRfqInfo({...rfqInfo, lead_date: e.target.value})}/>
-                </div>
-                <div className="grid w-full max-w-sm items-center gap-1.5 mt-4">
-                    <Label htmlFor="clientName">Supply Port</Label>
-                    {/* <Input type="text" id="clientName" placeholder="Enter Supply Port..." value={rfqInfo.supply_port} onChange={(e) => setRfqInfo({ ...rfqInfo, supply_port: e.target.value })} /> */}
-                    <Select onValueChange={(e) => setRfqInfo({...rfqInfo, supply_port: e})}>
-                        <SelectTrigger>
-                            <SelectValue placeholder="Select Supply Port"/>
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="Bussan">Bussan</SelectItem>
-                            <SelectItem value="Goa">Goa</SelectItem>
-                            <SelectItem value="Tamil Nadu">Tamil Nadu</SelectItem>
-                            <SelectItem value="Kerala">Kerala</SelectItem>
-                            <SelectItem value="Mumbai">Mumbai</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </div>
-                <div className="grid w-full max-w-sm items-center gap-1.5 mt-4">
-                    <Label htmlFor="clientName">Expire Date</Label>
-                    <Input type="date" id="clientName" className="grid" placeholder="Enter Expire Date..."
-                           value={rfqInfo.expire_date}
-                           onChange={(e) => setRfqInfo({...rfqInfo, expire_date: e.target.value})}/>
-                </div>
-            </CardContent>
-        </Card>
-    )
+function RFQInfoCard({ rfqInfo, setRfqInfo }) {
+  useEffect(() => {
+    if (!rfqInfo.lead_date) {
+      const currentDate = new Date().toISOString().split("T")[0];
+      setRfqInfo((prev: any) => ({ ...prev, lead_date: currentDate }));
+    }
+  }, [rfqInfo.lead_date, setRfqInfo]);
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>RFQ Info</CardTitle>
+        <CardDescription></CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="grid w-full max-w-sm items-center gap-1.5 mt-4">
+          <Label htmlFor="leadDate">Lead Date</Label>
+          <Input
+            type="date"
+            id="leadDate"
+            value={rfqInfo.lead_date || ""}
+            onChange={(e) =>
+              setRfqInfo({ ...rfqInfo, lead_date: e.target.value })
+            }
+            className="grid"
+            disabled
+          />
+        </div>
+        <div className="grid w-full max-w-sm items-center gap-1.5 mt-4">
+          <Label htmlFor="supplyPort">Supply Port</Label>
+          <Select
+            onValueChange={(value) =>
+              setRfqInfo({ ...rfqInfo, supply_port: value })
+            }
+            value={rfqInfo.supply_port || ""}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select Supply Port" />
+            </SelectTrigger>
+            <SelectContent>
+              {["Bussan", "Goa", "Tamil Nadu", "Kerala", "Mumbai"].map(
+                (port) => (
+                  <SelectItem key={port} value={port}>
+                    {port}
+                  </SelectItem>
+                )
+              )}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="grid w-full max-w-sm items-center gap-1.5 mt-4">
+          <Label htmlFor="expireDate">Expire Date</Label>
+          <Input
+            type="date"
+            id="expireDate"
+            value={rfqInfo.expire_date || ""}
+            onChange={(e) =>
+              setRfqInfo({ ...rfqInfo, expire_date: e.target.value })
+            }
+            className="grid"
+          />
+        </div>
+      </CardContent>
+    </Card>
+  );
 }
 
 // @ts-ignore
