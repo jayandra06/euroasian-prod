@@ -8,9 +8,9 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card"
-import createClient from "@/utils/supabase/client";
+import {createClient} from "@/utils/supabase/client";
 import Link from "next/link"
-import { useEffect, useState } from "react"
+import {useEffect, useState} from "react"
 
 
 export default function RFQsPage() {
@@ -65,7 +65,8 @@ export default function RFQsPage() {
                             </div>
                         </CardContent>
                         <CardFooter>
-                            <Link href={`/dashboard/admin/rfqs/${rfq.id}`} className="text-center text-white py-2 text-xs font-semibold grid w-full rounded-lg bg-black dark:text-black dark:bg-white">
+                            <Link href={`/dashboard/admin/rfqs/${rfq.id}`}
+                                  className="text-center text-white py-2 text-xs font-semibold grid w-full rounded-lg bg-black dark:text-black dark:bg-white">
                                 View Details
                             </Link>
                         </CardFooter>
