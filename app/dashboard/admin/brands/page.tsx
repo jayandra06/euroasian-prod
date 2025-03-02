@@ -19,7 +19,8 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import  createClient  from "@/utils/supabase/client";
+import { createClient } from "@/utils/supabase/client"
+;
 import Link from "next/link";
 import { useEffect, useState } from "react";
 

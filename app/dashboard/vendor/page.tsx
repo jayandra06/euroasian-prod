@@ -10,7 +10,8 @@ import {
     CardTitle,
 } from "@/components/ui/card"
 import { useState, useEffect } from "react";
-import  createClient  from "@/utils/supabase/client";
+import { createClient } from "@/utils/supabase/client"
+;
 
 
 function RFQCard({rfqs}: {rfqs: number}) {

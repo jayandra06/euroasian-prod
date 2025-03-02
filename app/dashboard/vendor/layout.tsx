@@ -15,7 +15,7 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar"
-import  createClient  from "@/utils/supabase/client";
+import {createClient}  from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
@@ -35,6 +35,7 @@ export default function VendorLayout({
     const merchant = await supabase.from("merchant").select("*").eq("merchant_profile", user?.id).single();
     console.log(merchant.data);
     if (!merchant.data) {
+      alert("dear vendor, create a merchant account first!!")
       router.push("/dashboard/become-a-seller");
     }
   }
