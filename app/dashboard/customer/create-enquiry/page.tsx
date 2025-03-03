@@ -20,7 +20,8 @@ import {
 } from "@/components/ui/table"
 import {Textarea} from "@/components/ui/textarea"
 import {useEffect, useState} from "react";
-import { createClient } from "@/utils/supabase/client";import {
+import {createClient} from "@/utils/supabase/client";
+import {
     Select,
     SelectContent,
     SelectItem,
@@ -56,71 +57,71 @@ import {Trash2} from "lucide-react";
 // }
 
 // @ts-ignore
-function RFQInfoCard({ rfqInfo, setRfqInfo }) {
-  useEffect(() => {
-    if (!rfqInfo.lead_date) {
-      const currentDate = new Date().toISOString().split("T")[0];
-      setRfqInfo((prev: any) => ({ ...prev, lead_date: currentDate }));
-    }
-  }, [rfqInfo.lead_date, setRfqInfo]);
+function RFQInfoCard({rfqInfo, setRfqInfo}) {
+    useEffect(() => {
+        if (!rfqInfo.lead_date) {
+            const currentDate = new Date().toISOString().split("T")[0];
+            setRfqInfo((prev: any) => ({...prev, lead_date: currentDate}));
+        }
+    }, [rfqInfo.lead_date, setRfqInfo]);
 
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>RFQ Info</CardTitle>
-        <CardDescription></CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="grid w-full max-w-sm items-center gap-1.5 mt-4">
-          <Label htmlFor="leadDate">Lead Date</Label>
-          <Input
-            type="date"
-            id="leadDate"
-            value={rfqInfo.lead_date || ""}
-            onChange={(e) =>
-              setRfqInfo({ ...rfqInfo, lead_date: e.target.value })
-            }
-            className="grid"
-            disabled
-          />
-        </div>
-        <div className="grid w-full max-w-sm items-center gap-1.5 mt-4">
-          <Label htmlFor="supplyPort">Supply Port</Label>
-          <Select
-            onValueChange={(value) =>
-              setRfqInfo({ ...rfqInfo, supply_port: value })
-            }
-            value={rfqInfo.supply_port || ""}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select Supply Port" />
-            </SelectTrigger>
-            <SelectContent>
-              {["Bussan", "Goa", "Tamil Nadu", "Kerala", "Mumbai"].map(
-                (port) => (
-                  <SelectItem key={port} value={port}>
-                    {port}
-                  </SelectItem>
-                )
-              )}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="grid w-full max-w-sm items-center gap-1.5 mt-4">
-          <Label htmlFor="expireDate">Expire Date</Label>
-          <Input
-            type="date"
-            id="expireDate"
-            value={rfqInfo.expire_date || ""}
-            onChange={(e) =>
-              setRfqInfo({ ...rfqInfo, expire_date: e.target.value })
-            }
-            className="grid"
-          />
-        </div>
-      </CardContent>
-    </Card>
-  );
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle>RFQ Info</CardTitle>
+                <CardDescription></CardDescription>
+            </CardHeader>
+            <CardContent>
+                <div className="grid w-full max-w-sm items-center gap-1.5 mt-4">
+                    <Label htmlFor="leadDate">Lead Date</Label>
+                    <Input
+                        type="date"
+                        id="leadDate"
+                        value={rfqInfo.lead_date || ""}
+                        onChange={(e) =>
+                            setRfqInfo({...rfqInfo, lead_date: e.target.value})
+                        }
+                        className="grid"
+                        disabled
+                    />
+                </div>
+                <div className="grid w-full max-w-sm items-center gap-1.5 mt-4">
+                    <Label htmlFor="supplyPort">Supply Port</Label>
+                    <Select
+                        onValueChange={(value) =>
+                            setRfqInfo({...rfqInfo, supply_port: value})
+                        }
+                        value={rfqInfo.supply_port || ""}
+                    >
+                        <SelectTrigger>
+                            <SelectValue placeholder="Select Supply Port"/>
+                        </SelectTrigger>
+                        <SelectContent>
+                            {["Bussan", "Goa", "Tamil Nadu", "Kerala", "Mumbai"].map(
+                                (port) => (
+                                    <SelectItem key={port} value={port}>
+                                        {port}
+                                    </SelectItem>
+                                )
+                            )}
+                        </SelectContent>
+                    </Select>
+                </div>
+                <div className="grid w-full max-w-sm items-center gap-1.5 mt-4">
+                    <Label htmlFor="expireDate">Expire Date</Label>
+                    <Input
+                        type="date"
+                        id="expireDate"
+                        value={rfqInfo.expire_date || ""}
+                        onChange={(e) =>
+                            setRfqInfo({...rfqInfo, expire_date: e.target.value})
+                        }
+                        className="grid"
+                    />
+                </div>
+            </CardContent>
+        </Card>
+    );
 }
 
 // @ts-ignore
@@ -342,10 +343,26 @@ function Item({item, handleUpdateItem, handleRemove}) {
 
 
 export default function CreateEnquiryPage() {
-    // const id = (await params).id;
+
+    const [reqdVendors, updateReqdVendors] = useState({
+        vendor1: {
+            name: '',
+            vendorId: ''
+        },
+        vendor2: {
+            name: '',
+            vendorId: ''
+        },
+        vendor3: {
+            name: '',
+            vendorId: ''
+        }
+    });
+
     const [brands, setBrands] = useState<any[]>([]);
     const [category, setCategory] = useState<any[]>([]);
     const [model, setModels] = useState<any[]>([]);
+    const [vendors, updateVendors] = useState<any[]>([]);
 
     const [rfqInfo, setRfqInfo] = useState({lead_date: "", supply_port: "", expire_date: "", rfq_no: ""});
     const [vesselInfo, setVesselInfo] = useState({name: "", imo_no: "", hull_no: "", port: ""});
@@ -377,7 +394,7 @@ export default function CreateEnquiryPage() {
             const {data: {user}} = await supabase.auth.getUser();
 
             const member = await supabase.from("member").select("*").eq("member_profile", user!.id).single();
-
+            console.log("selected vendors", Object.values(reqdVendors).map(vendor => vendor.vendorId))
             const rfq = await supabase.from("rfq").insert({
                 client_profile: user!.id,
                 lead_date: rfqInfo.lead_date,
@@ -392,7 +409,8 @@ export default function CreateEnquiryPage() {
                 model: equipmentTags.model,
                 category: equipmentTags.category,
                 created_at: new Date().toISOString(),
-                branch: member.data.branch
+                branch: member.data.branch,
+                assigned_to_merchants: Object.values(reqdVendors).map(vendor => vendor.vendorId)
             }).select().single();
 
             for (let i = 0; i < items.length; i++) {
@@ -431,6 +449,9 @@ export default function CreateEnquiryPage() {
 
     async function fetchDetails() {
         const supabase = createClient();
+
+        const merchants = await supabase.from("merchant").select("*").select("*");
+        updateVendors([...merchants.data!]);
 
         const brands = await supabase.from("brand").select("*").eq("is_active", true);
         setBrands([...brands.data!]);
@@ -473,6 +494,96 @@ export default function CreateEnquiryPage() {
                 <EquipmentCard equipmentTags={equipmentTags} setEquipmentTags={setEquipmentTags} models={model}
                                brands={brands} category={category}/>
             </main>
+
+            <div className="flex w-full max-w-6xl justify-self-center items-center mt-8">
+                <h1 className="text-xl font-bold">
+                    Choose vendors
+                </h1>
+            </div>
+
+            <div
+                className="grid justify-self-center grid-cols-1 sm:grid-cols-1 md:grid-cols-3 gap-4 max-w-6xl w-full mt-4">
+
+                <div className="grid gap-1">
+                    <div className="flex gap-1">
+                        <div className="text-xs text-white bg-zinc-600 rounded-full px-2">
+                            {reqdVendors.vendor1.name}
+                        </div>
+                    </div>
+                    <div className="grid ">
+                        <Label className={"mb-3"}>
+                            Option 1
+                        </Label>
+                        <Select onValueChange={(e) => updateReqdVendors({
+                            ...reqdVendors,
+                            vendor1: {name: e, vendorId: vendors.find(v => v.name === e).id}
+                        })}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Select Brand"/>
+                            </SelectTrigger>
+                            <SelectContent>
+                                {vendors.map((vendor: any, i: number) =>
+                                    <SelectItem value={vendor.name} key={vendor.id}>{vendor.name}</SelectItem>
+                                )}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                </div>
+
+                <div className="grid gap-1">
+                    <div className="flex gap-1">
+                        <div className="text-xs text-white bg-zinc-600 rounded-full px-2">
+                            {reqdVendors.vendor2.name}
+                        </div>
+                    </div>
+                    <div className="grid ">
+                        <Label className={"mb-3"}>
+                            Option 2
+                        </Label>
+                        <Select onValueChange={(e) => updateReqdVendors({
+                            ...reqdVendors,
+                            vendor2: {name: e, vendorId: vendors.find(v => v.name === e).id}
+                        })}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Select Brand"/>
+                            </SelectTrigger>
+                            <SelectContent>
+                                {vendors.map((vendor: any, i: number) =>
+                                    <SelectItem value={vendor.name} key={vendor.id}>{vendor.name}</SelectItem>
+                                )}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                </div>
+
+                <div className="grid gap-1">
+                    <div className="flex gap-1">
+                        <div className="text-xs text-white bg-zinc-600 rounded-full px-2">
+                            {reqdVendors.vendor3.name}
+                        </div>
+                    </div>
+                    <div className="grid ">
+                        <Label className={"mb-3"}>
+                            Option 3
+                        </Label>
+                        <Select onValueChange={(e) => updateReqdVendors({
+                            ...reqdVendors,
+                            vendor3: {name: e, vendorId: vendors.find(v => v.name === e).id}
+                        })}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Select Brand"/>
+                            </SelectTrigger>
+                            <SelectContent>
+                                {vendors.map((vendor: any, i: number) =>
+                                    <SelectItem value={vendor.name} key={vendor.id}>{vendor.name}</SelectItem>
+                                )}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                </div>
+
+
+            </div>
 
             <div className="grid justify-self-center max-w-6xl w-full mt-8">
                 <div className="flex justify-between items-center">

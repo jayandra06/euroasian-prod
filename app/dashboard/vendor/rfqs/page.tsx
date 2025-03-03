@@ -168,11 +168,11 @@ export default function VendorRfqs() {
 
         const { data: { user } } = await supabase.auth.getUser();
         const profileData = await supabase.from("profiles").select("*").eq("id", user!.id).single();
-        console.log(profileData.data);
         const merchantData = await supabase.from("merchant").select("*").eq("merchant_profile", profileData.data.id).single();
         setMerchantData({ ...merchantData.data });
+
+        const rfqs = await supabase.from("rfq").select("*").contains("assigned_to_merchants", merchantData.data!.id);
         const items = await supabase.from("itemcopy").select("*").eq("merchant", merchantData.data!.id);
-        console.log(items);
         setItems([...items.data!]);
     }
 
