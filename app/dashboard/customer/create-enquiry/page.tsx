@@ -29,8 +29,8 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import {Trash2} from "lucide-react";
-
-
+ 
+ 
 // function InfoCard() {
 //     return (
 //         <Card>
@@ -55,16 +55,16 @@ import {Trash2} from "lucide-react";
 //         </Card>
 //     )
 // }
-
+ 
 // @ts-ignore
-function RFQInfoCard({rfqInfo, setRfqInfo}) {
+function RFQInfoCard({rfqInfo, setRfqInfo,errors}) {
+   
     useEffect(() => {
         if (!rfqInfo.lead_date) {
             const currentDate = new Date().toISOString().split("T")[0];
             setRfqInfo((prev: any) => ({...prev, lead_date: currentDate}));
         }
     }, [rfqInfo.lead_date, setRfqInfo]);
-
     return (
         <Card>
             <CardHeader>
@@ -86,7 +86,7 @@ function RFQInfoCard({rfqInfo, setRfqInfo}) {
                     />
                 </div>
                 <div className="grid w-full max-w-sm items-center gap-1.5 mt-4">
-                    <Label htmlFor="supplyPort">Supply Port</Label>
+                    <Label htmlFor="supplyPort">Supply Port <span className="text-red-500 ml-1">*</span></Label>
                     <Select
                         onValueChange={(value) =>
                             setRfqInfo({...rfqInfo, supply_port: value})
@@ -106,9 +106,12 @@ function RFQInfoCard({rfqInfo, setRfqInfo}) {
                             )}
                         </SelectContent>
                     </Select>
+                    {errors.supply_port && <p className="text-red-500 text-sm">{errors.supply_port}</p>}
+                   
+                    {/* {errors.supply_port && <p className="text-red-500 text-sm">{errors.supply_port}</p>} */}
                 </div>
                 <div className="grid w-full max-w-sm items-center gap-1.5 mt-4">
-                    <Label htmlFor="expireDate">Expire Date</Label>
+                    <Label htmlFor="expireDate">Expire Date <span className="text-red-500 ml-1">*</span></Label>
                     <Input
                         type="date"
                         id="expireDate"
@@ -118,39 +121,40 @@ function RFQInfoCard({rfqInfo, setRfqInfo}) {
                         }
                         className="grid"
                     />
+                    {errors.expire_date && <p className="text-red-500 text-sm">{errors.expire_date}</p>}
                 </div>
             </CardContent>
         </Card>
     );
 }
-
+ 
 // @ts-ignore
-function VesselCard({vesselInfo, setVesselInfo}) {
+function VesselCard({vesselInfo, setVesselInfo,errors}) {
     const [vessels, setVessels] = useState<any[]>([]);
-
+ 
     async function fetchVessels() {
         const supabase = createClient();
-
+ 
         const {data: {user}} = await supabase.auth.getUser();
-
+ 
         const memberProfiles = await supabase.from("member").select("*").eq("member_profile", user!.id);
-
+ 
         let allVessels: any[] = [];
-
+ 
         for (let i = 0; i < memberProfiles.data!.length; i++) {
             const member = memberProfiles.data![i];
             const branch = await supabase.from("branch").select("*").eq("id", member!.branch).single();
             allVessels.push(branch.data.vessels)
         }
-
+ 
         setVessels(allVessels)
     }
-
+ 
     useEffect(() => {
         fetchVessels();
     }, []);
-
-
+ 
+ 
     return (
         <Card>
             <CardHeader>
@@ -159,7 +163,7 @@ function VesselCard({vesselInfo, setVesselInfo}) {
             </CardHeader>
             <CardContent>
                 <div className="grid w-full max-w-sm items-center gap-1.5">
-                    <Label htmlFor="clientName">Vessel Name</Label>
+                    <Label htmlFor="clientName">Vessel Name <span className="text-red-500 ml-1">*</span></Label>
                     {/* <Input type="text" id="clientName" placeholder="Enter Vessel Name..." value={vesselInfo.name} onChange={(e) => setVesselInfo({ ...vesselInfo, name: e.target.value })} /> */}
                     <Select onValueChange={(e) => setVesselInfo({...vesselInfo, name: e})}>
                         <SelectTrigger>
@@ -171,14 +175,16 @@ function VesselCard({vesselInfo, setVesselInfo}) {
                             )}
                         </SelectContent>
                     </Select>
+                    {errors.name && <p className="text-red-500 text-sm">{errors.name}</p>}
                 </div>
                 <div className="grid w-full max-w-sm items-center gap-1.5 mt-4">
-                    <Label htmlFor="clientName">IMO No</Label>
+                    <Label htmlFor="clientName">IMO No <span className="text-red-500 ml-1">*</span></Label>
                     <Input type="text" id="clientName" placeholder="Enter IMO No." value={vesselInfo.imo_no}
                            onChange={(e) => setVesselInfo({...vesselInfo, imo_no: e.target.value})}/>
+                             {errors.imo_no && <p className="text-red-500 text-sm">{errors.imo_no}</p>}
                 </div>
                 <div className="grid w-full max-w-sm items-center gap-1.5 mt-4">
-                    <Label htmlFor="clientName">Port</Label>
+                    <Label htmlFor="clientName">Port <span className="text-red-500 ml-1">*</span></Label>
                     {/* <Input type="text" id="clientName" placeholder="Enter Port..." value={vesselInfo.port} onChange={(e) => setVesselInfo({ ...vesselInfo, port: e.target.value })} /> */}
                     <Select onValueChange={(e) => setVesselInfo({...vesselInfo, port: e})}>
                         <SelectTrigger>
@@ -192,22 +198,24 @@ function VesselCard({vesselInfo, setVesselInfo}) {
                             <SelectItem value="Mumbai">Mumbai</SelectItem>
                         </SelectContent>
                     </Select>
+                    {errors.port && <p className="text-red-500 text-sm">{errors.port}</p>}
                 </div>
                 <div className="grid w-full max-w-sm items-center gap-1.5 mt-4">
-                    <Label htmlFor="clientName">Hull No</Label>
+                    <Label htmlFor="clientName">Hull No <span className="text-red-500 ml-1">*</span></Label>
                     <Input type="text" id="clientName" placeholder="Enter HULL No." value={vesselInfo.hull_no}
                            onChange={(e) => setVesselInfo({...vesselInfo, hull_no: e.target.value})}/>
+                             {errors.hull_no && <p className="text-red-500 text-sm">{errors.hull_no}</p>}
                 </div>
             </CardContent>
         </Card>
     )
 }
-
+ 
 // @ts-ignore
-function EquipmentCard({equipmentTags, setEquipmentTags, models, brands, category}) {
+function EquipmentCard({equipmentTags, setEquipmentTags, models, brands, category,errors}) {
     const [tags, setTags] = useState([]);
     const [currentTag, setCurrentTag] = useState("");
-
+ 
     return (
         <Card>
             <CardHeader>
@@ -235,7 +243,7 @@ function EquipmentCard({equipmentTags, setEquipmentTags, models, brands, categor
                         </Button>
                     </div>
                     <div className="grid w-full items-center gap-1.5">
-                        <Label htmlFor="clientName">Brand</Label>
+                        <Label htmlFor="clientName">Brand <span className="text-red-500 ml-1">*</span></Label>
                         <Select onValueChange={(v) => setEquipmentTags({...equipmentTags, brand: v})}>
                             <SelectTrigger>
                                 <SelectValue placeholder="Select Brand"/>
@@ -246,10 +254,11 @@ function EquipmentCard({equipmentTags, setEquipmentTags, models, brands, categor
                                 )}
                             </SelectContent>
                         </Select>
-
+                        {errors.brand && <p className="text-red-500 text-sm">{errors.brand}</p>}
+ 
                     </div>
                     <div className="grid w-full items-center gap-1.5">
-                        <Label htmlFor="clientName">Model</Label>
+                        <Label htmlFor="clientName">Model <span className="text-red-500 ml-1">*</span></Label>
                         <Select onValueChange={(v) => setEquipmentTags({...equipmentTags, model: v})}>
                             <SelectTrigger>
                                 <SelectValue placeholder="Select Model"/>
@@ -260,9 +269,10 @@ function EquipmentCard({equipmentTags, setEquipmentTags, models, brands, categor
                                 )}
                             </SelectContent>
                         </Select>
+                        {errors.model && <p className="text-red-500 text-sm">{errors.model}</p>}
                     </div>
                     <div className="grid w-full items-center gap-1.5">
-                        <Label htmlFor="clientName">Category</Label>
+                        <Label htmlFor="clientName">Category <span className="text-red-500 ml-1">*</span></Label>
                         <Select onValueChange={(v) => setEquipmentTags({...equipmentTags, category: v})}>
                             <SelectTrigger>
                                 <SelectValue placeholder="Select Category"/>
@@ -273,21 +283,22 @@ function EquipmentCard({equipmentTags, setEquipmentTags, models, brands, categor
                                 )}
                             </SelectContent>
                         </Select>
+                        {errors.category && <p className="text-red-500 text-sm">{errors.category}</p>}
                     </div>
                 </div>
             </CardContent>
         </Card>
     )
 }
-
-
+ 
+ 
 // @ts-ignore
 function Item({item, handleUpdateItem, handleRemove}) {
     const handleChange = (e: any) => {
         const {name, value} = e.target;
         handleUpdateItem(item.id, name, value); // Update the parent state
     };
-
+ 
     return (
         <>
             <TableRow>
@@ -340,10 +351,10 @@ function Item({item, handleUpdateItem, handleRemove}) {
         </>
     )
 }
-
-
+ 
+ 
 export default function CreateEnquiryPage() {
-
+ 
     const [reqdVendors, updateReqdVendors] = useState({
         vendor1: {
             name: '',
@@ -358,12 +369,13 @@ export default function CreateEnquiryPage() {
             vendorId: ''
         }
     });
-
+ 
     const [brands, setBrands] = useState<any[]>([]);
     const [category, setCategory] = useState<any[]>([]);
     const [model, setModels] = useState<any[]>([]);
     const [vendors, updateVendors] = useState<any[]>([]);
-
+    const [vendorsError, setVendorsError] = useState(false);
+ 
     const [rfqInfo, setRfqInfo] = useState({lead_date: "", supply_port: "", expire_date: "", rfq_no: ""});
     const [vesselInfo, setVesselInfo] = useState({name: "", imo_no: "", hull_no: "", port: ""});
     const [equipmentTags, setEquipmentTags] = useState({tags: [], brand: "", model: "", category: ""});
@@ -378,7 +390,7 @@ export default function CreateEnquiryPage() {
         offered_qty: "0"
     }]);
     const [isMem, setIsMem] = useState(false);
-
+    const [errors, setErrors] = useState({ supply_port: "", expire_date: "" });
     const handleUpdateItem = (id: number, key: any, value: any) => {
         setItems((prevItems) =>
             prevItems.map((item) =>
@@ -386,13 +398,37 @@ export default function CreateEnquiryPage() {
             )
         );
     };
-
+ 
     async function getQuote() {
-        const supabase = createClient();
-
+     
+        let newErrors = { supply_port: "", expire_date: "" ,name:"", imo_no:"",hull_no:"",port:"",brand:"",model:"",category:""};
+        if (!rfqInfo.supply_port) newErrors.supply_port = "Supply Port is required.";
+        if (!rfqInfo.expire_date) newErrors.expire_date = "Expire Date is required.";
+        if(!vesselInfo.name) newErrors.name="Vessel Name is required.";
+        if(!vesselInfo.imo_no) newErrors.imo_no="IMO No is required.";
+        if(!vesselInfo.hull_no) newErrors.hull_no="Hull No is required.";
+        if(!vesselInfo.port) newErrors.port="Port is required.";
+        if(!equipmentTags.brand) newErrors.brand="Brand is required"
+        if(!equipmentTags.model) newErrors.model="Model is required.";
+        if(!equipmentTags.category) newErrors.category="Catrgory is required.";
+        setErrors(newErrors);
+        if (!reqdVendors.vendor1.vendorId || !reqdVendors.vendor2.vendorId || !reqdVendors.vendor3.vendorId) {
+            setVendorsError(true);
+            return;
+        } else {
+            setVendorsError(false);
+        }
+       
+ 
+        if (Object.values(newErrors).some(error => error)) return;
+       
+       
+       
+        const supabase = createClient();    
         try {
+           
             const {data: {user}} = await supabase.auth.getUser();
-
+ 
             const member = await supabase.from("member").select("*").eq("member_profile", user!.id).single();
             console.log("selected vendors", Object.values(reqdVendors).map(vendor => vendor.vendorId))
             const rfq = await supabase.from("rfq").insert({
@@ -412,7 +448,7 @@ export default function CreateEnquiryPage() {
                 branch: member.data.branch,
                 assigned_to_merchants: Object.values(reqdVendors).map(vendor => vendor.vendorId)
             }).select().single();
-
+ 
             for (let i = 0; i < items.length; i++) {
                 const item = items[i];
                 await supabase.from("item").insert({
@@ -430,9 +466,9 @@ export default function CreateEnquiryPage() {
                     status: "processing"
                 });
             }
-
+ 
             console.log("RFQ Created! ", rfq.data);
-
+ 
             alert("RFQ Successfully Created!");
             window.location.reload();
         } catch (e) {
@@ -440,44 +476,44 @@ export default function CreateEnquiryPage() {
             alert("Unable to Create RFQ!!");
         }
     }
-
+ 
     function handleRemove(itemId: number) {
         const filteredItem = items.filter((i) => i.id !== itemId);
-
+ 
         setItems([...filteredItem]);
     }
-
+ 
     async function fetchDetails() {
         const supabase = createClient();
-
+ 
         const merchants = await supabase.from("merchant").select("*").select("*");
         updateVendors([...merchants.data!]);
-
+ 
         const brands = await supabase.from("brand").select("*").eq("is_active", true);
         setBrands([...brands.data!]);
-
+ 
         const models = await supabase.from("model").select("*").eq("is_active", true);
         console.log(models);
         setModels([...models.data!]);
-
+ 
         const categories = await supabase.from("category").select("*").eq("is_active", true);
         setCategory([...categories.data!]);
-
+ 
         const {data: {user}} = await supabase.auth.getUser();
-
+ 
         const member = await supabase.from("member").select("*").eq("member_profile", user!.id);
         console.log(member);
         if (member.data) {
             setIsMem(true);
         }
     }
-
+ 
     useEffect(() => {
         void fetchDetails();
     }, []);
-
+ 
     if (!isMem) return "Create a Branch or be the Part of any Branch to Create Enquiry..."
-
+ 
     return (
         <main className="grid">
             <div className="pt-4 max-w-6xl w-full grid justify-self-center">
@@ -487,32 +523,38 @@ export default function CreateEnquiryPage() {
                 <h3 className="mt-2">
                 </h3>
             </div>
-
+ 
             <main className="grid justify-self-center max-w-6xl w-full md:grid-cols-3 gap-4 mt-4">
-                <RFQInfoCard rfqInfo={rfqInfo} setRfqInfo={setRfqInfo}/>
-                <VesselCard vesselInfo={vesselInfo} setVesselInfo={setVesselInfo}/>
+                <RFQInfoCard rfqInfo={rfqInfo} setRfqInfo={setRfqInfo} errors={errors} />
+                <VesselCard vesselInfo={vesselInfo} setVesselInfo={setVesselInfo} errors={errors}/>
                 <EquipmentCard equipmentTags={equipmentTags} setEquipmentTags={setEquipmentTags} models={model}
-                               brands={brands} category={category}/>
+                               brands={brands} category={category} errors={errors}/>
             </main>
-
+ 
             <div className="flex w-full max-w-6xl justify-self-center items-center mt-8">
                 <h1 className="text-xl font-bold">
                     Choose vendors
                 </h1>
             </div>
-
+            {vendorsError && (
+    <div className="text-red-500 text-sm ml-32 mt-2">
+        Please select all vendors.
+    </div>
+)}
+ 
             <div
                 className="grid justify-self-center grid-cols-1 sm:grid-cols-1 md:grid-cols-3 gap-4 max-w-6xl w-full mt-4">
-
+ 
                 <div className="grid gap-1">
                     <div className="flex gap-1">
                         <div className="text-xs text-white bg-zinc-600 rounded-full px-2">
                             {reqdVendors.vendor1.name}
                         </div>
+                     
                     </div>
                     <div className="grid ">
                         <Label className={"mb-3"}>
-                            Option 1
+                            Option 1 <span className="text-red-500 ml-1">*</span>
                         </Label>
                         <Select onValueChange={(e) => updateReqdVendors({
                             ...reqdVendors,
@@ -527,9 +569,10 @@ export default function CreateEnquiryPage() {
                                 )}
                             </SelectContent>
                         </Select>
+                       
                     </div>
                 </div>
-
+ 
                 <div className="grid gap-1">
                     <div className="flex gap-1">
                         <div className="text-xs text-white bg-zinc-600 rounded-full px-2">
@@ -538,7 +581,7 @@ export default function CreateEnquiryPage() {
                     </div>
                     <div className="grid ">
                         <Label className={"mb-3"}>
-                            Option 2
+                            Option 2 <span className="text-red-500 ml-1">*</span>
                         </Label>
                         <Select onValueChange={(e) => updateReqdVendors({
                             ...reqdVendors,
@@ -555,7 +598,7 @@ export default function CreateEnquiryPage() {
                         </Select>
                     </div>
                 </div>
-
+ 
                 <div className="grid gap-1">
                     <div className="flex gap-1">
                         <div className="text-xs text-white bg-zinc-600 rounded-full px-2">
@@ -564,7 +607,7 @@ export default function CreateEnquiryPage() {
                     </div>
                     <div className="grid ">
                         <Label className={"mb-3"}>
-                            Option 3
+                            Option 3 <span className="text-red-500 ml-1">*</span>
                         </Label>
                         <Select onValueChange={(e) => updateReqdVendors({
                             ...reqdVendors,
@@ -581,16 +624,19 @@ export default function CreateEnquiryPage() {
                         </Select>
                     </div>
                 </div>
-
-
+ 
+ 
             </div>
-
+ 
+           
+ 
+ 
             <div className="grid justify-self-center max-w-6xl w-full mt-8">
                 <div className="flex justify-between items-center">
                     <h1 className="text-xl font-bold">
                         Items
                     </h1>
-
+ 
                     <Button onClick={() => {
                         setItems([...items, {
                             id: items.length + 1,
@@ -606,7 +652,7 @@ export default function CreateEnquiryPage() {
                         Add Item
                     </Button>
                 </div>
-
+ 
                 <div className="mt-4 max-w-6xl overflow-x-scroll">
                     <div className="min-w-5xl max-w-9xl grid">
                         <Table className="min-w-5xl max-w-9xl w-full">
@@ -623,14 +669,14 @@ export default function CreateEnquiryPage() {
                             <TableBody>
                                 {items.map((item, i) =>
                                     <Item key={i} item={item} handleRemove={handleRemove}
-                                          handleUpdateItem={handleUpdateItem}/>
+                                          handleUpdateItem={handleUpdateItem} />
                                 )}
                             </TableBody>
                         </Table>
                     </div>
                 </div>
             </div>
-
+ 
             <div className="max-w-6xl w-full grid justify-self-center justify-center mt-8 mb-24">
                 <div>
                     <Button className="px-12" onClick={getQuote}>
@@ -641,3 +687,4 @@ export default function CreateEnquiryPage() {
         </main>
     )
 }
+ 
