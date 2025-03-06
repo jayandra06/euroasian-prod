@@ -57,8 +57,7 @@ import {Trash2} from "lucide-react";
 // }
  
 // @ts-ignore
-function RFQInfoCard({rfqInfo, setRfqInfo,errors}) {
-   
+function RFQInfoCard({rfqInfo, setRfqInfo,errors, setErrors}) {
     useEffect(() => {
         if (!rfqInfo.lead_date) {
             const currentDate = new Date().toISOString().split("T")[0];
@@ -88,8 +87,10 @@ function RFQInfoCard({rfqInfo, setRfqInfo,errors}) {
                 <div className="grid w-full max-w-sm items-center gap-1.5 mt-4">
                     <Label htmlFor="supplyPort">Supply Port <span className="text-red-500 ml-1">*</span></Label>
                     <Select
-                        onValueChange={(value) =>
-                            setRfqInfo({...rfqInfo, supply_port: value})
+                        onValueChange={(value) =>{                        
+                            setRfqInfo({...rfqInfo, supply_port: value});
+                            setErrors({...errors, supply_port:""})
+                        }
                         }
                         value={rfqInfo.supply_port || ""}
                     >
@@ -117,7 +118,10 @@ function RFQInfoCard({rfqInfo, setRfqInfo,errors}) {
                         id="expireDate"
                         value={rfqInfo.expire_date || ""}
                         onChange={(e) =>
+                        {
                             setRfqInfo({...rfqInfo, expire_date: e.target.value})
+                            setErrors({...errors, expire_date:""})
+                        }
                         }
                         className="grid"
                     />
@@ -129,7 +133,7 @@ function RFQInfoCard({rfqInfo, setRfqInfo,errors}) {
 }
  
 // @ts-ignore
-function VesselCard({vesselInfo, setVesselInfo,errors}) {
+function VesselCard({vesselInfo, setVesselInfo,errors, setErrors}) {
     const [vessels, setVessels] = useState<any[]>([]);
  
     async function fetchVessels() {
@@ -165,7 +169,12 @@ function VesselCard({vesselInfo, setVesselInfo,errors}) {
                 <div className="grid w-full max-w-sm items-center gap-1.5">
                     <Label htmlFor="clientName">Vessel Name <span className="text-red-500 ml-1">*</span></Label>
                     {/* <Input type="text" id="clientName" placeholder="Enter Vessel Name..." value={vesselInfo.name} onChange={(e) => setVesselInfo({ ...vesselInfo, name: e.target.value })} /> */}
-                    <Select onValueChange={(e) => setVesselInfo({...vesselInfo, name: e})}>
+                    <Select onValueChange={(e) => 
+                    {
+                        setVesselInfo({...vesselInfo, name: e})
+                        setErrors({...errors, name:""})
+                    }}
+                        >
                         <SelectTrigger>
                             <SelectValue placeholder="Select Vessel"/>
                         </SelectTrigger>
@@ -180,13 +189,24 @@ function VesselCard({vesselInfo, setVesselInfo,errors}) {
                 <div className="grid w-full max-w-sm items-center gap-1.5 mt-4">
                     <Label htmlFor="clientName">IMO No <span className="text-red-500 ml-1">*</span></Label>
                     <Input type="text" id="clientName" placeholder="Enter IMO No." value={vesselInfo.imo_no}
-                           onChange={(e) => setVesselInfo({...vesselInfo, imo_no: e.target.value})}/>
+                           onChange={(e) => 
+                           {
+                           setVesselInfo({...vesselInfo, imo_no: e.target.value})
+                           setErrors({...errors, imo_no:""})
+                           }}
+                           />
                              {errors.imo_no && <p className="text-red-500 text-sm">{errors.imo_no}</p>}
                 </div>
                 <div className="grid w-full max-w-sm items-center gap-1.5 mt-4">
                     <Label htmlFor="clientName">Port <span className="text-red-500 ml-1">*</span></Label>
                     {/* <Input type="text" id="clientName" placeholder="Enter Port..." value={vesselInfo.port} onChange={(e) => setVesselInfo({ ...vesselInfo, port: e.target.value })} /> */}
-                    <Select onValueChange={(e) => setVesselInfo({...vesselInfo, port: e})}>
+                    <Select onValueChange={(e) =>
+                    {
+                         setVesselInfo({...vesselInfo, port: e})
+                         setErrors({...errors, port:""})
+                    }
+                        }
+                         >
                         <SelectTrigger>
                             <SelectValue placeholder="Select Port"/>
                         </SelectTrigger>
@@ -203,7 +223,13 @@ function VesselCard({vesselInfo, setVesselInfo,errors}) {
                 <div className="grid w-full max-w-sm items-center gap-1.5 mt-4">
                     <Label htmlFor="clientName">Hull No <span className="text-red-500 ml-1">*</span></Label>
                     <Input type="text" id="clientName" placeholder="Enter HULL No." value={vesselInfo.hull_no}
-                           onChange={(e) => setVesselInfo({...vesselInfo, hull_no: e.target.value})}/>
+                           onChange={(e) =>
+                            { 
+                           setVesselInfo({...vesselInfo, hull_no: e.target.value})
+                           setErrors({...errors, hull_no:""})
+                            }
+                        }
+                           />
                              {errors.hull_no && <p className="text-red-500 text-sm">{errors.hull_no}</p>}
                 </div>
             </CardContent>
@@ -212,7 +238,7 @@ function VesselCard({vesselInfo, setVesselInfo,errors}) {
 }
  
 // @ts-ignore
-function EquipmentCard({equipmentTags, setEquipmentTags, models, brands, category,errors}) {
+function EquipmentCard({equipmentTags, setEquipmentTags, models, brands, category,errors, setErrors}) {
     const [tags, setTags] = useState([]);
     const [currentTag, setCurrentTag] = useState("");
  
@@ -244,7 +270,12 @@ function EquipmentCard({equipmentTags, setEquipmentTags, models, brands, categor
                     </div>
                     <div className="grid w-full items-center gap-1.5">
                         <Label htmlFor="clientName">Brand <span className="text-red-500 ml-1">*</span></Label>
-                        <Select onValueChange={(v) => setEquipmentTags({...equipmentTags, brand: v})}>
+                        <Select onValueChange={(v) => 
+                        {
+                            setEquipmentTags({...equipmentTags, brand: v})
+                            setErrors({...errors, brand:""})
+                        }
+                            }>
                             <SelectTrigger>
                                 <SelectValue placeholder="Select Brand"/>
                             </SelectTrigger>
@@ -259,7 +290,12 @@ function EquipmentCard({equipmentTags, setEquipmentTags, models, brands, categor
                     </div>
                     <div className="grid w-full items-center gap-1.5">
                         <Label htmlFor="clientName">Model <span className="text-red-500 ml-1">*</span></Label>
-                        <Select onValueChange={(v) => setEquipmentTags({...equipmentTags, model: v})}>
+                        <Select onValueChange={(v) => 
+                        {
+                            setEquipmentTags({...equipmentTags, model: v})
+                            setErrors({...errors, model:""})
+                        }
+                            }>
                             <SelectTrigger>
                                 <SelectValue placeholder="Select Model"/>
                             </SelectTrigger>
@@ -273,7 +309,12 @@ function EquipmentCard({equipmentTags, setEquipmentTags, models, brands, categor
                     </div>
                     <div className="grid w-full items-center gap-1.5">
                         <Label htmlFor="clientName">Category <span className="text-red-500 ml-1">*</span></Label>
-                        <Select onValueChange={(v) => setEquipmentTags({...equipmentTags, category: v})}>
+                        <Select onValueChange={(v) => 
+                        {
+                            setEquipmentTags({...equipmentTags, category: v})
+                            setErrors({...errors, category:""})
+                        }}
+                            >
                             <SelectTrigger>
                                 <SelectValue placeholder="Select Category"/>
                             </SelectTrigger>
@@ -293,7 +334,7 @@ function EquipmentCard({equipmentTags, setEquipmentTags, models, brands, categor
  
  
 // @ts-ignore
-function Item({item, handleUpdateItem, handleRemove}) {
+function Item({item, handleUpdateItem, handleRemove, setErrors, errors}) {
     const handleChange = (e: any) => {
         const {name, value} = e.target;
         handleUpdateItem(item.id, name, value); // Update the parent state
@@ -308,6 +349,7 @@ function Item({item, handleUpdateItem, handleRemove}) {
                         <div className="col-span-4">
                             <Textarea placeholder="Enter Item Description..." value={item.description}
                                       name="description" onChange={handleChange}/>
+                                       {errors.description && <p className="text-red-500 text-sm">{errors.description}</p>}
                         </div>
                         <div className="col-span-4 sm:col-span-2">
                             <Input type="text" placeholder="Enter Part No." value={item.part_no} name="part_no"
@@ -379,7 +421,7 @@ export default function CreateEnquiryPage() {
     const [rfqInfo, setRfqInfo] = useState({lead_date: "", supply_port: "", expire_date: "", rfq_no: ""});
     const [vesselInfo, setVesselInfo] = useState({name: "", imo_no: "", hull_no: "", port: ""});
     const [equipmentTags, setEquipmentTags] = useState({tags: [], brand: "", model: "", category: ""});
-    const [items, setItems] = useState([{
+    const [items, setItems] = useState<any>([{
         id: 1,
         description: "",
         part_no: "",
@@ -392,16 +434,15 @@ export default function CreateEnquiryPage() {
     const [isMem, setIsMem] = useState(false);
     const [errors, setErrors] = useState({ supply_port: "", expire_date: "" });
     const handleUpdateItem = (id: number, key: any, value: any) => {
-        setItems((prevItems) =>
-            prevItems.map((item) =>
+        setItems((prevItems:any) =>
+            prevItems.map((item:any) =>
                 item.id === id ? {...item, [key]: value} : item
             )
         );
     };
  
     async function getQuote() {
-     
-        let newErrors = { supply_port: "", expire_date: "" ,name:"", imo_no:"",hull_no:"",port:"",brand:"",model:"",category:""};
+        let newErrors = { supply_port: "", expire_date: "" ,name:"", imo_no:"",hull_no:"",port:"",brand:"",model:"",category:"", description:"", part_no:"", position_no:"", alternative_part_no:"", uom:"", offered_qty:"", req_qty:""};
         if (!rfqInfo.supply_port) newErrors.supply_port = "Supply Port is required.";
         if (!rfqInfo.expire_date) newErrors.expire_date = "Expire Date is required.";
         if(!vesselInfo.name) newErrors.name="Vessel Name is required.";
@@ -411,6 +452,8 @@ export default function CreateEnquiryPage() {
         if(!equipmentTags.brand) newErrors.brand="Brand is required"
         if(!equipmentTags.model) newErrors.model="Model is required.";
         if(!equipmentTags.category) newErrors.category="Catrgory is required.";
+        if(!items?.description) newErrors.description="Description is required.";
+        if(!items?.part_no) newErrors.description="Part No is required.";
         setErrors(newErrors);
         if (!reqdVendors.vendor1.vendorId || !reqdVendors.vendor2.vendorId || !reqdVendors.vendor3.vendorId) {
             setVendorsError(true);
@@ -478,7 +521,7 @@ export default function CreateEnquiryPage() {
     }
  
     function handleRemove(itemId: number) {
-        const filteredItem = items.filter((i) => i.id !== itemId);
+        const filteredItem = items.filter((i:any) => i.id !== itemId);
  
         setItems([...filteredItem]);
     }
@@ -525,10 +568,10 @@ export default function CreateEnquiryPage() {
             </div>
  
             <main className="grid justify-self-center max-w-6xl w-full md:grid-cols-3 gap-4 mt-4">
-                <RFQInfoCard rfqInfo={rfqInfo} setRfqInfo={setRfqInfo} errors={errors} />
-                <VesselCard vesselInfo={vesselInfo} setVesselInfo={setVesselInfo} errors={errors}/>
+                <RFQInfoCard rfqInfo={rfqInfo} setRfqInfo={setRfqInfo} errors={errors} setErrors={setErrors} />
+                <VesselCard vesselInfo={vesselInfo} setVesselInfo={setVesselInfo} errors={errors} setErrors={setErrors}/>
                 <EquipmentCard equipmentTags={equipmentTags} setEquipmentTags={setEquipmentTags} models={model}
-                               brands={brands} category={category} errors={errors}/>
+                               brands={brands} category={category} errors={errors} setErrors={setErrors}/>
             </main>
  
             <div className="flex w-full max-w-6xl justify-self-center items-center mt-8">
@@ -667,9 +710,9 @@ export default function CreateEnquiryPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {items.map((item, i) =>
+                                {items.map((item:any, i:any) =>
                                     <Item key={i} item={item} handleRemove={handleRemove}
-                                          handleUpdateItem={handleUpdateItem} />
+                                          handleUpdateItem={handleUpdateItem} errors={errors} setErrors={setErrors}/>
                                 )}
                             </TableBody>
                         </Table>
