@@ -241,7 +241,7 @@ function VesselCard({vesselInfo, setVesselInfo,errors, setErrors}) {
 function EquipmentCard({equipmentTags, setEquipmentTags, models, brands, category,errors, setErrors}) {
     const [tags, setTags] = useState([]);
     const [currentTag, setCurrentTag] = useState("");
- 
+ console.log(errors,"hello")
     return (
         <Card>
             <CardHeader>
@@ -337,9 +337,8 @@ function EquipmentCard({equipmentTags, setEquipmentTags, models, brands, categor
 function Item({item, handleUpdateItem, handleRemove, setErrors, errors}) {
     const handleChange = (e: any) => {
         const {name, value} = e.target;
-        handleUpdateItem(item.id, name, value); // Update the parent state
+        handleUpdateItem(item.id, name, value);
     };
- 
     return (
         <>
             <TableRow>
@@ -348,30 +347,62 @@ function Item({item, handleUpdateItem, handleRemove, setErrors, errors}) {
                     <div className="grid gap-2 grid-cols-4">
                         <div className="col-span-4">
                             <Textarea placeholder="Enter Item Description..." value={item.description}
-                                      name="description" onChange={handleChange}/>
+                                      name="description" 
+                                      onChange={(e) => {
+                                        const {name, value} = e.target;
+                                        handleUpdateItem(item.id, name, value);
+                                        setErrors({ ...errors, description: "" });
+                                      }}
+                                      />
                                        {errors.description && <p className="text-red-500 text-sm">{errors.description}</p>}
                         </div>
                         <div className="col-span-4 sm:col-span-2">
                             <Input type="text" placeholder="Enter Part No." value={item.part_no} name="part_no"
-                                   onChange={handleChange}/>
+                                   onChange={(e) => {
+                                    handleChange(e);
+                                    setErrors({ ...errors, part_no: "" });
+                                  }}/>
+                                   {errors.part_no && <p className="text-red-500 text-sm">{errors.part_no}</p>}
                         </div>
                         <div className="col-span-4 sm:col-span-2">
                             <Input type="text" placeholder="Enter Position No." value={item.position_no}
-                                   name="position_no" onChange={handleChange}/>
+                                   name="position_no" 
+                                   onChange={(e) => {
+                                    handleChange(e);
+                                    setErrors({ ...errors, position_no: "" });
+                                  }}
+                                   />
+                                    {errors.position_no && <p className="text-red-500 text-sm">{errors.position_no}</p>}
                         </div>
                         <div className="col-span-4 sm:col-span-4">
                             <Input type="text" placeholder="Enter Alternate Part No." value={item.alternative_part_no}
-                                   name="alternative_part_no" onChange={handleChange}/>
+                                   name="alternative_part_no"
+                                   onChange={(e) => {
+                                    handleChange(e);
+                                    setErrors({ ...errors, alternative_part_no: "" });
+                                  }}
+                                   />
+                                   {errors.alternative_part_no && <p className="text-red-500 text-sm">{errors.alternative_part_no}</p>}
                         </div>
                     </div>
                 </TableCell>
                 <TableCell>
                     <Input type="number" placeholder="Enter Required Quanity" value={item.req_qty} name="req_qty"
-                           onChange={handleChange}/>
+                            onChange={(e) => {
+                                handleChange(e);
+                                setErrors({ ...errors, req_qty: "" });
+                              }}
+                           />
+                           {errors.req_qty && <p className="text-red-500 text-sm">{errors.req_qty}</p>}
                 </TableCell>
                 <TableCell>
                     {/* <Input type="text" placeholder="Enter UOM..." value={item.uom} name="uom" onChange={} /> */}
-                    <Select name="uom" onValueChange={(v) => handleUpdateItem(item.id, "uom", v)}>
+                    <Select name="uom" onValueChange={(v) =>
+                    {
+                         handleUpdateItem(item.id, "uom", v)
+                         setErrors({ ...errors, uom: "" });
+                    }
+                         }>
                         <SelectTrigger>
                             <SelectValue placeholder="Select UOM"/>
                         </SelectTrigger>
@@ -381,6 +412,7 @@ function Item({item, handleUpdateItem, handleRemove, setErrors, errors}) {
                             <SelectItem value="Litres">Litres</SelectItem>
                         </SelectContent>
                     </Select>
+                    {errors.uom && <p className="text-red-500 text-sm">{errors.uom}</p>}
                 </TableCell>
                 <TableCell className="text-right relative">
                     <Button onClick={() => handleRemove(item.id)} className="absolute top-4 right-4"
@@ -417,7 +449,6 @@ export default function CreateEnquiryPage() {
     const [model, setModels] = useState<any[]>([]);
     const [vendors, updateVendors] = useState<any[]>([]);
     const [vendorsError, setVendorsError] = useState(false);
- 
     const [rfqInfo, setRfqInfo] = useState({lead_date: "", supply_port: "", expire_date: "", rfq_no: ""});
     const [vesselInfo, setVesselInfo] = useState({name: "", imo_no: "", hull_no: "", port: ""});
     const [equipmentTags, setEquipmentTags] = useState({tags: [], brand: "", model: "", category: ""});
@@ -431,6 +462,15 @@ export default function CreateEnquiryPage() {
         req_qty: "",
         offered_qty: "0"
     }]);
+    const [fiedData, setFieldData]= useState({
+        description: "",
+        part_no: "",
+        position_no: "",
+        alternative_part_no: "",
+        uom: "",
+        req_qty: "",
+        offered_qty: "0"
+    })
     const [isMem, setIsMem] = useState(false);
     const [errors, setErrors] = useState({ supply_port: "", expire_date: "" });
     const handleUpdateItem = (id: number, key: any, value: any) => {
@@ -442,6 +482,7 @@ export default function CreateEnquiryPage() {
     };
  
     async function getQuote() {
+        console.log(items?.description, "desc")
         let newErrors = { supply_port: "", expire_date: "" ,name:"", imo_no:"",hull_no:"",port:"",brand:"",model:"",category:"", description:"", part_no:"", position_no:"", alternative_part_no:"", uom:"", offered_qty:"", req_qty:""};
         if (!rfqInfo.supply_port) newErrors.supply_port = "Supply Port is required.";
         if (!rfqInfo.expire_date) newErrors.expire_date = "Expire Date is required.";
@@ -452,8 +493,13 @@ export default function CreateEnquiryPage() {
         if(!equipmentTags.brand) newErrors.brand="Brand is required"
         if(!equipmentTags.model) newErrors.model="Model is required.";
         if(!equipmentTags.category) newErrors.category="Catrgory is required.";
-        if(!items?.description) newErrors.description="Description is required.";
-        if(!items?.part_no) newErrors.description="Part No is required.";
+        // if(!items?.description) newErrors.description = "Description is required.";
+        // if(!items?.part_no) newErrors.part_no = "Part No is required.";
+        // if(!items?.position_no) newErrors.position_no = "Position No is required.";
+        // if(!items?.alternative_part_no) newErrors.alternative_part_no = "Alternative Part No is required.";
+        // if(!items?.uom) newErrors.uom = "Uom is required.";
+        // if(!items?.offered_qty) newErrors.offered_qty = "Offered Quantity is required.";
+        // if(!items?.req_qty) newErrors.req_qty = "Required Quantity is required.";
         setErrors(newErrors);
         if (!reqdVendors.vendor1.vendorId || !reqdVendors.vendor2.vendorId || !reqdVendors.vendor3.vendorId) {
             setVendorsError(true);
@@ -461,17 +507,11 @@ export default function CreateEnquiryPage() {
         } else {
             setVendorsError(false);
         }
-       
- 
         if (Object.values(newErrors).some(error => error)) return;
-       
-       
-       
         const supabase = createClient();    
         try {
            
             const {data: {user}} = await supabase.auth.getUser();
- 
             const member = await supabase.from("member").select("*").eq("member_profile", user!.id).single();
             console.log("selected vendors", Object.values(reqdVendors).map(vendor => vendor.vendorId))
             const rfq = await supabase.from("rfq").insert({
@@ -652,10 +692,16 @@ export default function CreateEnquiryPage() {
                         <Label className={"mb-3"}>
                             Option 3 <span className="text-red-500 ml-1">*</span>
                         </Label>
-                        <Select onValueChange={(e) => updateReqdVendors({
+                        <Select onValueChange={(e) => 
+                        {
+                            updateReqdVendors({
                             ...reqdVendors,
                             vendor3: {name: e, vendorId: vendors.find(v => v.name === e).id}
-                        })}>
+                        });
+                        setVendorsError(false);
+                    }
+                        
+                        }>
                             <SelectTrigger>
                                 <SelectValue placeholder="Select Brand"/>
                             </SelectTrigger>
@@ -691,7 +737,9 @@ export default function CreateEnquiryPage() {
                             req_qty: "",
                             offered_qty: "0"
                         }]);
-                    }}>
+                    }}
+                    
+                    >
                         Add Item
                     </Button>
                 </div>
@@ -703,10 +751,10 @@ export default function CreateEnquiryPage() {
                             <TableHeader>
                                 <TableRow>
                                     <TableHead className="w-[100px]">No.</TableHead>
-                                    <TableHead colSpan={3}>Description</TableHead>
-                                    <TableHead>Req. Qty.</TableHead>
-                                    <TableHead>UOM</TableHead>
-                                    <TableHead className="text-right">Quoted Price</TableHead>
+                                    <TableHead colSpan={3}>Description<span className="text-red-500 ml-1">*</span></TableHead>
+                                    <TableHead>Req. Qty.<span className="text-red-500 ml-1">*</span></TableHead>
+                                    <TableHead>UOM<span className="text-red-500 ml-1">*</span></TableHead>
+                                    <TableHead className="text-right">Quoted Price<span className="text-red-500 ml-1">*</span></TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
