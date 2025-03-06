@@ -241,7 +241,6 @@ function VesselCard({vesselInfo, setVesselInfo,errors, setErrors}) {
 function EquipmentCard({equipmentTags, setEquipmentTags, models, brands, category,errors, setErrors}) {
     const [tags, setTags] = useState([]);
     const [currentTag, setCurrentTag] = useState("");
- console.log(errors,"hello")
     return (
         <Card>
             <CardHeader>
