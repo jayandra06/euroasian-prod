@@ -347,39 +347,45 @@ function Item({item, handleUpdateItem, handleRemove, setErrors, errors}) {
                         <div className="col-span-4">
                             <Textarea placeholder="Enter Item Description..." value={item.description}
                                       name="description" 
-                                      onChange={(e) => {
-                                        const {name, value} = e.target;
-                                        handleUpdateItem(item.id, name, value);
-                                        setErrors({ ...errors, description: "" });
-                                      }}
+                                    //   onChange={(e) => {
+                                    //     const {name, value} = e.target;
+                                    //     handleUpdateItem(item.id, name, value);
+                                    //     // setErrors({ ...errors, description: "" });
+                                    //   }}
+                                    onChange={handleChange}
                                       />
                                        {errors.description && <p className="text-red-500 text-sm">{errors.description}</p>}
                         </div>
                         <div className="col-span-4 sm:col-span-2">
                             <Input type="text" placeholder="Enter Part No." value={item.part_no} name="part_no"
-                                   onChange={(e) => {
-                                    handleChange(e);
-                                    setErrors({ ...errors, part_no: "" });
-                                  }}/>
+                                //    onChange={(e) => {
+                                //     handleChange(e);
+                                //     setErrors({ ...errors, part_no: "" });
+                                //   }}
+                                onChange={handleChange}
+                                  />
                                    {errors.part_no && <p className="text-red-500 text-sm">{errors.part_no}</p>}
                         </div>
                         <div className="col-span-4 sm:col-span-2">
                             <Input type="text" placeholder="Enter Position No." value={item.position_no}
                                    name="position_no" 
-                                   onChange={(e) => {
-                                    handleChange(e);
-                                    setErrors({ ...errors, position_no: "" });
-                                  }}
+                                //    onChange={(e) => {
+                                //     handleChange(e);
+                                //     setErrors({ ...errors, position_no: "" });
+                                //   }}
+
+                                onChange={handleChange}
                                    />
                                     {errors.position_no && <p className="text-red-500 text-sm">{errors.position_no}</p>}
                         </div>
                         <div className="col-span-4 sm:col-span-4">
                             <Input type="text" placeholder="Enter Alternate Part No." value={item.alternative_part_no}
                                    name="alternative_part_no"
-                                   onChange={(e) => {
-                                    handleChange(e);
-                                    setErrors({ ...errors, alternative_part_no: "" });
-                                  }}
+                                //    onChange={(e) => {
+                                //     handleChange(e);
+                                //     setErrors({ ...errors, alternative_part_no: "" });
+                                //   }}
+                                onChange={handleChange}
                                    />
                                    {errors.alternative_part_no && <p className="text-red-500 text-sm">{errors.alternative_part_no}</p>}
                         </div>
@@ -387,20 +393,21 @@ function Item({item, handleUpdateItem, handleRemove, setErrors, errors}) {
                 </TableCell>
                 <TableCell>
                     <Input type="number" placeholder="Enter Required Quanity" value={item.req_qty} name="req_qty"
-                            onChange={(e) => {
-                                handleChange(e);
-                                setErrors({ ...errors, req_qty: "" });
-                              }}
+                            // onChange={(e) => {
+                            //     handleChange(e);
+                            //     setErrors({ ...errors, req_qty: "" });
+                            //   }}
+                            onChange={handleChange}
                            />
                            {errors.req_qty && <p className="text-red-500 text-sm">{errors.req_qty}</p>}
                 </TableCell>
                 <TableCell>
                     {/* <Input type="text" placeholder="Enter UOM..." value={item.uom} name="uom" onChange={} /> */}
                     <Select name="uom" onValueChange={(v) =>
-                    {
+                    // {
                          handleUpdateItem(item.id, "uom", v)
-                         setErrors({ ...errors, uom: "" });
-                    }
+                        //  setErrors({ ...errors, uom: "" });
+                    // }
                          }>
                         <SelectTrigger>
                             <SelectValue placeholder="Select UOM"/>
@@ -471,7 +478,7 @@ export default function CreateEnquiryPage() {
         offered_qty: "0"
     })
     const [isMem, setIsMem] = useState(false);
-    const [errors, setErrors] = useState({ supply_port: "", expire_date: "" });
+    const [errors, setErrors] = useState({ supply_port: "", expire_date: "", items:[] });
     const handleUpdateItem = (id: number, key: any, value: any) => {
         setItems((prevItems:any) =>
             prevItems.map((item:any) =>
@@ -479,10 +486,10 @@ export default function CreateEnquiryPage() {
             )
         );
     };
- 
+ console.log(errors)
     async function getQuote() {
         console.log(items?.description, "desc")
-        let newErrors = { supply_port: "", expire_date: "" ,name:"", imo_no:"",hull_no:"",port:"",brand:"",model:"",category:"", description:"", part_no:"", position_no:"", alternative_part_no:"", uom:"", offered_qty:"", req_qty:""};
+        let newErrors = { supply_port: "", expire_date: "" ,name:"", imo_no:"",hull_no:"",port:"",brand:"",model:"",category:"", items:[]};
         if (!rfqInfo.supply_port) newErrors.supply_port = "Supply Port is required.";
         if (!rfqInfo.expire_date) newErrors.expire_date = "Expire Date is required.";
         if(!vesselInfo.name) newErrors.name="Vessel Name is required.";
@@ -492,21 +499,26 @@ export default function CreateEnquiryPage() {
         if(!equipmentTags.brand) newErrors.brand="Brand is required"
         if(!equipmentTags.model) newErrors.model="Model is required.";
         if(!equipmentTags.category) newErrors.category="Catrgory is required.";
-        // if(!items?.description) newErrors.description = "Description is required.";
-        // if(!items?.part_no) newErrors.part_no = "Part No is required.";
-        // if(!items?.position_no) newErrors.position_no = "Position No is required.";
-        // if(!items?.alternative_part_no) newErrors.alternative_part_no = "Alternative Part No is required.";
-        // if(!items?.uom) newErrors.uom = "Uom is required.";
-        // if(!items?.offered_qty) newErrors.offered_qty = "Offered Quantity is required.";
-        // if(!items?.req_qty) newErrors.req_qty = "Required Quantity is required.";
+
+        const itemErrors = items.map((item: any) => ({
+            description: item.description ? "" : "Description is required.",
+            part_no: item.part_no ? "" : "Part No is required.",
+            position_no: item.position_no ? "" : "Position No is required.",
+            alternative_part_no: item.alternative_part_no ? "" : "Alternative Part No is required.",
+            uom: item.uom ? "" : "UOM is required.",
+            offered_qty: item.offered_qty ? "" : "Offered Quantity is required.",
+            req_qty: item.req_qty ? "" : "Required Quantity is required.",
+        }));
         setErrors(newErrors);
+        newErrors.items = itemErrors;
         if (!reqdVendors.vendor1.vendorId || !reqdVendors.vendor2.vendorId || !reqdVendors.vendor3.vendorId) {
             setVendorsError(true);
             return;
         } else {
             setVendorsError(false);
         }
-        if (Object.values(newErrors).some(error => error)) return;
+        if (itemErrors.some((item: { [s: string]: unknown; } | ArrayLike<unknown>) => Object.values(item).some(err => err))) return;
+
         const supabase = createClient();    
         try {
            
@@ -759,7 +771,9 @@ export default function CreateEnquiryPage() {
                             <TableBody>
                                 {items.map((item:any, i:any) =>
                                     <Item key={i} item={item} handleRemove={handleRemove}
-                                          handleUpdateItem={handleUpdateItem} errors={errors} setErrors={setErrors}/>
+                                          handleUpdateItem={handleUpdateItem} setErrors={setErrors}
+                                          errors={errors.items?.[i] || {}}
+                                          />
                                 )}
                             </TableBody>
                         </Table>
