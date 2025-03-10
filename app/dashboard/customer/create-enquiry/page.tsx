@@ -780,7 +780,7 @@ export default function CreateEnquiryPage() {
                     vendorsError ? "border-red-500" : "border-gray-300"
                   }`}
                 >
-                  <SelectValue placeholder="Select Brand" />
+                  <SelectValue placeholder="Select Vendor" />
                 </SelectTrigger>
                 <SelectContent>
                   {vendors.map((vendor: any, i: number) => (
@@ -820,7 +820,7 @@ export default function CreateEnquiryPage() {
                 <SelectTrigger className={`w-full border ${
                     vendorsError ? "border-red-500" : "border-gray-300"
                   }`}>
-                  <SelectValue placeholder="Select Brand" />
+                  <SelectValue placeholder="Select vendor" />
                 </SelectTrigger>
                 <SelectContent>
                   {vendors.map((vendor: any, i: number) => (
@@ -862,7 +862,7 @@ export default function CreateEnquiryPage() {
                 <SelectTrigger className={`w-full border ${
                     vendorsError ? "border-red-500" : "border-gray-300"
                   }`}>
-                  <SelectValue placeholder="Select Brand" />
+                  <SelectValue placeholder="Select vendor" />
                 </SelectTrigger>
                 <SelectContent>
                   {vendors.map((vendor: any, i: number) => (

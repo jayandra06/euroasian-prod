@@ -1,4 +1,6 @@
 // hooks/useSecureState.ts
+"use client"
+
 import { useState, useEffect } from 'react';
 
 export function useSecureState() {

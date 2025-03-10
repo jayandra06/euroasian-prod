@@ -1,3 +1,5 @@
+"use client"
+
 export function BannerSection() {
   return (
     <section className="relative w-full h-screen">

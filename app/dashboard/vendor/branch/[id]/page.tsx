@@ -1,3 +1,5 @@
+"use client"
+
 import { createClient } from "@/utils/supabase/client"
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
