@@ -44,35 +44,35 @@ export const updateSession = async (request: NextRequest) => {
       return NextResponse.redirect(new URL("/sign-in", request.url));
     }
 
-    if (request.nextUrl.pathname.startsWith("/dashboard/customer") && user.data.user) {
-      const profile = await supabase.from("profiles").select("*").eq("id", user.data.user.id).single();
-      if(profile.data.user_role !== "customer") {
-        return NextResponse.redirect(new URL("/", request.url));
-      }
-    }
+    // if (request.nextUrl.pathname.startsWith("/dashboard/customer") && user.data.user) {
+    //   const profile = await supabase.from("profiles").select("*").eq("id", user.data.user.id).single();
+    //   if(profile.data.user_role !== "customer") {
+    //     return NextResponse.redirect(new URL("/", request.url));
+    //   }
+    // }
 
-    if (request.nextUrl.pathname.startsWith("/dashboard/vendor") && user.data.user) {
-      const profile = await supabase.from("profiles").select("*").eq("id", user.data.user.id).single();
-      if(profile.data.user_role !== "vendor") {
-        return NextResponse.redirect(new URL("/", request.url));
-      }
-    }
+    // if (request.nextUrl.pathname.startsWith("/dashboard/vendor") && user.data.user) {
+    //   const profile = await supabase.from("profiles").select("*").eq("id", user.data.user.id).single();
+    //   if(profile.data.user_role !== "vendor") {
+    //     return NextResponse.redirect(new URL("/", request.url));
+    //   }
+    // }
 
-    if (request.nextUrl.pathname.startsWith("/dashboard/admin") && user.data.user) {
-      const profile = await supabase.from("profiles").select("*").eq("id", user.data.user.id).single();
-      if(profile.data.user_role !== "admin") {
-        return NextResponse.redirect(new URL("/", request.url));
-      }
-    }
+    // if (request.nextUrl.pathname.startsWith("/dashboard/admin") && user.data.user) {
+    //   const profile = await supabase.from("profiles").select("*").eq("id", user.data.user.id).single();
+    //   if(profile.data.user_role !== "admin") {
+    //     return NextResponse.redirect(new URL("/", request.url));
+    //   }
+    // }
 
     if (request.nextUrl.pathname.startsWith("/sign-in") && user.data.user) {
       const {data} = await supabase.from("profiles").select("*").eq("id", user.data.user.id).single();
-      return NextResponse.redirect(new URL(`/dashboard/${data.user_role}`, request.url));
+      return NextResponse.redirect(new URL(`/dashboard/`, request.url));
     }
 
     if (request.nextUrl.pathname === "/" && !user.error) {
       const {data} = await supabase.from("profiles").select("*").eq("id", user.data.user.id).single();
-      return NextResponse.redirect(new URL(`/dashboard/${data.user_role}`, request.url));
+      return NextResponse.redirect(new URL(`/dashboard/`, request.url));
     }
 
     return response;

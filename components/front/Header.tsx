@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { User, Menu, X, ChevronDown } from "lucide-react"
 import { useNavigate } from "./Navigation"
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 // import {AboutUs} from "./AboutUs.tsx"
 // import {ContactForm} from "./ContactForm.tsx"
 
@@ -13,7 +14,8 @@ export function Header() {
   const [isCategoriesOpen, setIsCategoriesOpen] = useState(false)
   const [isLoginOpen, setIsLoginOpen] = useState(false)
   const navigate = useNavigate()
-
+  
+  const pathname = usePathname()
   // Sample categories data - replace with your actual categories
   const categories = [
     {
@@ -53,6 +55,8 @@ export function Header() {
     return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [isLoginOpen])
 
+  // Function to check if a link is active
+  const isActive = (route: string) => pathname === route
   return (
 <header className="bg-black shadow-md fixed w-full top-0 z-50">
 <div className="container mx-auto px-4">
@@ -104,60 +108,43 @@ export function Header() {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex space-x-6">
+          <Link 
+          href='/'
+            className={`text-cyan-100 hover:text-cyan-400 py-2 ${isActive("/") ? "border-b-2 border-cyan-400" : ""}`}
+          >
+                Home
+              </Link>
             <button onClick={() => navigate("/maintenance")} className="text-cyan-100 hover:text-cyan-400">
-              For Buyers
+              Buyers
             </button>
-            <button onClick={() => navigate("/maintenance")} className="text-cyan-100 hover:text-cyan-400">
-              For Vendors
-            </button>
+            <Link href="/about"
+              className={`text-cyan-100 hover:text-cyan-400 py-2 ${isActive("/dashboard/become-a-seller") ? "border-b-2 border-cyan-400" : ""}`}
+            >
+              Vendors
+            </Link>
             <Link
-              
               href="/about"
-              className="text-cyan-100 hover:text-cyan-400"
+              className={`text-cyan-100 hover:text-cyan-400 py-2 ${isActive("/about") ? "border-b-2 border-cyan-400" : ""}`}
             >
               About
             </Link>
-            <Link href="/contact" className="text-cyan-100 hover:text-cyan-400">
+            <Link href="/contact" className="text-cyan-100 hover:text-cyan-400 py-2">
               Contact Us
             </Link>
-            <button onClick={() => navigate("/maintenance")} className="text-cyan-100 hover:text-cyan-400">
-              News and Insights
-            </button>
           </nav>
 
           {/* Desktop login dropdown */}
           <div className="hidden md:relative md:flex">
             <button
-              onClick={() => setIsLoginOpen(!isLoginOpen)}
               className="flex items-center space-x-2 bg-cyan-600 text-white px-4 py-2 rounded-md hover:bg-cyan-700 login-dropdown"
             >
+              <Link href="/sign-in">
+              <div className="flex items-center gap-2">
               <User className="h-4 w-4" />
               <span>Login</span>
-              <ChevronDown className="h-4 w-4" />
+              </div>
+              </Link>
             </button>
-
-  {isLoginOpen && (
-    <div className="absolute right-0 mt-12 w-48 bg-gray-800 rounded-md shadow-lg py-1 z-50 login-dropdown">
-      <Link
-        href="/sign-up"
-        className="block px-4 py-2 text-sm text-cyan-100 hover:bg-gray-700 w-full text-left"
-      >
-        Buy With Us
-      </Link>
-      <Link
-        href="/dashboard/become-a-seller/"
-        className="block px-4 py-2 text-sm text-cyan-100 hover:bg-gray-700 w-full text-left"
-      >
-        Sell With Us
-      </Link>
-      <Link
-        href="/sign-in-admin"
-        className="block px-4 py-2 text-sm text-cyan-100 hover:bg-gray-700 w-full text-left"
-      >
-        Admin Login
-      </Link>
-    </div>
-  )}
 </div>
 
         </div>
@@ -193,11 +180,14 @@ export function Header() {
         {isMenuOpen && (
           <div className="md:hidden py-4 border-t">
             <div className="flex flex-col space-y-3">
-              <button onClick={() => navigate("/maintenance")} className="text-cyan-100 hover:text-cyan-400 py-2">
-                For Buyers
+            <button onClick={() => navigate("/maintenance")} className="text-cyan-100 hover:text-cyan-400 py-2">
+                Home
               </button>
               <button onClick={() => navigate("/maintenance")} className="text-cyan-100 hover:text-cyan-400 py-2">
-                For Vendors
+                Buyers
+              </button>
+              <button onClick={() => navigate("/maintenance")} className="text-cyan-100 hover:text-cyan-400 py-2">
+                Vendors
               </button>
               <button onClick={() => navigate("/maintenance")} className="text-cyan-100 hover:text-cyan-400 py-2">
                 Customers
@@ -208,9 +198,6 @@ export function Header() {
               <Link href="/contact" className="text-cyan-100 hover:text-cyan-400 py-2 text-center">
                 Contact Us
               </Link>
-              <button onClick={() => navigate("/maintenance")} className="text-cyan-100 hover:text-cyan-400 py-2">
-                News and Insights
-              </button>
               <Link
                 href="/sign-in"
                 className="flex items-center justify-center space-x-2 bg-cyan-600 text-white px-4 py-2 rounded-md hover:bg-cyan-700"

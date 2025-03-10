@@ -45,7 +45,7 @@ const AboutUs = () => {
                             <div className="space-y-8" data-aos="fade-left">
                                 <div className="relative">
                                     <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-lg blur opacity-25"></div>
-                                    <div className="relative backdrop-blur-md bg-white/5 rounded-lg p-8 border border-cyan-500/10">
+                                    <div className="relative backdrop-blur-md bg-white/5 rounded-lg p-8 border border-cyan-500/10" style={{marginTop:"95px"}}>
                                         <h3 className="text-2xl font-semibold mb-6 text-cyan-400">Global Presence</h3>
                                         <div className="space-y-4">
                                             <div className="flex items-center space-x-4">

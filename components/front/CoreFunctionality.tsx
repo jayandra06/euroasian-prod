@@ -16,16 +16,13 @@ export function CoreFunctionality() {
         />
       </div>
 
-      <div className="container mx-auto px-6 relative z-10">
+      <div className="container mx-auto px-6 relative z-10" style={{marginTop:"-78px"}}>
         <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500 mb-6">
+          <h2 className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500 mb-6 py-1">
             Highlight of our System's Core Functionality
           </h2>
-          <h3 className="text-2xl md:text-3xl font-semibold text-white mb-4">
-            Connecting Part Numbers to Equipment and Vendors
-          </h3>
-          <p className="text-gray-300 max-w-3xl mx-auto">
-            At Euroasiann, we've developed an intelligent system designed to bridge the gap between equipment, spares,
+          <p className="text-2xl font-semibold text-white mb-4">
+            At Euroasiann, we've developed an intelligent system designed to<br/> bridge the gap between equipment, spares,
             and vendors. 
           </p>
         </div>

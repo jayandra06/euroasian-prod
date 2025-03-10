@@ -92,8 +92,6 @@ export default function BecomeASeller() {
    
       const validateForm = () => {
         let newErrors: { [key in keyof FormData]?: string } = {}
- 
-   
         if (!formData.name.trim()) newErrors.name = "Name is required.";
         if (!formData.business_email.trim()) newErrors.business_email = "Business Email is required.";
         if (!formData.phone.trim()) newErrors.phone = "Phone is required.";
@@ -104,7 +102,6 @@ export default function BecomeASeller() {
         if (!formData.managing_director_phone.trim()) newErrors.managing_director_phone = "Managing director phone is required.";
         if (!formData.managing_director_phone.trim()) newErrors.managing_director_desk_phone = "Managing director desk phone is required.";
         if (!formData.port.trim()) newErrors.port = "port is required.";
- 
         if (!formData.sales_manager.trim()) newErrors.sales_manager = "Sales manager name is required.";
         if (!formData.sales_manager_email.trim()) newErrors.sales_manager_email = "Sales manager email is required.";
         if (!formData.sales_manager_phone.trim()) newErrors.sales_manager_phone = "Sales manager phone is required.";
@@ -158,7 +155,6 @@ const handleSelectBrand = (v: string) => {
         }
         return data;
     }
- 
     async function createNewMerchant(profileId: string) {
         const {data, error}: PostgrestSingleResponse<any> = await supabase
             .from("merchant")
@@ -224,81 +220,109 @@ const handleSelectBrand = (v: string) => {
     useEffect(() => {
         void fetchDetails();
     }, []);
- 
- 
     return (
-        <div className="container mx-auto px-4 py-8 max-w-3xl grid justify-self-center my-8 gap-4">
+      <div className="container mx-auto px-4 py-8 max-w-4xl grid justify-self-center my-8 gap-4 rounded-xl border bg-card text-card-foreground shadow">
+        <div>
+          <h1 className="text-center text-2xl font-bold">Become a Vendor</h1>
+        </div>
+
+        <div className="grid grid-cols-3 gap-4 mt-8 ">
+          <div className="col-span-3 mt-8 mb-4">
+            <h1 className="text-xl font-bold">Vendor Details</h1>
+          </div>
+
+          <div>
+            <Label>Name</Label> <span className="text-red-500">*</span>
+            <Input
+              type="text"
+              name="name"
+              value={formData.name}
+              onChange={handleFormChange}
+              className={`w-full border ${
+                errors.name ? "border-red-500" : "border-gray-300"
+              }`}
+            />
+            {errors.name && (
+              <p className="text-red-500 text-sm">{errors.name}</p>
+            )}
+          </div>
+
+          <div>
+            <Label>Business Email</Label>{" "}
+            <span className="text-red-500">*</span>
+            <Input
+              type="text"
+              name="business_email"
+              value={formData.business_email}
+              onChange={handleFormChange}
+              className={`w-full border ${
+                errors.business_email ? "border-red-500" : "border-gray-300"
+              }`}
+            />
+            {errors.business_email && (
+              <p className="text-red-500 text-sm">{errors.business_email}</p>
+            )}
+          </div>
+
+          <div>
+            <Label>Phone</Label> <span className="text-red-500">*</span>
+            <Input
+              type="tel"
+              name="phone"
+              value={formData.phone}
+              onChange={handleFormChange}
+              className={`w-full border ${
+                errors.phone ? "border-red-500" : "border-gray-300"
+              }`}
+            />
+            {errors.phone && (
+              <p className="text-red-500 text-sm">{errors.phone}</p>
+            )}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid gap-1">
+            <div className="flex gap-1">
+              {formData.brands.map((brand: string, i: number) => (
+                <div
+                  key={i}
+                  className="text-xs text-white bg-zinc-600 rounded-full px-2"
+                >
+                  {brand}
+                </div>
+              ))}
+              {/*    WTF is this? */}
+            </div>
             <div>
-                <h1 className="text-center py-4 text-2xl font-bold">
-                    Become a Vendor
-                </h1>
-            </div>
- 
-            <div className="grid gap-2 mt-8">
-                <div className="mt-8 mb-4">
-                    <h1 className="text-xl font-bold">
-                        Vendor Details
-                    </h1>
-                </div>
-                <div>
-                    <Label>
-                        Name
-                    </Label>  <span className="text-red-500">*</span>
-                    <Input type="text" name={"name"} value={formData.name} onChange={handleFormChange}/>
-                    {errors.name && <p className="text-red-500 text-sm">{errors.name}</p>}
-                </div>
- 
-                <div>
-                    <Label>
-                        Business Email
-                    </Label>  <span className="text-red-500">*</span>
-                    <Input type="text" name={"business_email"} value={formData.business_email}
-                           onChange={handleFormChange}/>
-                             {errors.business_email && <p className="text-red-500 text-sm">{errors.business_email}</p>}
-                </div>
- 
-                <div>
-                    <Label>
-                        Phone
-                    </Label>  <span className="text-red-500">*</span>
-                    <Input type="tel" name={"phone"} value={formData.phone} onChange={handleFormChange}/>
-                    {errors.phone && <p className="text-red-500 text-sm">{errors.phone}</p>}
-                </div>
-            </div>
- 
-            <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="grid gap-1">
-                    <div className="flex gap-1">
-                        {formData.brands.map((brand: string, i: number) =>
-                            <div key={i} className="text-xs text-white bg-zinc-600 rounded-full px-2">
-                                {brand}
-                            </div>
-                        )}
-                        {/*    WTF is this? */}
-                    </div>
-                    <div>
-                        <Label>
-                            Select Brands
-                        </Label>  <span className="text-red-500">*</span>
-                       
-                        <Select name={"brands"}
-                                onValueChange={(v) => {
-                                setFormData({...formData, brands: [...formData.brands, v]})
-                                setErrors({ ...errors, brands: "" })
-                                }}
-                                >
-                            <SelectTrigger>
-                                <SelectValue placeholder="Select Brand"/>
-                            </SelectTrigger>
-                            <SelectContent>
-                                {brands.map((brand: any, i: number) =>
-                                    <SelectItem value={brand.name} key={i}>{brand.name}</SelectItem>
-                                )}
-                            </SelectContent>
-                        </Select>
-                        {errors.brands && <p className="text-red-500">{errors.brands}</p>}
- 
-                        {/*  <Dialog>
+              <Label>Select Brands</Label>{" "}
+              <span className="text-red-500">*</span>
+              <Select
+                name={"brands"}
+                onValueChange={(v) => {
+                  setFormData({ ...formData, brands: [...formData.brands, v] });
+                  setErrors({ ...errors, brands: "" });
+                }}
+              >
+                <SelectTrigger  className={`text-gray-400 w-full border ${
+                  errors.brands ? "border-red-500" : "border-gray-300"
+                }`}>
+                  {formData.brands.length > 0 ? (
+                    <SelectValue />
+                  ) : (
+                    <span className="text-gray-400">Select Brand</span>
+                  )}
+                </SelectTrigger>
+                <SelectContent>
+                  {brands.map((brand: any, i: number) => (
+                    <SelectItem value={brand.name} key={i}>
+                      {brand.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.brands && <p className="text-red-500">{errors.brands}</p>}
+              {/*  <Dialog>
                             <DialogTrigger>
                                 <Button className="grid mt-2">
                                     Add Brand
@@ -322,38 +346,48 @@ const handleSelectBrand = (v: string) => {
                                 </DialogFooter>
                             </DialogContent>
                         </Dialog>*/}
-                    </div>
+            </div>
+          </div>
+
+          <div className="grid gap-1">
+            <div className="flex gap-1">
+              {formData.model.map((brand: string, i: number) => (
+                <div
+                  key={i}
+                  className="text-xs text-white bg-zinc-600 rounded-full"
+                >
+                  {brand}
                 </div>
- 
- 
-                <div className="grid gap-1">
-                    <div className="flex gap-1">
-                        {formData.model.map((brand: string, i: number) =>
-                            <div key={i} className="text-xs text-white bg-zinc-600 rounded-full">
-                                {brand}
-                            </div>
-                        )}
-                    </div>
-                    <div>
-                        <Label>
-                            Select Models
-                        </Label>  <span className="text-red-500">*</span>
-                     
-                        <Select onValueChange={(v) => { setFormData({...formData, model: [...formData.model, v]})
-                            setErrors({ ...errors, model: "" })
-                        }}>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Select Model"/>
-                            </SelectTrigger>
-                            <SelectContent>
-                                {models.map((brand: any, i: number) =>
-                                    <SelectItem value={brand.name} key={i}>{brand.name}</SelectItem>
-                                )}
-                            </SelectContent>
-                        </Select>
-                        {errors.model && <p className="text-red-500">{errors.model}</p>}
- 
-                        {/*<Dialog>
+              ))}
+            </div>
+            <div>
+              <Label>Select Models</Label>{" "}
+              <span className="text-red-500">*</span>
+              <Select
+                onValueChange={(v) => {
+                  setFormData({ ...formData, model: [...formData.model, v] });
+                  setErrors({ ...errors, model: "" });
+                }}
+              >
+                <SelectTrigger  className={`text-gray-400 w-full border ${
+                  errors.model ? "border-red-500" : "border-gray-300"
+                }`}>
+                  {formData.model.length > 0 ? (
+                    <SelectValue />
+                  ) : (
+                    <span className="text-gray-400">Select Model</span>
+                  )}
+                </SelectTrigger>
+                <SelectContent>
+                  {models.map((brand: any, i: number) => (
+                    <SelectItem value={brand.name} key={i}>
+                      {brand.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.model && <p className="text-red-500">{errors.model}</p>}
+              {/*<Dialog>
                             <DialogTrigger>
                                 <Button className="grid mt-2">
                                     Add Model
@@ -377,37 +411,53 @@ const handleSelectBrand = (v: string) => {
                                 </DialogFooter>
                             </DialogContent>
                         </Dialog>*/}
-                    </div>
+            </div>
+          </div>
+
+          <div className="grid gap-1">
+            <div className="flex gap-1">
+              {formData.category.map((brand: string, i: number) => (
+                <div
+                  key={i}
+                  className="text-xs text-white bg-zinc-600 rounded-full"
+                >
+                  {brand}
                 </div>
- 
- 
-                <div className="grid gap-1">
-                    <div className="flex gap-1">
-                        {formData.category.map((brand: string, i: number) =>
-                            <div key={i} className="text-xs text-white bg-zinc-600 rounded-full">
-                                {brand}
-                            </div>
-                        )}
-                    </div>
-                    <div>
-                        <Label>
-                            Select Categories
-                        </Label>  <span className="text-red-500">*</span>
-                        <Select onValueChange={(v) => { setFormData({...formData, category: [...formData.category, v]})
-                                                    setErrors({ ...errors, category: "" })
-                                                }}>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Select Category"/>
-                            </SelectTrigger>
-                            <SelectContent>
-                                {categories.map((brand: any, i: number) =>
-                                    <SelectItem value={brand.name} key={i}>{brand.name}</SelectItem>
-                                )}
-                            </SelectContent>
-                        </Select>
-                        {errors.category && <p className="text-red-500">{errors.category}</p>}
- 
-                        {/*<Dialog>
+              ))}
+            </div>
+            <div>
+              <Label>Select Categories</Label>{" "}
+              <span className="text-red-500">*</span>
+              <Select
+                onValueChange={(v) => {
+                  setFormData({
+                    ...formData,
+                    category: [...formData.category, v],
+                  });
+                  setErrors({ ...errors, category: "" });
+                }}
+              >
+               <SelectTrigger  className={`text-gray-400 w-full border ${
+                  errors.category ? "border-red-500" : "border-gray-300"
+                }`}>
+                  {formData.category.length > 0 ? (
+                    <SelectValue />
+                  ) : (
+                    <span className="text-gray-400">Select Category</span>
+                  )}
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((brand: any, i: number) => (
+                    <SelectItem value={brand.name} key={i}>
+                      {brand.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.category && (
+                <p className="text-red-500">{errors.category}</p>
+              )}
+              {/*<Dialog>
                             <DialogTrigger>
                                 <Button className="grid mt-2">
                                     Add Category
@@ -432,151 +482,254 @@ const handleSelectBrand = (v: string) => {
                                 </DialogFooter>
                             </DialogContent>
                         </Dialog>*/}
-                    </div>
-                </div>
             </div>
- 
-            <div className="grid gap-2">
-                <div className="mt-8 mb-4">
-                    <h1 className="text-xl font-bold">
-                        Business Details
-                    </h1>
-                </div>
-                <div>
-                    <Label>
-                        Tax ID
-                    </Label>  <span className="text-red-500">*</span>
-                    <Input type="text" name={"tax_id"} value={formData.tax_id} onChange={handleFormChange}/>
-                    {errors.tax_id && <p className="text-red-500 text-sm">{errors.tax_id}</p>}
-                </div>
- 
-                <div>
-                    <Label>
-                        Warehouse Address
-                    </Label>  <span className="text-red-500">*</span>
-                    <Input type="text" name={"warehouse_address"} value={formData.warehouse_address}
-                           onChange={handleFormChange}/>
-                           {errors.warehouse_address && <p className="text-red-500 text-sm">{errors.warehouse_address}</p>}
-                </div>
- 
-                <div className="mt-8 mb-4">
-                    <h1 className="text-xl font-bold">
-                        Managing Directory Details
-                    </h1>
-                </div>
-                <div>
-                    <Label>
-                        Managing Directory
-                    </Label>  <span className="text-red-500">*</span>
-                    <Input type="text" name={"managing_director"} value={formData.managing_director}
-                           onChange={handleFormChange}/>
-                           {errors.managing_director && <p className="text-red-500 text-sm">{errors.managing_director}</p>}
- 
-                </div>
- 
-                <div>
-                    <Label>
-                        Managing Directory Email
-                    </Label>  <span className="text-red-500">*</span>
-                    <Input type="email" name={"managing_director_email"} value={formData.managing_director_email}
-                           onChange={handleFormChange}/>
-                           {errors.managing_director_email && <p className="text-red-500 text-sm">{errors.managing_director_email}</p>}
- 
-                </div>
- 
-                <div>
- 
-                    <Label>
-                        Managing Directory Personal Phone
-                    </Label>  <span className="text-red-500">*</span>
-                   
-                    <Input  name={"managing_director_phone"} value={formData.managing_director_phone}
-                           onChange={handleFormChange}/>
-                            {errors. managing_director_phone && <p className="text-red-500 text-sm">{errors. managing_director_phone}</p>}
-                </div>
- 
-                <div>
-                    <Label>
-                        Managing Directory Desk Phone
-                    </Label> <span className="text-red-500">*</span>
-
-                    <Input type="tel" name={"managing_director_desk_phone"} value={formData.managing_director_desk_phone} onChange={handleFormChange}/>
-                            {errors.managing_director_desk_phone && <p className="text-red-500 text-sm">{errors.managing_director_desk_phone}</p>}
-                </div>
- 
-                <div>
-                    <Label>
-                        Port
-                    </Label>  <span className="text-red-500">*</span>
-                    <Input type="tel" name={"port"} value={formData.port}
-                           onChange={handleFormChange}/>
-                            {errors.port && <p className="text-red-500 text-sm">{errors.port}</p>}
-                </div>
-            </div>
- 
-            <div className="my-4 grid gap-2">
-                <div className="mt-8 mb-4">
-                    <h1 className="text-xl font-bold">
-                        Sales Manager Details
-                    </h1>
-                </div>
-                <div>
-                    <Label>
-                        Sales Manager Name
-                    </Label>  <span className="text-red-500">*</span>
-                    <Input type="text" name={"sales_manager"} value={formData.sales_manager}
-                           onChange={handleFormChange}/>
-                            {errors.sales_manager && <p className="text-red-500 text-sm">{errors.sales_manager}</p>}
-                </div>
-                <div>
-                    <Label>
-                        Sales Manager Email
-                    </Label>  <span className="text-red-500">*</span>
-                    <Input type="email" name={"sales_manager_email"} value={formData.sales_manager_email}
-                           onChange={handleFormChange}/>
-                            {errors.sales_manager_email && <p className="text-red-500 text-sm">{errors.sales_manager_email}</p>}
-                </div>
-                <div>
-                    <Label>
-                        Sales Manager Phone
-                    </Label>  <span className="text-red-500">*</span>
-                    <Input type="text" name={"sales_manager_phone"} value={formData.sales_manager_phone}
-                           onChange={handleFormChange}/>
-                            {errors.sales_manager_phone && <p className="text-red-500 text-sm">{errors.sales_manager_phone}</p>}
-                </div>
-                <div>
-                    <Label>
-                        Sales Manager Desk Phone
-                    </Label>  <span className="text-red-500">*</span>
-                    <Input type="text" name={"sales_manager_desk_phone"} value={formData.sales_manager_desk_phone}
-                           onChange={handleFormChange}/>
-                            {errors.sales_manager_desk_phone && <p className="text-red-500 text-sm">{errors.sales_manager_desk_phone}</p>}
-                </div>
-            </div>
- 
- 
-            <div className="my-4 grid gap-2">
-                <div className="mt-8 mb-4">
-                    <h1 className="text-xl font-bold">
-                        Logistic Service Details
-                    </h1>
-                </div>
-                <div>
-                    <Label>
-                        Enter Logistic Service
-                    </Label>  <span className="text-red-500">*</span>
-                    <Input type="text" name={"logistic_service"} value={formData.logistic_service}
-                           onChange={handleFormChange}/>
-                            {errors.logistic_service && <p className="text-red-500 text-sm">{errors.logistic_service}</p>}
-                </div>
- 
-            </div>
- 
-            <div className="my-4 grid">
-                <Button onClick={handleSubmit}>
-                    Become a Vendor
-                </Button>
-            </div>
+          </div>
         </div>
-    )
+
+        <div className="grid gap-2">
+          <div className="mt-8 mb-4">
+            <h1 className="text-xl font-bold">Business Details</h1>
+          </div>
+          <div className="grid grid-cols-3 gap-4">
+            <div>
+              <Label>Tax ID</Label> <span className="text-red-500">*</span>
+              <Input
+                type="text"
+                name={"tax_id"}
+                value={formData.tax_id}
+                onChange={handleFormChange}
+                className={` w-full border ${
+                    errors.tax_id ? "border-red-500" : "border-gray-300"
+                  }`}
+              />
+              {errors.tax_id && (
+                <p className="text-red-500 text-sm">{errors.tax_id}</p>
+              )}
+            </div>
+
+            <div>
+              <Label>Warehouse Address</Label>{" "}
+              <span className="text-red-500">*</span>
+              <Input
+                type="text"
+                name={"warehouse_address"}
+                value={formData.warehouse_address}
+                onChange={handleFormChange}
+                className={`w-full border ${
+                    errors.warehouse_address ? "border-red-500" : "border-gray-300"
+                  }`}
+              />
+              {errors.warehouse_address && (
+                <p className="text-red-500 text-sm">
+                  {errors.warehouse_address}
+                </p>
+              )}
+            </div>
+          </div>
+          <div className="mt-8 mb-4">
+            <h1 className="text-xl font-bold">Managing Directory Details</h1>
+          </div>
+          <div className="grid grid-cols-3 gap-4">
+            <div>
+              <Label>Managing Directory</Label>{" "}
+              <span className="text-red-500">*</span>
+              <Input
+                type="text"
+                name={"managing_director"}
+                value={formData.managing_director}
+                onChange={handleFormChange}
+                className={`w-full border ${
+                    errors.managing_director ? "border-red-500" : "border-gray-300"
+                  }`}
+              />
+              {errors.managing_director && (
+                <p className="text-red-500 text-sm">
+                  {errors.managing_director}
+                </p>
+              )}
+            </div>
+            <div>
+              <Label>Managing Directory Email</Label>{" "}
+              <span className="text-red-500">*</span>
+              <Input
+                type="email"
+                name={"managing_director_email"}
+                value={formData.managing_director_email}
+                onChange={handleFormChange}
+                className={`w-full border ${
+                    errors.managing_director_email ? "border-red-500" : "border-gray-300"
+                  }`}
+              />
+              {errors.managing_director_email && (
+                <p className="text-red-500 text-sm">
+                  {errors.managing_director_email}
+                </p>
+              )}
+            </div>
+            <div>
+              <div className="whitespace-nowrap">
+                <Label>Managing Directory Personal Phone</Label>{" "}
+                <span className="text-red-500">*</span>
+              </div>
+              <Input
+                name={"managing_director_phone"}
+                value={formData.managing_director_phone}
+                onChange={handleFormChange}
+                className={`w-full border ${
+                    errors.managing_director_phone ? "border-red-500" : "border-gray-300"
+                  }`}
+              />
+              {errors.managing_director_phone && (
+                <p className="text-red-500 text-sm">
+                  {errors.managing_director_phone}
+                </p>
+              )}
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-4 mt-8">
+            <div>
+              <Label>Managing Directory Desk Phone</Label>{" "}
+              <span className="text-red-500">*</span>
+              <Input
+                type="tel"
+                name={"managing_director_desk_phone"}
+                value={formData.managing_director_desk_phone}
+                onChange={handleFormChange}
+                className={`w-full border ${
+                    errors.managing_director_desk_phone ? "border-red-500" : "border-gray-300"
+                  }`}
+              />
+              {errors.managing_director_desk_phone && (
+                <p className="text-red-500 text-sm">
+                  {errors.managing_director_desk_phone}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <Label>Port</Label> <span className="text-red-500">*</span>
+              <Input
+                type="tel"
+                name={"port"}
+                value={formData.port}
+                onChange={handleFormChange}
+                className={`w-full border ${
+                    errors.port ? "border-red-500" : "border-gray-300"
+                  }`}
+              />
+              {errors.port && (
+                <p className="text-red-500 text-sm">{errors.port}</p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="my-4 grid gap-2">
+          <div className="mt-8 mb-4">
+            <h1 className="text-xl font-bold">Sales Manager Details</h1>
+          </div>
+          <div className="grid grid-cols-3 gap-4">
+            <div>
+              <Label>Sales Manager Name</Label>{" "}
+              <span className="text-red-500">*</span>
+              <Input
+                type="text"
+                name={"sales_manager"}
+                value={formData.sales_manager}
+                onChange={handleFormChange}
+                className={`w-full border ${
+                    errors.sales_manager ? "border-red-500" : "border-gray-300"
+                  }`}
+              />
+              {errors.sales_manager && (
+                <p className="text-red-500 text-sm">{errors.sales_manager}</p>
+              )}
+            </div>
+            <div>
+              <Label>Sales Manager Email</Label>{" "}
+              <span className="text-red-500">*</span>
+              <Input
+                type="email"
+                name={"sales_manager_email"}
+                value={formData.sales_manager_email}
+                onChange={handleFormChange}
+                className={`w-full border ${
+                    errors.sales_manager_email ? "border-red-500" : "border-gray-300"
+                  }`}
+              />
+              {errors.sales_manager_email && (
+                <p className="text-red-500 text-sm">
+                  {errors.sales_manager_email}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <Label>Sales Manager Phone</Label>{" "}
+              <span className="text-red-500">*</span>
+              <Input
+                type="text"
+                name={"sales_manager_phone"}
+                value={formData.sales_manager_phone}
+                onChange={handleFormChange}
+                className={`w-full border ${
+                    errors.sales_manager_phone ? "border-red-500" : "border-gray-300"
+                  }`}
+              />
+              {errors.sales_manager_phone && (
+                <p className="text-red-500 text-sm">
+                  {errors.sales_manager_phone}
+                </p>
+              )}
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-4 mt-8">
+            <div>
+              <Label>Sales Manager Desk Phone</Label>{" "}
+              <span className="text-red-500">*</span>
+              <Input
+                type="text"
+                name={"sales_manager_desk_phone"}
+                value={formData.sales_manager_desk_phone}
+                onChange={handleFormChange}
+                className={`w-full border ${
+                    errors.sales_manager_desk_phone ? "border-red-500" : "border-gray-300"
+                  }`}
+              />
+              {errors.sales_manager_desk_phone && (
+                <p className="text-red-500 text-sm">
+                  {errors.sales_manager_desk_phone}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="my-4 grid gap-2">
+          <div className="mt-8">
+            <h1 className="text-xl font-bold">Logistic Service Details</h1>
+          </div>
+          <div>
+            <Label>Enter Logistic Service</Label>{" "}
+            <span className="text-red-500">*</span>
+            <Input
+              type="text"
+              name={"logistic_service"}
+              value={formData.logistic_service}
+              onChange={handleFormChange}
+              className={`w-full border ${
+                errors.logistic_service ? "border-red-500" : "border-gray-300"
+              }`}
+            />
+            {errors.logistic_service && (
+              <p className="text-red-500 text-sm">{errors.logistic_service}</p>
+            )}
+          </div>
+        </div>
+
+        <div className="my-3 grid">
+          <Button onClick={handleSubmit}>Become a Vendor</Button>
+        </div>
+      </div>
+    );
 }

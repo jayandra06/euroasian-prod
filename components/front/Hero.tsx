@@ -33,7 +33,7 @@ export function Hero() {
           isVisible ? "translate-x-0 opacity-100" : "-translate-x-full opacity-0"
         }`}
       >
-        <div className="max-w-2xl space-y-8">
+        {/* <div className="max-w-2xl space-y-8">
           <h1 className="text-5xl md:text-6xl font-bold leading-tight text-white drop-shadow-lg">
             POWER YOUR MARITIME SUCCESS
           </h1>
@@ -51,7 +51,27 @@ export function Hero() {
           <p className="text-xl md:text-2xl text-gray-300">
             Streamline your marine procurement process with precision, innovation, and global reach.
           </p>
+        </div> */}
+         <div className="max-w-2xl space-y-8">
+          <h1 className="text-5xl md:text-6xl font-bold leading-tight text-white drop-shadow-lg">
+            POWER YOUR MARITIME SUCCESS
+          </h1>
+          <h2 className="text-3xl md:text-4xl font-bold leading-tight text-cyan-400">
+            Join a Global Network of Vessel Managers / Owners and Vendors!
+          </h2>
+          <div className="flex space-x-4">
+            <button
+              onClick={() => navigate("/request-demo")}
+              className="px-8 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-semibold rounded-lg shadow-lg hover:shadow-cyan-500/20 transition-all duration-300 transform hover:-translate-y-1"
+            >
+              Request Demo
+            </button>
+          </div>
+          <p className="text-xl md:text-2xl text-gray-300">
+          Streamline your marine procurement process with precision & innovation.
+          </p>
         </div>
+
       </div>
     </div>
   )

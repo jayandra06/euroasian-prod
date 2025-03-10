@@ -80,14 +80,17 @@ export function PopularServices() {
       <div className="container mx-auto px-10 pt-20 relative z-10">
         <div className="grid md:grid-cols-2 gap-12">
           <div className="text-center md:text-left space-y-6 pl-10">
+            <div style={{textAlign:"center"}}>
             <div className="inline-block p-10 bg-cyan-900/20 rounded-full border border-cyan-500/10 transform transition-transform duration-300 hover:scale-105">
             <ShoppingCart  className="h-8 w-8 text-cyan-400" />
             </div>
-            <h2 className="text-2xl font-bold text-white">For Buyers</h2>
-            <p className="text-gray-300 max-w-lg">
+            <h2 className="text-2xl font-bold text-white" >For Buyers</h2>
+            </div>
+            <p className="text-gray-300 max-w-lg" style={{marginLeft:"89px", textAlign:"center", marginTop:"10px"}}>
               Access our global network of verified maritime Vendors. Streamline your procurement
               process and find the best deals for your fleet.
             </p>
+            
             {/* <button
               onClick={() => navigate('/maintenance')}
               className="bg-cyan-600 text-white px-6 py-2 rounded-md hover:bg-cyan-700 transition-colors duration-300"
@@ -96,11 +99,13 @@ export function PopularServices() {
             </button> */}
           </div>
           <div className="text-center md:text-left space-y-6 pl-10">
+          <div style={{textAlign:"center"}}>
             <div className="inline-block p-10 bg-cyan-900/20 rounded-full border border-cyan-500/10 transform transition-transform duration-300 hover:scale-105">
               <Settings  className="h-8 w-8 text-cyan-400" />
             </div>
             <h2 className="text-2xl font-bold text-white">For Vendors</h2>
-            <p className="text-gray-300 max-w-lg">
+            </div>
+            <p className="text-gray-300 max-w-lg" style={{marginLeft:"89px", textAlign:"center", marginTop:"10px"}}>
               Expand your reach in the maritime industry. Connect with shipowners and managers
               worldwide and grow your business.
             </p>

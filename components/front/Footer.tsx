@@ -17,7 +17,7 @@ const Footer = () => {
               <img src={logo.src} alt="EuroAsian Logo" className="h-16 w-auto" />
 
             </div>
-            <p className="mt-4 text-sm">Your trusted source for quality ship parts and marine equipment.</p>
+            {/* <p className="mt-4 text-sm">Your trusted source for quality ship parts and marine equipment.</p> */}
           </div>
 
           {/* <div>
@@ -94,7 +94,7 @@ const Footer = () => {
         </div>
 
         <div className="mt-12 pt-8 border-t border-gray-800 text-center text-sm">
-          <p>&copy; {new Date().getFullYear()} EuroAsian. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} EuroAsiann. All rights reserved.</p>
         </div>
       </div>
     </footer>

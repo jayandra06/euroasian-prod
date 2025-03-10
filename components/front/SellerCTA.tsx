@@ -50,7 +50,7 @@ export function SellerCTA() {
             </p>
           </div>
 
-          <div className="bg-white shadow-md rounded-lg p-8 text-center">
+          <div className="bg-white shadow-md rounded-lg p-8 text-center" style={{position:"relative", left:"200px"}}>
             <TrendingUp className="h-12 w-12 text-blue-600 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-blue-800 mb-2">Business Growth</h3>
             <p className="text-gray-600">
@@ -58,7 +58,7 @@ export function SellerCTA() {
             </p>
           </div>
 
-          <div className="bg-white shadow-md rounded-lg p-8 text-center">
+          <div className="bg-white shadow-md rounded-lg p-8 text-center" style={{position:"relative", left:"200px"}}>
             <DollarSign className="h-12 w-12 text-blue-600 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-blue-800 mb-2">Transparent Pricing</h3>
             <p className="text-gray-600">

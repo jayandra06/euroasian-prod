@@ -28,9 +28,11 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
-import {Trash2} from "lucide-react";
-
-
+import {Loader, Trash2} from "lucide-react";
+import ErrorToast from "@/components/ui/errorToast";
+import SuccessToast from "@/components/ui/successToast";
+ 
+ 
 // function InfoCard() {
 //     return (
 //         <Card>
@@ -65,70 +67,81 @@ function RFQInfoCard({rfqInfo, setRfqInfo,errors, setErrors}) {
         }
     }, [rfqInfo.lead_date, setRfqInfo]);
     return (
-        <Card>
-            <CardHeader>
-                <CardTitle>RFQ Info</CardTitle>
-                <CardDescription></CardDescription>
-            </CardHeader>
-            <CardContent>
-                <div className="grid w-full max-w-sm items-center gap-1.5 mt-4">
-                    <Label htmlFor="leadDate">Lead Date</Label>
-                    <Input
-                        type="date"
-                        id="leadDate"
-                        value={rfqInfo.lead_date || ""}
-                        onChange={(e) =>
-                            setRfqInfo({...rfqInfo, lead_date: e.target.value})
-                        }
-                        className="grid"
-                        disabled
-                    />
-                </div>
-                <div className="grid w-full max-w-sm items-center gap-1.5 mt-4">
-                    <Label htmlFor="supplyPort">Supply Port <span className="text-red-500 ml-1">*</span></Label>
-                    <Select
-                        onValueChange={(value) =>{
-                            setRfqInfo({...rfqInfo, supply_port: value});
-                            setErrors({...errors, supply_port:""})
-                        }
-                        }
-                        value={rfqInfo.supply_port || ""}
-                    >
-                        <SelectTrigger>
-                            <SelectValue placeholder="Select Supply Port"/>
-                        </SelectTrigger>
-                        <SelectContent>
-                            {["Bussan", "Goa", "Tamil Nadu", "Kerala", "Mumbai"].map(
-                                (port) => (
-                                    <SelectItem key={port} value={port}>
-                                        {port}
-                                    </SelectItem>
-                                )
-                            )}
-                        </SelectContent>
-                    </Select>
-                    {errors.supply_port && <p className="text-red-500 text-sm">{errors.supply_port}</p>}
+      <Card>
+        <CardHeader>
+          <CardTitle>RFQ Info</CardTitle>
+          <CardDescription></CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid w-full max-w-sm items-center gap-1.5 mt-4">
+            <Label htmlFor="leadDate">Lead Date</Label>
+            <Input
+              type="date"
+              id="leadDate"
+              value={rfqInfo.lead_date || ""}
+              onChange={(e) =>
+                setRfqInfo({ ...rfqInfo, lead_date: e.target.value })
+              }
+              className="grid"
+              disabled
+            />
+          </div>
+          <div className="grid w-full max-w-sm items-center gap-1.5 mt-4">
+            <Label htmlFor="supplyPort">
+              Supply Port <span className="text-red-500 ml-1">*</span>
+            </Label>
+            <Select
+              onValueChange={(value) => {
+                setRfqInfo({ ...rfqInfo, supply_port: value });
+                setErrors({ ...errors, supply_port: "" });
+              }}
+              value={rfqInfo.supply_port || ""}
+            >
+              <SelectTrigger
+                className={`w-full border ${
+                  errors.supply_port ? "border-red-500" : "border-gray-300"
+                }`}
+              >
+                <SelectValue placeholder="Select Supply Port" />
+              </SelectTrigger>
+              <SelectContent>
+                {["Bussan", "Goa", "Tamil Nadu", "Kerala", "Mumbai"].map(
+                  (port) => (
+                    <SelectItem key={port} value={port}>
+                      {port}
+                    </SelectItem>
+                  )
+                )}
+              </SelectContent>
+            </Select>
+            {errors.supply_port && (
+              <p className="text-red-500 text-sm">{errors.supply_port}</p>
+            )}
 
-                    {/* {errors.supply_port && <p className="text-red-500 text-sm">{errors.supply_port}</p>} */}
-                </div>
-                <div className="grid w-full max-w-sm items-center gap-1.5 mt-4">
-                    <Label htmlFor="expireDate">Expire Date <span className="text-red-500 ml-1">*</span></Label>
-                    <Input
-                        type="date"
-                        id="expireDate"
-                        value={rfqInfo.expire_date || ""}
-                        onChange={(e) =>
-                        {
-                            setRfqInfo({...rfqInfo, expire_date: e.target.value})
-                            setErrors({...errors, expire_date:""})
-                        }
-                        }
-                        className="grid"
-                    />
-                    {errors.expire_date && <p className="text-red-500 text-sm">{errors.expire_date}</p>}
-                </div>
-            </CardContent>
-        </Card>
+            {/* {errors.supply_port && <p className="text-red-500 text-sm">{errors.supply_port}</p>} */}
+          </div>
+          <div className="grid w-full max-w-sm items-center gap-1.5 mt-4">
+            <Label htmlFor="expireDate">
+              Expire Date <span className="text-red-500 ml-1">*</span>
+            </Label>
+            <Input
+              type="date"
+              id="expireDate"
+              value={rfqInfo.expire_date || ""}
+              onChange={(e) => {
+                setRfqInfo({ ...rfqInfo, expire_date: e.target.value });
+                setErrors({ ...errors, expire_date: "" });
+              }}
+              className={`grid w-full border ${
+                errors.expire_date ? "border-red-500" : "border-gray-300"
+              }`}
+            />
+            {errors.expire_date && (
+              <p className="text-red-500 text-sm">{errors.expire_date}</p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
     );
 }
 
@@ -160,47 +173,69 @@ function VesselCard({vesselInfo, setVesselInfo,errors, setErrors}) {
 
 
     return (
-        <Card>
-            <CardHeader>
-                <CardTitle>Vessel Info</CardTitle>
-                <CardDescription></CardDescription>
-            </CardHeader>
-            <CardContent>
-                <div className="grid w-full max-w-sm items-center gap-1.5">
-                    <Label htmlFor="clientName">Vessel Name <span className="text-red-500 ml-1">*</span></Label>
-                    {/* <Input type="text" id="clientName" placeholder="Enter Vessel Name..." value={vesselInfo.name} onChange={(e) => setVesselInfo({ ...vesselInfo, name: e.target.value })} /> */}
-                    <Select onValueChange={(e) =>
-                    {
-                        setVesselInfo({...vesselInfo, name: e})
-                        setErrors({...errors, name:""})
-                    }}
-                        >
-                        <SelectTrigger>
-                            <SelectValue placeholder="Select Vessel"/>
-                        </SelectTrigger>
-                        <SelectContent>
-                            {vessels.map((vessel, i) =>
-                                <SelectItem value={vessel} key={i}>{vessel}</SelectItem>
-                            )}
-                        </SelectContent>
-                    </Select>
-                    {errors.name && <p className="text-red-500 text-sm">{errors.name}</p>}
-                </div>
-                <div className="grid w-full max-w-sm items-center gap-1.5 mt-4">
-                    <Label htmlFor="clientName">IMO No <span className="text-red-500 ml-1">*</span></Label>
-                    <Input type="text" id="clientName" placeholder="Enter IMO No." value={vesselInfo.imo_no}
-                           onChange={(e) =>
-                           {
-                           setVesselInfo({...vesselInfo, imo_no: e.target.value})
-                           setErrors({...errors, imo_no:""})
-                           }}
-                           />
-                             {errors.imo_no && <p className="text-red-500 text-sm">{errors.imo_no}</p>}
-                </div>
-                <div className="grid w-full max-w-sm items-center gap-1.5 mt-4">
+      <Card>
+        <CardHeader>
+          <CardTitle>Vessel Info</CardTitle>
+          <CardDescription></CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid w-full max-w-sm items-center gap-1.5">
+            <Label htmlFor="clientName">
+              Vessel Name <span className="text-red-500 ml-1">*</span>
+            </Label>
+
+            <Select
+              onValueChange={(e) => {
+                setVesselInfo({ ...vesselInfo, name: e });
+                setErrors({ ...errors, name: "" });
+              }}
+            >
+              <SelectTrigger
+                className={`w-full border ${
+                  errors.name ? "border-red-500" : "border-gray-300"
+                }`}
+              >
+                <SelectValue placeholder="Select Vessel" />
+              </SelectTrigger>
+              <SelectContent>
+                {vessels.map((vessel, i) => (
+                  <SelectItem value={vessel} key={i}>
+                    {vessel}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {errors.name && (
+              <p className="text-red-500 text-sm">{errors.name}</p>
+            )}
+          </div>
+
+          <div className="grid w-full max-w-sm items-center gap-1.5 mt-4">
+            <Label htmlFor="clientName">
+              IMO No <span className="text-red-500 ml-1">*</span>
+            </Label>
+            <Input
+              type="text"
+              id="clientName"
+              placeholder="Enter IMO No."
+              value={vesselInfo.imo_no}
+              onChange={(e) => {
+                setVesselInfo({ ...vesselInfo, imo_no: e.target.value });
+                setErrors({ ...errors, imo_no: "" });
+              }}
+              className={`w-full border ${
+                errors.imo_no ? "border-red-500" : "border-gray-300"
+              }`}
+            />
+            {errors.imo_no && (
+              <p className="text-red-500 text-sm">{errors.imo_no}</p>
+            )}
+          </div>
+          {/* <div className="grid w-full max-w-sm items-center gap-1.5 mt-4">
                     <Label htmlFor="clientName">Port <span className="text-red-500 ml-1">*</span></Label>
                     {/* <Input type="text" id="clientName" placeholder="Enter Port..." value={vesselInfo.port} onChange={(e) => setVesselInfo({ ...vesselInfo, port: e.target.value })} /> */}
-                    <Select onValueChange={(e) =>
+          {/* <Select onValueChange={(e) =>
                     {
                          setVesselInfo({...vesselInfo, port: e})
                          setErrors({...errors, port:""})
@@ -217,118 +252,173 @@ function VesselCard({vesselInfo, setVesselInfo,errors, setErrors}) {
                             <SelectItem value="Kerala">Kerala</SelectItem>
                             <SelectItem value="Mumbai">Mumbai</SelectItem>
                         </SelectContent>
-                    </Select>
-                    {errors.port && <p className="text-red-500 text-sm">{errors.port}</p>}
-                </div>
-                <div className="grid w-full max-w-sm items-center gap-1.5 mt-4">
-                    <Label htmlFor="clientName">Hull No <span className="text-red-500 ml-1">*</span></Label>
-                    <Input type="text" id="clientName" placeholder="Enter HULL No." value={vesselInfo.hull_no}
-                           onChange={(e) =>
-                            {
-                           setVesselInfo({...vesselInfo, hull_no: e.target.value})
-                           setErrors({...errors, hull_no:""})
-                            }
-                        }
-                           />
-                             {errors.hull_no && <p className="text-red-500 text-sm">{errors.hull_no}</p>}
-                </div>
-            </CardContent>
-        </Card>
-    )
+                    </Select> */}
+          {/* {errors.port && <p className="text-red-500 text-sm">{errors.port}</p>} */}
+          {/* </div> */}
+          <div className="grid w-full max-w-sm items-center gap-1.5 mt-4">
+            <Label htmlFor="clientName">Hull No</Label>
+            <Input
+              type="text"
+              id="clientName"
+              placeholder="Enter HULL No."
+              value={vesselInfo.hull_no}
+              onChange={(e) => {
+                setVesselInfo({ ...vesselInfo, hull_no: e.target.value });
+                setErrors({ ...errors, hull_no: "" });
+              }}
+            />
+            {/* {errors.hull_no && <p className="text-red-500 text-sm">{errors.hull_no}</p>} */}
+          </div>
+        </CardContent>
+      </Card>
+    );
 }
 
 // @ts-ignore
 function EquipmentCard({equipmentTags, setEquipmentTags, models, brands, category,errors, setErrors}) {
     const [tags, setTags] = useState([]);
     const [currentTag, setCurrentTag] = useState("");
-    return (
-        <Card>
-            <CardHeader>
-                <CardTitle>Equipments Details</CardTitle>
-                <CardDescription></CardDescription>
-            </CardHeader>
-            <CardContent>
-                <div className="flex gap-2 my-1">
-                    {equipmentTags.tags.map((tag: string, i: any) =>
-                        <div key={i} className="px-2 rounded-full bg-zinc-500 text-white text-xs">
-                            {tag}
-                        </div>
-                    )}
-                </div>
-                <div className="grid gap-4">
-                    <div className="grid w-full items-center gap-1.5">
-                        <Label htmlFor="clientName">Equipments Tags</Label>
-                        <Input type="text" id="clientName" placeholder="Enter Equipment Tags" value={currentTag}
-                               onChange={(e) => setCurrentTag(e.target.value)}/>
-                        <Button onClick={() => {
-                            setEquipmentTags({...equipmentTags, tags: [...equipmentTags.tags, currentTag]});
-                            setCurrentTag("")
-                        }}>
-                            Add
-                        </Button>
-                    </div>
-                    <div className="grid w-full items-center gap-1.5">
-                        <Label htmlFor="clientName">Brand <span className="text-red-500 ml-1">*</span></Label>
-                        <Select onValueChange={(v) =>
-                        {
-                            setEquipmentTags({...equipmentTags, brand: v})
-                            setErrors({...errors, brand:""})
-                        }
-                            }>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Select Brand"/>
-                            </SelectTrigger>
-                            <SelectContent>
-                                {brands.map((brand: any, i: number) =>
-                                    <SelectItem value={brand.name} key={i}>{brand.name}</SelectItem>
-                                )}
-                            </SelectContent>
-                        </Select>
-                        {errors.brand && <p className="text-red-500 text-sm">{errors.brand}</p>}
+    const [loading, setLoading] = useState(false);
 
-                    </div>
-                    <div className="grid w-full items-center gap-1.5">
-                        <Label htmlFor="clientName">Model <span className="text-red-500 ml-1">*</span></Label>
-                        <Select onValueChange={(v) =>
-                        {
-                            setEquipmentTags({...equipmentTags, model: v})
-                            setErrors({...errors, model:""})
-                        }
-                            }>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Select Model"/>
-                            </SelectTrigger>
-                            <SelectContent>
-                                {models.map((brand: any, i: number) =>
-                                    <SelectItem value={brand.name} key={i}>{brand.name}</SelectItem>
-                                )}
-                            </SelectContent>
-                        </Select>
-                        {errors.model && <p className="text-red-500 text-sm">{errors.model}</p>}
-                    </div>
-                    <div className="grid w-full items-center gap-1.5">
-                        <Label htmlFor="clientName">Category <span className="text-red-500 ml-1">*</span></Label>
-                        <Select onValueChange={(v) =>
-                        {
-                            setEquipmentTags({...equipmentTags, category: v})
-                            setErrors({...errors, category:""})
-                        }}
-                            >
-                            <SelectTrigger>
-                                <SelectValue placeholder="Select Category"/>
-                            </SelectTrigger>
-                            <SelectContent>
-                                {category.map((brand: any, i: number) =>
-                                    <SelectItem value={brand.name} key={i}>{brand.name}</SelectItem>
-                                )}
-                            </SelectContent>
-                        </Select>
-                        {errors.category && <p className="text-red-500 text-sm">{errors.category}</p>}
-                    </div>
-                </div>
-            </CardContent>
-        </Card>
-    )
+    const handleAddTag = () => {
+      if (!currentTag.trim()) return; // Prevent empty tags
+      setLoading(true);
+      
+      setTimeout(() => {
+        setEquipmentTags((prev:any) => ({
+          ...prev,
+          tags: [...prev.tags, currentTag],
+        }));
+        setCurrentTag("");
+        setLoading(false);
+      }, 1000); // Simulating API or processing delay
+    };
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Equipments Details</CardTitle>
+          <CardDescription></CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex gap-2 my-1">
+            {equipmentTags.tags.map((tag: string, i: any) => (
+              <div
+                key={i}
+                className="px-2 rounded-full bg-zinc-500 text-white text-xs"
+              >
+                {tag}
+              </div>
+            ))}
+          </div>
+          <div className="grid gap-4">
+            <div className="grid w-full items-center gap-1.5">
+              <Label htmlFor="clientName">Equipments Tags</Label>
+              <Input
+                type="text"
+                id="clientName"
+                placeholder="Enter Equipment Tags"
+                value={currentTag}
+                onChange={(e) => setCurrentTag(e.target.value)}
+              />
+              <Button
+                onClick={handleAddTag}
+                className="flex items-center justify-center gap-2"
+                disabled={loading}
+              >
+                Add {loading && <Loader size="small" />}
+              </Button>
+            </div>
+            <div className="grid w-full items-center gap-1.5">
+              <Label htmlFor="clientName">
+                Brand <span className="text-red-500 ml-1">*</span>
+              </Label>
+              <Select
+                onValueChange={(v) => {
+                  setEquipmentTags({ ...equipmentTags, brand: v });
+                  setErrors({ ...errors, brand: "" });
+                }}
+              >
+                <SelectTrigger
+                  className={`w-full border ${
+                    errors.brand ? "border-red-500" : "border-gray-300"
+                  }`}
+                >
+                  <SelectValue placeholder="Select Brand" />
+                </SelectTrigger>
+                <SelectContent>
+                  {brands.map((brand: any, i: number) => (
+                    <SelectItem value={brand.name} key={i}>
+                      {brand.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.brand && (
+                <p className="text-red-500 text-sm">{errors.brand}</p>
+              )}
+            </div>
+            <div className="grid w-full items-center gap-1.5">
+              <Label htmlFor="clientName">
+                Model <span className="text-red-500 ml-1">*</span>
+              </Label>
+              <Select
+                onValueChange={(v) => {
+                  setEquipmentTags({ ...equipmentTags, model: v });
+                  setErrors({ ...errors, model: "" });
+                }}
+              >
+                <SelectTrigger
+                  className={`w-full border ${
+                    errors.model ? "border-red-500" : "border-gray-300"
+                  }`}
+                >
+                  <SelectValue placeholder="Select Model" />
+                </SelectTrigger>
+                <SelectContent>
+                  {models.map((brand: any, i: number) => (
+                    <SelectItem value={brand.name} key={i}>
+                      {brand.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.model && (
+                <p className="text-red-500 text-sm">{errors.model}</p>
+              )}
+            </div>
+            <div className="grid w-full items-center gap-1.5">
+              <Label htmlFor="clientName">
+                Category <span className="text-red-500 ml-1">*</span>
+              </Label>
+              <Select
+                onValueChange={(v) => {
+                  setEquipmentTags({ ...equipmentTags, category: v });
+                  setErrors({ ...errors, category: "" });
+                }}
+              >
+                <SelectTrigger
+                  className={`w-full border ${
+                    errors.category ? "border-red-500" : "border-gray-300"
+                  }`}
+                >
+                  <SelectValue placeholder="Select Category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {category.map((brand: any, i: number) => (
+                    <SelectItem value={brand.name} key={i}>
+                      {brand.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.category && (
+                <p className="text-red-500 text-sm">{errors.category}</p>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
 }
 
 
@@ -337,6 +427,9 @@ function Item({item, handleUpdateItem, handleRemove, setErrors, errors}) {
     const handleChange = (e: any) => {
         const {name, value} = e.target;
         handleUpdateItem(item.id, name, value);
+        if(errors?.description){
+            setErrors({...errors, description:""})
+        }
     };
     return (
         <>
@@ -486,15 +579,21 @@ export default function CreateEnquiryPage() {
             )
         );
     };
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const [successMessage, setSuccessMessage] = useState<string | null>(null);
+    const[isloading, setIsLoading] = useState(false);
  console.log(errors)
-    async function getQuote() {
-        console.log(items?.description, "desc")
+
+    const getQuote =async()=> {
+        setIsLoading(true);
+        setErrorMessage(null);
+        setSuccessMessage(null);
         let newErrors = { supply_port: "", expire_date: "" ,name:"", imo_no:"",hull_no:"",port:"",brand:"",model:"",category:"", items:[]};
         if (!rfqInfo.supply_port) newErrors.supply_port = "Supply Port is required.";
         if (!rfqInfo.expire_date) newErrors.expire_date = "Expire Date is required.";
         if(!vesselInfo.name) newErrors.name="Vessel Name is required.";
         if(!vesselInfo.imo_no) newErrors.imo_no="IMO No is required.";
-        if(!vesselInfo.hull_no) newErrors.hull_no="Hull No is required.";
+        // if(!vesselInfo.hull_no) newErrors.hull_no="Hull No is required.";
         if(!vesselInfo.port) newErrors.port="Port is required.";
         if(!equipmentTags.brand) newErrors.brand="Brand is required"
         if(!equipmentTags.model) newErrors.model="Model is required.";
@@ -513,6 +612,7 @@ export default function CreateEnquiryPage() {
         newErrors.items = itemErrors;
         if (!reqdVendors.vendor1.vendorId || !reqdVendors.vendor2.vendorId || !reqdVendors.vendor3.vendorId) {
             setVendorsError(true);
+            setIsLoading(false)
             return;
         } else {
             setVendorsError(false);
@@ -559,17 +659,17 @@ export default function CreateEnquiryPage() {
           uom: item.uom,
                 });
             }
-
-            console.log("RFQ Created! ", rfq.data);
-
-            alert("RFQ Successfully Created!");
+            setSuccessMessage("RFQ Successfully Created!");
             window.location.reload();
+            setIsLoading(false);
         } catch (e) {
-            console.log("Unable to create RFQ ", e);
-            alert("Unable to Create RFQ!!");
+            setErrorMessage("Unable to create RFQ. Please try again!");
+            setIsLoading(false);
         }
     }
-
+ const handleAddQuote =()=>{
+    getQuote();
+ }
     function handleRemove(itemId: number) {
         const filteredItem = items.filter((i:any) => i.id !== itemId);
 
@@ -604,191 +704,255 @@ export default function CreateEnquiryPage() {
     useEffect(() => {
         void fetchDetails();
     }, []);
-
     if (!isMem) return "Create a Branch or be the Part of any Branch to Create Enquiry..."
-
     return (
-        <main className="grid">
-            <div className="pt-4 max-w-6xl w-full grid justify-self-center">
-                <h1 className="text-3xl font-bold">
-                    Create RFQ
-                </h1>
-                <h3 className="mt-2">
-                </h3>
-            </div>
+        <>
+        {errorMessage && <ErrorToast message={errorMessage} onClose={() => setErrorMessage(null)} />}
+        {successMessage && <SuccessToast message={successMessage} onClose={() => setSuccessMessage(null)} />}
+      <main className="grid">
+         
+        <div className="pt-4 max-w-6xl w-full grid justify-self-center">
+          <h1 className="text-3xl font-bold">Create RFQ</h1>
+          <h3 className="mt-2"></h3>
+        </div>
 
-            <main className="grid justify-self-center max-w-6xl w-full md:grid-cols-3 gap-4 mt-4">
-                <RFQInfoCard rfqInfo={rfqInfo} setRfqInfo={setRfqInfo} errors={errors} setErrors={setErrors} />
-                <VesselCard vesselInfo={vesselInfo} setVesselInfo={setVesselInfo} errors={errors} setErrors={setErrors}/>
-                <EquipmentCard equipmentTags={equipmentTags} setEquipmentTags={setEquipmentTags} models={model}
-                               brands={brands} category={category} errors={errors} setErrors={setErrors}/>
-            </main>
-
-            <div className="flex w-full max-w-6xl justify-self-center items-center mt-8">
-                <h1 className="text-xl font-bold">
-                    Choose vendors
-                </h1>
-            </div>
-            {vendorsError && (
-    <div className="text-red-500 text-sm ml-32 mt-2">
-        Please select all vendors.
-    </div>
-)}
-
-            <div
-                className="grid justify-self-center grid-cols-1 sm:grid-cols-1 md:grid-cols-3 gap-4 max-w-6xl w-full mt-4">
-
-                <div className="grid gap-1">
-                    <div className="flex gap-1">
-                        <div className="text-xs text-white bg-zinc-600 rounded-full px-2">
-                            {reqdVendors.vendor1.name}
-                        </div>
-
-                    </div>
-                    <div className="grid ">
-                        <Label className={"mb-3"}>
-                            Option 1 <span className="text-red-500 ml-1">*</span>
-                        </Label>
-                        <Select onValueChange={(e) => updateReqdVendors({
-                            ...reqdVendors,
-                            vendor1: {name: e, vendorId: vendors.find(v => v.name === e).id}
-                        })}>
-                            <SelectTrigger>
-                <SelectValue placeholder="Select Vendor" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {vendors.map((vendor: any, i: number) =>
-                                    <SelectItem value={vendor.name} key={vendor.id}>{vendor.name}</SelectItem>
-                                )}
-                            </SelectContent>
-                        </Select>
-
-                    </div>
-                </div>
-
-                <div className="grid gap-1">
-                    <div className="flex gap-1">
-                        <div className="text-xs text-white bg-zinc-600 rounded-full px-2">
-                            {reqdVendors.vendor2.name}
-                        </div>
-                    </div>
-                    <div className="grid ">
-                        <Label className={"mb-3"}>
-                            Option 2 <span className="text-red-500 ml-1">*</span>
-                        </Label>
-                        <Select onValueChange={(e) => updateReqdVendors({
-                            ...reqdVendors,
-                            vendor2: {name: e, vendorId: vendors.find(v => v.name === e).id}
-                        })}>
-                            <SelectTrigger>
-                <SelectValue placeholder="Select Vendor" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {vendors.map((vendor: any, i: number) =>
-                                    <SelectItem value={vendor.name} key={vendor.id}>{vendor.name}</SelectItem>
-                                )}
-                            </SelectContent>
-                        </Select>
-                    </div>
-                </div>
-
-                <div className="grid gap-1">
-                    <div className="flex gap-1">
-                        <div className="text-xs text-white bg-zinc-600 rounded-full px-2">
-                            {reqdVendors.vendor3.name}
-                        </div>
-                    </div>
-                    <div className="grid ">
-                        <Label className={"mb-3"}>
-                            Option 3 <span className="text-red-500 ml-1">*</span>
-                        </Label>
-                        <Select onValueChange={(e) =>
-                        {
-                            updateReqdVendors({
-                            ...reqdVendors,
-                            vendor3: {name: e, vendorId: vendors.find(v => v.name === e).id}
-                        });
-                        setVendorsError(false);
-                    }
-
-                        }>
-                            <SelectTrigger>
-                <SelectValue placeholder="Select Vendor" />
-                            </SelectTrigger>
-                            <SelectContent>
-                {vendors.map((vendor: any, i: number) => (
-                  <SelectItem value={vendor.name} key={vendor.id}>
-                    {vendor.name}
-                  </SelectItem>
-                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-                </div>
-
-
-            </div>
-
-
-
-
-            <div className="grid justify-self-center max-w-6xl w-full mt-8">
-                <div className="flex justify-between items-center">
-                    <h1 className="text-xl font-bold">
-                        Items
-                    </h1>
-
-                    <Button onClick={() => {
-                        setItems([...items, {
-                            id: items.length + 1,
-                            description: "",
-                            part_no: "",
-                            position_no: "",
-                            alternative_part_no: "",
-                            uom: "",
-                            req_qty: "",
-                            offered_qty: "0"
-                        }]);
-                    }}
-
-                    >
-                        Add Item
-                    </Button>
-                </div>
-
-                <div className="mt-4 max-w-6xl overflow-x-scroll">
-                    <div className="min-w-5xl max-w-9xl grid">
-                        <Table className="min-w-5xl max-w-9xl w-full">
-                            <TableCaption>List Of Items.</TableCaption>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead className="w-[100px]">No.</TableHead>
-                                    <TableHead colSpan={3}>Description<span className="text-red-500 ml-1">*</span></TableHead>
-                                    <TableHead>Req. Qty.<span className="text-red-500 ml-1">*</span></TableHead>
-                                    <TableHead>UOM<span className="text-red-500 ml-1">*</span></TableHead>
-                                    <TableHead className="text-right">Quoted Price<span className="text-red-500 ml-1">*</span></TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {items.map((item:any, i:any) =>
-                                    <Item key={i} item={item} handleRemove={handleRemove}
-                                          handleUpdateItem={handleUpdateItem} setErrors={setErrors}
-                                          errors={errors.items?.[i] || {}}
-                                          />
-                                )}
-                            </TableBody>
-                        </Table>
-                    </div>
-                </div>
-            </div>
-
-            <div className="max-w-6xl w-full grid justify-self-center justify-center mt-8 mb-24">
-                <div>
-                    <Button className="px-12" onClick={getQuote}>
-                        Get Quote
-                    </Button>
-                </div>
-            </div>
+        <main className="grid justify-self-center max-w-6xl w-full md:grid-cols-3 gap-4 mt-4">
+          <RFQInfoCard
+            rfqInfo={rfqInfo}
+            setRfqInfo={setRfqInfo}
+            errors={errors}
+            setErrors={setErrors}
+          />
+          <VesselCard
+            vesselInfo={vesselInfo}
+            setVesselInfo={setVesselInfo}
+            errors={errors}
+            setErrors={setErrors}
+          />
+          <EquipmentCard
+            equipmentTags={equipmentTags}
+            setEquipmentTags={setEquipmentTags}
+            models={model}
+            brands={brands}
+            category={category}
+            errors={errors}
+            setErrors={setErrors}
+          />
         </main>
-    )
+
+        <div className="flex w-full max-w-6xl justify-self-center items-center mt-8">
+          <h1 className="text-xl font-bold">Choose vendors</h1>
+        </div>
+        {vendorsError && (
+          <div className="text-red-500 text-sm ml-32 mt-2">
+            Please select all vendors.
+          </div>
+        )}
+
+        <div className="grid justify-self-center grid-cols-1 sm:grid-cols-1 md:grid-cols-3 gap-4 max-w-6xl w-full mt-4">
+          <div className="grid gap-1">
+            <div className="flex gap-1">
+              {reqdVendors.vendor1?.name ? (
+                <div className="text-xs text-white bg-zinc-600 rounded-full px-2">
+                  {reqdVendors.vendor1.name}
+                </div>
+              ) : (
+                ""
+              )}
+            </div>
+            <div className="grid ">
+              <Label className={"mb-3"}>
+                Vendor 1 <span className="text-red-500 ml-1">*</span>
+              </Label>
+              <Select
+                onValueChange={(e) =>
+                  updateReqdVendors({
+                    ...reqdVendors,
+                    vendor1: {
+                      name: e,
+                      vendorId: vendors.find((v) => v.name === e).id,
+                    },
+                  })
+                }
+              >
+                <SelectTrigger
+                  className={`w-full border ${
+                    vendorsError ? "border-red-500" : "border-gray-300"
+                  }`}
+                >
+                  <SelectValue placeholder="Select Brand" />
+                </SelectTrigger>
+                <SelectContent>
+                  {vendors.map((vendor: any, i: number) => (
+                    <SelectItem value={vendor.name} key={vendor.id}>
+                      {vendor.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="grid gap-1">
+            <div className="flex gap-1">
+              {reqdVendors.vendor2?.name ? (
+                <div className="text-xs text-white bg-zinc-600 rounded-full px-2">
+                  {reqdVendors.vendor2.name}
+                </div>
+              ) : (
+                ""
+              )}
+            </div>
+            <div className="grid ">
+              <Label className={"mb-3"}>
+                Vendor 2 <span className="text-red-500 ml-1">*</span>
+              </Label>
+              <Select
+                onValueChange={(e) =>
+                  updateReqdVendors({
+                    ...reqdVendors,
+                    vendor2: {
+                      name: e,
+                      vendorId: vendors.find((v) => v.name === e).id,
+                    },
+                  })
+                }
+              >
+                <SelectTrigger className={`w-full border ${
+                    vendorsError ? "border-red-500" : "border-gray-300"
+                  }`}>
+                  <SelectValue placeholder="Select Brand" />
+                </SelectTrigger>
+                <SelectContent>
+                  {vendors.map((vendor: any, i: number) => (
+                    <SelectItem value={vendor.name} key={vendor.id}>
+                      {vendor.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid gap-1">
+            <div className="flex gap-1">
+              {reqdVendors.vendor3?.name ? (
+                <div className="text-xs text-white bg-zinc-600 rounded-full px-2">
+                  {reqdVendors.vendor3.name}
+                </div>
+              ) : (
+                ""
+              )}
+            </div>
+            <div className="grid ">
+              <Label className={"mb-3"}>
+                Vendor 3 <span className="text-red-500 ml-1">*</span>
+              </Label>
+              <Select
+                onValueChange={(e) => {
+                  updateReqdVendors({
+                    ...reqdVendors,
+                    vendor3: {
+                      name: e,
+                      vendorId: vendors.find((v) => v.name === e).id,
+                    },
+                  });
+                  setVendorsError(false);
+                }}
+              >
+                <SelectTrigger className={`w-full border ${
+                    vendorsError ? "border-red-500" : "border-gray-300"
+                  }`}>
+                  <SelectValue placeholder="Select Brand" />
+                </SelectTrigger>
+                <SelectContent>
+                  {vendors.map((vendor: any, i: number) => (
+                    <SelectItem value={vendor.name} key={vendor.id}>
+                      {vendor.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid justify-self-center max-w-6xl w-full mt-8">
+          <div className="flex justify-between items-center">
+            <h1 className="text-xl font-bold">Items</h1>
+          </div>
+          <div className="mt-4 max-w-6xl overflow-x-scroll">
+            <div className="min-w-5xl max-w-9xl grid">
+              <Table className="min-w-5xl max-w-9xl w-full">
+                <TableCaption>List Of Items.</TableCaption>
+
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[100px]">No.</TableHead>
+                    <TableHead colSpan={3}>
+                      Description<span className="text-red-500 ml-1">*</span>
+                    </TableHead>
+                    <TableHead>
+                      Req. Qty.<span className="text-red-500 ml-1">*</span>
+                    </TableHead>
+                    <TableHead>
+                      UOM<span className="text-red-500 ml-1">*</span>
+                    </TableHead>
+                    <TableHead className="text-right">
+                      Quoted Price<span className="text-red-500 ml-1">*</span>
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+
+                <TableBody>
+                  {items.map((item: any, i: any) => (
+                    <Item
+                      key={i}
+                      item={item}
+                      handleRemove={handleRemove}
+                      handleUpdateItem={handleUpdateItem}
+                      setErrors={setErrors}
+                      errors={errors.items?.[i] || {}}
+                    />
+                  ))}
+                </TableBody>
+              </Table>
+              <div className="flex justify-end mt-2 mb-2">
+                <Button
+                  onClick={() => {
+                    setItems([
+                      ...items,
+                      {
+                        id: items.length + 1,
+                        description: "",
+                        part_no: "",
+                        position_no: "",
+                        alternative_part_no: "",
+                        uom: "",
+                        req_qty: "",
+                        offered_qty: "0",
+                      },
+                    ]);
+                  }}
+                >
+                  Add Item
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="max-w-6xl w-full grid justify-self-center justify-center mt-8 mb-24">
+          <div>
+          <Button
+                onClick={handleAddQuote}
+                className="flex items-center justify-center gap-2"
+                disabled={isloading}
+              >
+                Get Quote {isloading && <Loader size="small" />}
+              </Button>
+          </div>
+        </div>
+      </main>
+      </>
+    );
 }
