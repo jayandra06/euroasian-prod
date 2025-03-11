@@ -199,10 +199,6 @@ const customerData = {
           title: "RFQs",
           url: "/dashboard/customer/rfqs",
         },
-        {
-          title: "Create Enquiry",
-          url: "/dashboard/customer/create-enquiry",
-        },
       ],
     },
     {

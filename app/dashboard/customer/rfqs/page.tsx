@@ -1,16 +1,11 @@
 "use client";
-
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import Link from "next/link";
 import { createClient } from "@/utils/supabase/client";
 import { useEffect, useState } from "react";
+import {Button} from "@/components/ui/button"
+// import {RFQTable} from "@/dashboard/commonComponent/rfqtable"
+
+
 
 export default function RFQsPage() {
   const [rfqs, setRfqs] = useState<any[]>([]);
@@ -52,43 +47,49 @@ export default function RFQsPage() {
 
   return (
     <>
-      <div className="pt-4">
+      <div className="pt-4" style={{display:"flex", justifyContent:"space-between"}}>
         <h1 className="text-3xl font-bold">Your RFQs</h1>
+        <Button className="ml-9">
+              <Link
+                href={"/dashboard/customer/create-enquiry"}
+                className="text-center text-white py-2 text-xs font-semibold grid w-full rounded-lg bg-black dark:text-black dark:bg-white "
+              >
+                Create Enquiry
+              </Link>
+              </Button>
+ 
       </div>
-      <main className="mt-4 grid max-w-7xl gap-4 justify-self-center grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
+      <table className="mt-4 w-full max-w-7xl border-collapse border border-gray-300">
+      <thead>
+        <tr className="bg-gray-100">
+          <th className="border border-gray-300 px-4 py-2 text-left">Ref ID</th>
+          <th className="border border-gray-300 px-4 py-2 text-left">Lead Date</th>
+          <th className="border border-gray-300 px-4 py-2 text-left">Port</th>
+          <th className="border border-gray-300 px-4 py-2 text-left">Supply Port</th>
+          <th className="border border-gray-300 px-4 py-2 text-left">Action</th>
+        </tr>
+      </thead>
+      <tbody>
         {rfqs.map((rfq, i) => (
-          <Card key={i}>
-            <CardHeader>
-              <CardTitle>RFQ Id</CardTitle>
-              <CardDescription>{rfq.id}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="py-2 grid gap-2 text-base">
-                <div>
-                  <span className="font-bold">Lead Date:</span>
-                  {rfq.created_at}
-                </div>
-                <div>
-                  <span className="font-bold">Port:</span>
-                  {rfq.port}
-                </div>
-                <div>
-                  <span className="font-bold">Supply Port:</span>
-                  {rfq.supply_port}
-                </div>
-              </div>
-            </CardContent>
-            <CardFooter>
+          <tr key={i} className="border border-gray-300">
+            <td className="border border-gray-300 px-4 py-2">{rfq.id}</td>
+            <td className="border border-gray-300 px-4 py-2">{rfq.created_at}</td>
+            <td className="border border-gray-300 px-4 py-2">{rfq.port ? rfq.port : "-"}</td>
+            <td className="border border-gray-300 px-4 py-2">{rfq.supply_port ? rfq.supply_port : "-"}</td>
+            <td className="border border-gray-300 px-4 py-2">
               <Link
                 href={`/dashboard/customer/rfqs/${rfq.id}`}
-                className="text-center text-white py-2 text-xs font-semibold grid w-full rounded-lg bg-black dark:text-black dark:bg-white"
+                className="text-white px-4 py-1 text-xs font-semibold rounded bg-black dark:text-black dark:bg-white"
               >
                 View Details
               </Link>
-            </CardFooter>
-          </Card>
+            </td>
+          </tr>
         ))}
-      </main>
+      </tbody>
+    </table>
+      
+
     </>
   );
 }
