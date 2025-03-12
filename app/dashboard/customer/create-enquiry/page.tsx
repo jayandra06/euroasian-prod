@@ -9,6 +9,9 @@ import {
 } from "@/components/ui/card"
 import {Input} from "@/components/ui/input"
 import {Label} from "@/components/ui/label"
+// import { useRouter } from "next/router";
+
+
 import {
     Table,
     TableBody,
@@ -436,9 +439,9 @@ function Item({item, handleUpdateItem, handleRemove, setErrors, errors}) {
             <TableRow>
                 <TableCell className="font-medium">{item.id}</TableCell>
                 <TableCell colSpan={3}>
-                    <div className="grid gap-2 grid-cols-4">
-                        <div className="col-span-4">
-                            <Textarea placeholder="Enter Item Description..." value={item.description}
+                    <div className="grid gap-2 grid-cols-4 items-center">
+                        <div className="col-span-1">
+                            <Textarea  placeholder="Enter Item Description.." value={item.description}
                                       name="description"
                                     //   onChange={(e) => {
                                     //     const {name, value} = e.target;
@@ -449,7 +452,7 @@ function Item({item, handleUpdateItem, handleRemove, setErrors, errors}) {
                                       />
                                        {errors.description && <p className="text-red-500 text-sm">{errors.description}</p>}
                         </div>
-                        <div className="col-span-4 sm:col-span-2">
+                        <div className="col-span-1 ">
                             <Input type="text" placeholder="Enter Part No." value={item.part_no} name="part_no"
                                 //    onChange={(e) => {
                                 //     handleChange(e);
@@ -459,7 +462,7 @@ function Item({item, handleUpdateItem, handleRemove, setErrors, errors}) {
                                   />
                                    {errors.part_no && <p className="text-red-500 text-sm">{errors.part_no}</p>}
                         </div>
-                        <div className="col-span-4 sm:col-span-2">
+                        <div className="col-span-1 ">
                             <Input type="text" placeholder="Enter Position No." value={item.position_no}
                                    name="position_no"
                                 //    onChange={(e) => {
@@ -471,7 +474,7 @@ function Item({item, handleUpdateItem, handleRemove, setErrors, errors}) {
                                    />
                                     {errors.position_no && <p className="text-red-500 text-sm">{errors.position_no}</p>}
                         </div>
-                        <div className="col-span-4 sm:col-span-4">
+                        <div className="col-span-1 ">
                             <Input type="text" placeholder="Enter Alternate Part No." value={item.alternative_part_no}
                                    name="alternative_part_no"
                                 //    onChange={(e) => {
@@ -518,7 +521,7 @@ function Item({item, handleUpdateItem, handleRemove, setErrors, errors}) {
                             variant={"outline"}>
                         <Trash2/>
                     </Button>
-                    PENDING
+                  
                 </TableCell>
             </TableRow>
         </>
@@ -585,6 +588,7 @@ export default function CreateEnquiryPage() {
  console.log(errors)
 
     const getQuote =async()=> {
+   
         setIsLoading(true);
         setErrorMessage(null);
         setSuccessMessage(null);
@@ -662,11 +666,17 @@ export default function CreateEnquiryPage() {
             setSuccessMessage("RFQ Successfully Created!");
             window.location.reload();
             setIsLoading(false);
+          
         } catch (e) {
             setErrorMessage("Unable to create RFQ. Please try again!");
             setIsLoading(false);
         }
     }
+    const selectedVendors = [
+      reqdVendors.vendor1?.name,
+      reqdVendors.vendor2?.name,
+      reqdVendors.vendor3?.name,
+    ].filter(Boolean);
  const handleAddQuote =()=>{
     getQuote();
  }
@@ -748,8 +758,58 @@ export default function CreateEnquiryPage() {
             Please select all vendors.
           </div>
         )}
+       
 
-        <div className="grid justify-self-center grid-cols-1 sm:grid-cols-1 md:grid-cols-3 gap-4 max-w-6xl w-full mt-4">
+       <div className="grid justify-self-center grid-cols-1 sm:grid-cols-1 md:grid-cols-3 gap-4 max-w-6xl w-full mt-4">
+  {(["vendor1", "vendor2", "vendor3"] as const).map((vendorKey, index) => {
+    const availableVendors = vendors.filter(
+      (v) => !selectedVendors.includes(v.name) || reqdVendors[vendorKey]?.name === v.name
+    );
+
+    return (
+      <div key={vendorKey} className="grid gap-1">
+        <div className="flex gap-1">
+          {reqdVendors[vendorKey]?.name && (
+            <div className="text-xs text-white bg-zinc-600 rounded-full px-2">
+              {reqdVendors[vendorKey].name}
+            </div>
+          )}
+        </div>
+        <div className="grid">
+          <Label className="mb-3">
+            Vendor {index + 1} <span className="text-red-500 ml-1">*</span>
+          </Label>
+          <Select
+            onValueChange={(e) => {
+              updateReqdVendors({
+                ...reqdVendors,
+                [vendorKey]: {
+                  name: e,
+                  vendorId: vendors.find((v) => v.name === e)?.id || "",
+                },
+              });
+            }}
+          >
+            <SelectTrigger
+              className={`w-full border ${vendorsError ? "border-red-500" : "border-gray-300"}`}
+            >
+              <SelectValue placeholder="Select Vendor" />
+            </SelectTrigger>
+            <SelectContent>
+              {availableVendors.map((vendor) => (
+                <SelectItem value={vendor.name} key={vendor.id}>
+                  {vendor.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+    );
+  })}
+</div>
+
+        {/* <div className="grid justify-self-center grid-cols-1 sm:grid-cols-1 md:grid-cols-3 gap-4 max-w-6xl w-full mt-4">
           <div className="grid gap-1">
             <div className="flex gap-1">
               {reqdVendors.vendor1?.name ? (
@@ -874,7 +934,7 @@ export default function CreateEnquiryPage() {
               </Select>
             </div>
           </div>
-        </div>
+        </div> */}
 
         <div className="grid justify-self-center max-w-6xl w-full mt-8">
           <div className="flex justify-between items-center">
