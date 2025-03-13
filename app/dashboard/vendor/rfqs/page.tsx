@@ -10,12 +10,40 @@ import {
 } from "@/components/ui/card"
 import {createClient} from "@/utils/supabase/client";
 import Link from "next/link"
-import {useEffect, useState} from "react"
+import React, {useEffect, useState} from "react"
 
 
 export default function RFQsPage() {
     const [rfqs, setRfqs] = useState<any[]>([]);
-
+    const [expandedRow, setExpandedRow] = useState<number | null>(null);
+    const [rfqItems, setRfqItems] = useState<{ [key: number]: any[] }>({}); // Store items for each RFQ
+  
+    const supabase = createClient();
+  
+    const toggleRow = async (index: number, rfqId: number) => {
+      if (expandedRow === index) {
+        setExpandedRow(null);
+        return;
+      }
+  
+      // Fetch items if not already fetched
+      if (!rfqItems[rfqId]) {
+        try {
+          const { data: items, error } = await supabase
+            .from("rfq_items")
+            .select("*")
+            .eq("rfq_id", rfqId);
+  
+          if (error) throw error;
+          setRfqItems((prev) => ({ ...prev, [rfqId]: items || [] }));
+        } catch (err) {
+          console.error("Error fetching RFQ items:", err);
+        }
+      }
+  
+      setExpandedRow(index);
+    };
+ 
     async function fetchRfqs() {
         const supabase = createClient();
 
@@ -40,30 +68,71 @@ export default function RFQsPage() {
         <tr className="bg-gray-100">
           <th className="border border-gray-300 px-4 py-2 text-left">Ref ID</th>
           <th className="border border-gray-300 px-4 py-2 text-left">Lead Date</th>
-          <th className="border border-gray-300 px-4 py-2 text-left">Port</th>
           <th className="border border-gray-300 px-4 py-2 text-left">Supply Port</th>
+          <th className="border border-gray-300 px-4 py-2 text-left">Vessel Name</th>
+          <th className="border border-gray-300 px-4 py-2 text-left">Brand</th>
+          <th className="border border-gray-300 px-4 py-2 text-left">Status</th>
           <th className="border border-gray-300 px-4 py-2 text-left">Action</th>
         </tr>
       </thead>
       <tbody>
         {rfqs.map((rfq, i) => (
-          <tr key={i} className="border border-gray-300">
-            <td className="border border-gray-300 px-4 py-2">{rfq.id}</td>
-            <td className="border border-gray-300 px-4 py-2">{rfq.created_at}</td>
-            <td className="border border-gray-300 px-4 py-2">{rfq.port ? rfq.port : "-"}</td>
-            <td className="border border-gray-300 px-4 py-2">{rfq.supply_port ? rfq.supply_port : "-"}</td>
-            <td className="border border-gray-300 px-4 py-2">
-              <Link
-                href={`/dashboard/customer/rfqs/${rfq.id}`}
-                className="text-white px-4 py-1 text-xs font-semibold rounded bg-black dark:text-black dark:bg-white"
-              >
-                View Details
-              </Link>
-            </td>
-          </tr>
+          <React.Fragment key={rfq.id}>
+         
+            <tr key={i} className="border border-gray-300">
+              <td className="border border-gray-300 px-4 py-2">{rfq.id}</td>
+              <td className="border border-gray-300 px-4 py-2">{rfq.created_at}</td>
+              <td className="border border-gray-300 px-4 py-2">{rfq.supply_port || "-"}</td>
+              <td className="border border-gray-300 px-4 py-2">{rfq.vessel_name || "-"}</td>
+              <td className="border border-gray-300 px-4 py-2">{rfq.brand || "-"}</td>
+              <td className="border border-gray-300 px-4 py-2">{rfq.status || "-"}</td>
+              <td className="border border-gray-300 px-4 py-2">
+              <button
+                    onClick={() => toggleRow(i, rfq.id)}
+                    className="text-white px-4 py-1 text-xs font-semibold rounded bg-black dark:text-black dark:bg-white"
+                  >
+                  {expandedRow === i ? "Hide Details" : "View Details"}
+                </button>
+              </td>
+            </tr>
+            {expandedRow === i && (
+              <tr className="bg-gray-50">
+                <td colSpan={5} className="px-4 py-2 border border-gray-300">
+                  <div className="p-2">
+                  <strong>Items:</strong>
+                      {rfqItems[rfq.id] ? (
+                        rfqItems[rfq.id].length > 0 ? (
+                          <ul className="list-disc pl-4">
+                            {rfqItems[rfq.id].map((item) => (
+                              <li key={item.id}>
+                                <strong>Description:</strong> {item.description || "N/A"} <br />
+                                <strong>Req. Qty.:</strong> {item.quantity || "N/A"} <br />
+                                <strong>UOM:</strong> {item.uom || "N/A"}
+                              </li>
+                            ))}
+                          </ul>
+                        ): (
+                          <p>No items found</p>
+                        )
+                      ) : (
+                        <p>Loading...</p>
+                      )}
+                      
+                    {/* <Link
+                      href={`/dashboard/customer/rfqs/${rfq.id}`}
+                      className="text-blue-500 underline mt-2 inline-block"
+                    >
+                      Go to Full Details
+                    </Link> */}
+                  </div>
+                </td>
+              </tr>
+            )}
+          </React.Fragment>
         ))}
       </tbody>
     </table>
+    
         </>
     )
 }
