@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { motion } from "framer-motion";
 // import { useRouter } from "next/router";
 
 import {
@@ -33,6 +34,13 @@ import {
 import { Loader, Trash2 } from "lucide-react";
 import ErrorToast from "@/components/ui/errorToast";
 import SuccessToast from "@/components/ui/successToast";
+
+const tabs = [
+  { id: "Vendor 1", label: "Vendor 1", color: "bg-white", text: "text-black" },
+  { id: "Vendor 2", label: "Vendor 2", color: "bg-blue-500" },
+  { id: "Vendor 3", label: "Vendor 3", color: "bg-green-400" },
+  
+];
 
 // function InfoCard() {
 //     return (
@@ -198,36 +206,17 @@ function RFQInfoCard({
         <div>
           {/* RFQ Info Section */}
           <div className="w-full p-6">
-            <div className="grid grid-cols-4 gap-6">
-            <div className="flex flex-col">
-                <Label htmlFor="vesselName">
-                  Vessel Name <span className="text-red-500">*</span>
-                </Label>
-                <Select
-                  onValueChange={(e) =>
-                    setVesselInfo({ ...vesselInfo, name: e })
-                  }
-                >
-                  <SelectTrigger
-                    className={`border mt-2 ${
-                      errors.name ? "border-red-500" : "border-gray-300"
-                    }`}
-                  >
-                    <SelectValue placeholder="Select Vessel" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {vessels.map((vessel, i) => (
-                      <SelectItem value={vessel} key={i}>
-                        {vessel}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {errors.name && (
-                  <p className="text-red-500 text-sm">{errors.name}</p>
-                )}
+            <div className="grid grid-cols-5 gap-6">
+              <div className="flex flex-col">
+                <Label htmlFor="leadDate">Lead Date</Label>
+                <Input
+                  type="date"
+                  className="mt-2"
+                  id="leadDate"
+                  value={rfqInfo.lead_date || ""}
+                  disabled
+                />
               </div>
-             
               <div className="flex flex-col">
                 <Label htmlFor="supplyPort">
                   Supply Port <span className="text-red-500">*</span>
@@ -260,25 +249,13 @@ function RFQInfoCard({
                 )}
               </div>
               <div className="flex flex-col">
-                <Label htmlFor="leadDate">Created Date</Label>
-                <Input
-                  type="date"
-                  className="mt-2"
-                  id="leadDate"
-                  
-                  value={new Date().toISOString().split('T')[0]}
-                  disabled
-                 
-                />
-              </div>
-              <div className="flex flex-col">
               <Label htmlFor="expireDate">
-              Lead Date <span className="text-red-500 ml-1">*</span>
+              Valid Until <span className="text-red-500 ml-1">*</span>
             </Label>
             <Input
               type="date"
               id="expireDate"
-             value={rfqInfo.lead_date}
+              value={rfqInfo.expire_date || ""}
               onChange={(e) => {
                 setRfqInfo({ ...rfqInfo, expire_date: e.target.value });
                 setErrors({ ...errors, expire_date: "" });
@@ -291,25 +268,6 @@ function RFQInfoCard({
               <p className="text-red-500 text-sm">{errors.expire_date}</p>
             )}
               </div>
-              
-              <div className="flex flex-col">
-                <Label htmlFor="clientName">Drawing Number</Label>
-                <Input
-                  type="text"
-                  id="clientName"
-                  placeholder="Drawing Number"
-                  value={currentTag}
-                  className="mt-2"
-                  onChange={(e) => setCurrentTag(e.target.value)}
-                />
-                
-              </div>
-             
-             
-              
-             
-              
-              
               <div className="flex flex-col">
                 <Label htmlFor="imoNo">
                   IMO No <span className="text-red-500">*</span>
@@ -318,6 +276,55 @@ function RFQInfoCard({
                   type="text"
                   id="imoNo"
                   placeholder="Enter IMO No."
+                  value={vesselInfo.imo_no}
+                  onChange={(e) =>
+                    setVesselInfo({ ...vesselInfo, imo_no: e.target.value })
+                  }
+                  className={`border mt-2 ${
+                    errors.imo_no ? "border-red-500" : "border-gray-300"
+                  }`}
+                />
+                {errors.imo_no && (
+                  <p className="text-red-500 text-sm">{errors.imo_no}</p>
+                )}
+              </div>
+             
+              <div className="flex flex-col">
+                <Label htmlFor="vesselName">
+                  Vessel Name <span className="text-red-500">*</span>
+                </Label>
+                <Select
+                  onValueChange={(e) =>
+                    setVesselInfo({ ...vesselInfo, name: e })
+                  }
+                >
+                  <SelectTrigger
+                    className={`border mt-2 ${
+                      errors.name ? "border-red-500" : "border-gray-300"
+                    }`}
+                  >
+                    <SelectValue placeholder="Select Vessel" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {vessels.map((vessel, i) => (
+                      <SelectItem value={vessel} key={i}>
+                        {vessel}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {errors.name && (
+                  <p className="text-red-500 text-sm">{errors.name}</p>
+                )}
+              </div>
+              <div className="flex flex-col">
+                <Label htmlFor="imoNo">
+                  HULL No <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  type="text"
+                  id="imoNo"
+                  placeholder="Enter HULL No."
                   value={vesselInfo.imo_no}
                   onChange={(e) =>
                     setVesselInfo({ ...vesselInfo, imo_no: e.target.value })
@@ -435,24 +442,16 @@ function RFQInfoCard({
 
               {/* drawing Number */}
               <div className="flex flex-col">
-                <Label htmlFor="imoNo">
-                  HULL No <span className="text-red-500">*</span>
-                </Label>
+                <Label htmlFor="clientName">Drawing Number</Label>
                 <Input
                   type="text"
-                  id="imoNo"
-                  placeholder="Enter HULL No."
-                  value={vesselInfo.imo_no}
-                  onChange={(e) =>
-                    setVesselInfo({ ...vesselInfo, imo_no: e.target.value })
-                  }
-                  className={`border mt-2 ${
-                    errors.imo_no ? "border-red-500" : "border-gray-300"
-                  }`}
+                  id="clientName"
+                  placeholder="Enter Drawing Number"
+                  value={currentTag}
+                  className="mt-2"
+                  onChange={(e) => setCurrentTag(e.target.value)}
                 />
-                {errors.imo_no && (
-                  <p className="text-red-500 text-sm">{errors.imo_no}</p>
-                )}
+                
               </div>
               <div className="flex flex-col">
                 <Label htmlFor="model">
@@ -495,35 +494,6 @@ function RFQInfoCard({
                 />
                 
               </div>
-              <div className="flex flex-col">
-                <Label htmlFor="clientName">Serial Number</Label>
-                <Input
-                  type="text"
-                  id="clientName"
-                  placeholder="Enter Serial Number"
-                  value={currentTag}
-                  className="mt-2"
-                  onChange={(e) => setCurrentTag(e.target.value)}
-                />
-                
-              </div>
-              <div className="flex flex-col">
-                <Label htmlFor="clientName">Vessel Ex Name</Label>
-                <Input
-                  type="text"
-                  id="clientName"
-                  placeholder="Enter vessel ex name"
-                  value={currentTag}
-                  className="mt-2"
-                  onChange={(e) => setCurrentTag(e.target.value)}
-                />
-                
-              </div>
-              <div className="flex flex-col">
-              <Label htmlFor="clientName">Upload</Label>
-
-              <Input id="picture" type="file" className="mt-2" />
-              </div>
             </div>
           </div>
         </div>
@@ -549,7 +519,7 @@ function Item({ item, handleUpdateItem, handleRemove, setErrors, errors }) {
           <div className="grid gap-2 grid-cols-4 items-center">
             <div className="col-span-1">
               <Textarea
-                placeholder="Item Description.."
+                placeholder="Enter Item Description.."
                 value={item.description}
                 name="description"
                 //   onChange={(e) => {
@@ -566,7 +536,7 @@ function Item({ item, handleUpdateItem, handleRemove, setErrors, errors }) {
             <div className="col-span-1 ">
               <Input
                 type="text"
-                placeholder="Part No."
+                placeholder="Enter Part No."
                 value={item.part_no}
                 name="part_no"
                 //    onChange={(e) => {
@@ -582,23 +552,7 @@ function Item({ item, handleUpdateItem, handleRemove, setErrors, errors }) {
             <div className="col-span-1 ">
               <Input
                 type="text"
-                placeholder="Impa No"
-                value={item.impa_no}
-                name="part_no"
-                //    onChange={(e) => {
-                //     handleChange(e);
-                //     setErrors({ ...errors, part_no: "" });
-                //   }}
-                onChange={handleChange}
-              />
-              {errors.part_no && (
-                <p className="text-red-500 text-sm">{errors.part_no}</p>
-              )}
-            </div>
-            <div className="col-span-1 ">
-              <Input
-                type="text"
-                placeholder="Position No."
+                placeholder="Enter Position No."
                 value={item.position_no}
                 name="position_no"
                 //    onChange={(e) => {
@@ -615,7 +569,7 @@ function Item({ item, handleUpdateItem, handleRemove, setErrors, errors }) {
             <div className="col-span-1 ">
               <Input
                 type="text"
-                placeholder="Alternate Part No."
+                placeholder="Enter Alternate Part No."
                 value={item.alternative_part_no}
                 name="alternative_part_no"
                 //    onChange={(e) => {
@@ -635,7 +589,7 @@ function Item({ item, handleUpdateItem, handleRemove, setErrors, errors }) {
         <TableCell>
           <Input
             type="number"
-            placeholder="Required Quanity"
+            placeholder="Enter Required Quanity"
             value={item.req_qty}
             name="req_qty"
             // onChange={(e) => {
@@ -685,7 +639,9 @@ function Item({ item, handleUpdateItem, handleRemove, setErrors, errors }) {
   );
 }
 
-export default function CreateEnquiryPage() {
+
+
+export default function ViewRfq() {
   const [reqdVendors, updateReqdVendors] = useState({
     vendor1: {
       name: "",
@@ -700,6 +656,11 @@ export default function CreateEnquiryPage() {
       vendorId: "",
     },
   });
+   const [rfqs, setRfqs] = useState<any[]>([]);
+    const [expandedRow, setExpandedRow] = useState<number | null>(null);
+    const [rfqItems, setRfqItems] = useState<{ [key: number]: any[] }>({}); // Store items for each RFQ
+    const [filterRfqs, setFilterRfq] = useState<any[]>([]);
+    const [activeTab, setActiveTab] = useState("all");
 
   const [brands, setBrands] = useState<any[]>([]);
   const [offerQuality, setofferQuality] = useState<any[]>([]);
@@ -730,7 +691,6 @@ export default function CreateEnquiryPage() {
       id: 1,
       description: "",
       part_no: "",
-      impa_no: "",
       position_no: "",
       alternative_part_no: "",
       uom: "",
@@ -934,6 +894,45 @@ export default function CreateEnquiryPage() {
     }
   }
 
+  async function fetchRfqs() {
+      const supabase = createClient();
+  
+      const rfqs = await supabase.from("rfq").select();
+      console.log("rfq", rfqs);
+  
+      setRfqs([...rfqs.data!]);
+      setFilterRfq([...rfqs.data!]);
+    }
+  
+    useEffect(() => {
+      fetchRfqs();
+    }, []);
+
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+
+    let filteredData = [...rfqs];
+
+    switch (tab) {
+      case "received":
+        filteredData = rfqs.filter((rfqs) => rfqs.supply_port === "Tamil Nadu");
+        break;
+      case "sent":
+        filteredData = rfqs.filter((rfqs) => rfqs.supply_port === "Goa");
+        break;
+      case "cancelled":
+        filteredData = rfqs.filter((rfqs) => rfqs.supply_port === "Kerala");
+        break;
+      case "confirmed":
+        filteredData = rfqs.filter((rfqs) => rfqs.supply_port === "Mumbai");
+        break;
+      default:
+        filteredData = rfqs;
+    }
+
+    setFilterRfq(filteredData);
+  };
+
   useEffect(() => {
     void fetchDetails();
   }, []);
@@ -979,68 +978,28 @@ export default function CreateEnquiryPage() {
         <div className="flex w-full max-w-6xl justify-self-center items-center mt-8">
           <h1 className="text-xl font-bold">Choose vendors</h1>
         </div>
-        {vendorsError && (
-          <div className="text-red-500 text-sm ml-32 mt-2">
-            Please select all vendors.
-          </div>
-        )}
-
-        <div className="grid justify-self-center grid-cols-1 sm:grid-cols-1 md:grid-cols-3 gap-4 max-w-6xl w-full mt-4">
-          {(["vendor1", "vendor2", "vendor3"] as const).map(
-            (vendorKey, index) => {
-              const availableVendors = vendors.filter(
-                (v) =>
-                  !selectedVendors.includes(v.name) ||
-                  reqdVendors[vendorKey]?.name === v.name
-              );
-
-              return (
-                <div key={vendorKey} className="grid gap-1">
-                  <div className="flex gap-1">
-                    {reqdVendors[vendorKey]?.name && (
-                      <div className="text-xs text-white bg-zinc-600 rounded-full px-2">
-                        {reqdVendors[vendorKey].name}
-                      </div>
-                    )}
-                  </div>
-                  <div className="grid">
-                    <Label className="mb-3">
-                      Vendor {index + 1}{" "}
-                      <span className="text-red-500 ml-1">*</span>
-                    </Label>
-                    <Select
-                      onValueChange={(e) => {
-                        updateReqdVendors({
-                          ...reqdVendors,
-                          [vendorKey]: {
-                            name: e,
-                            vendorId:
-                              vendors.find((v) => v.name === e)?.id || "",
-                          },
-                        });
-                      }}
-                    >
-                      <SelectTrigger
-                        className={`w-full border ${
-                          vendorsError ? "border-red-500" : "border-gray-300"
-                        }`}
-                      >
-                        <SelectValue placeholder="Select Vendor" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {availableVendors.map((vendor) => (
-                          <SelectItem value={vendor.name} key={vendor.id}>
-                            {vendor.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              );
-            }
-          )}
+        <div className="relative flex justify-center max-w-5xl mx-auto mt-4  bg-gray-100 rounded-full p-2 shadow-xl mb-4">
+        <div className="relative flex gap-4">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => handleTabChange(tab.id)}
+              className={`relative z-10 px-4 py-2 text-sm font-medium transition ${tab.text} ${
+                activeTab === tab.id ? "text-black" : "text-gray-700"
+              }`}
+            >
+              {tab.label}
+              {activeTab === tab.id && (
+                <motion.div
+                  layoutId="tab-indicator"
+                  className={`absolute inset-0 ${tab.color} ${tab.text} shadow-2xl rounded-full z-[-1]`}
+                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                />
+              )}
+            </button>
+          ))}
         </div>
+      </div>
 
         {/* <div className="grid justify-self-center grid-cols-1 sm:grid-cols-1 md:grid-cols-3 gap-4 max-w-6xl w-full mt-4">
           <div className="grid gap-1">
@@ -1191,7 +1150,7 @@ export default function CreateEnquiryPage() {
                       UOM<span className="text-red-500 ml-1">*</span>
                     </TableHead>
                     <TableHead className="text-right">
-                      Action<span className="text-red-500 ml-1">*</span>
+                      Actions<span className="text-red-500 ml-1">*</span>
                     </TableHead>
                   </TableRow>
                 </TableHeader>
@@ -1218,7 +1177,6 @@ export default function CreateEnquiryPage() {
                         id: items.length + 1,
                         description: "",
                         part_no: "",
-                        impa_no: "",
                         position_no: "",
                         alternative_part_no: "",
                         uom: "",

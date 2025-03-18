@@ -41,7 +41,7 @@ export default async function BranchParticulerPage({
             <div className="flex justify-between">
                 <div>
                     <h1 className="text-2xl font-bold">
-                        Sub Merchant Details
+                        Branch Details
                     </h1>
                     <h3>
                         Id: {branch.data.id}
@@ -128,18 +128,18 @@ export default async function BranchParticulerPage({
                 </h1>
             </div>
 
-            {/* <div className="py-8">
+            <div className="py-8">
                 <div className="mb-4">
                     <h1 className="text-xl font-bold">Admin Details</h1>
                 </div>
                 {admin?.map((ad, i) =>
                     <AdminCard adminId={ad.id} key={i} adminProfile={ad.member_profile} />
                 )}
-            </div> */}
+            </div>
 
             <div className="py-8 mt-4">
                 <div className="mb-4">
-                    <h1 className="text-xl font-bold">Employees Details</h1>
+                    <h1 className="text-xl font-bold">Members Details</h1>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                     {members?.map((ad, i) =>

@@ -32,13 +32,10 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import Link from "next/link";
-<<<<<<< HEAD
-=======
 import { Textarea } from "@/components/ui/textarea";
 import { SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Trash2 } from "lucide-react";
 import VendorItem from "./VendorItem";
->>>>>>> 1d4d186 (Updated code)
 
 
 
@@ -84,15 +81,9 @@ function Drive({ drive }: { drive: any }) {
 export default function Inventory() {
     const [driveUpload, setDriveUpload] = useState<any>();
     const [products, setProducts] = useState<any[]>([]);
-<<<<<<< HEAD
-    const [newProduct, setNewProduct] = useState({ sku: "", name: "", description: "", quantity: 0, price: 0 });
-    const [drives, setDrives] = useState<any[]>([]);
-
-=======
     const [newProduct, setNewProduct] = useState({ IMPA: "", name: "", description: "", quantity: 0, price: 0 });
     const [drives, setDrives] = useState<any[]>([]);
    
->>>>>>> 1d4d186 (Updated code)
     async function handleDriveUpload(e: React.ChangeEvent<HTMLInputElement>) {
         if (e.target.files) {
             const supabase = createClient();
@@ -211,15 +202,12 @@ export default function Inventory() {
         fetchItems();
     }, []);
 
-<<<<<<< HEAD
-=======
     // @ts-ignore
 
     
 
    
 
->>>>>>> 1d4d186 (Updated code)
 
     return (
         <main className="max-w-6xl w-full grid justify-self-center mt-8">
@@ -300,11 +288,7 @@ export default function Inventory() {
                             <TableCaption>A list of your Products.</TableCaption>
                             <TableHeader>
                                 <TableRow>
-<<<<<<< HEAD
-                                    <TableHead className="w-[100px]">SKU</TableHead>
-=======
                                     <TableHead className="w-[100px]">IMPA</TableHead>
->>>>>>> 1d4d186 (Updated code)
                                     <TableHead>Name</TableHead>
                                     <TableHead>Description</TableHead>
                                     <TableHead className="text-right">Quantity</TableHead>
@@ -331,101 +315,9 @@ export default function Inventory() {
                 </Dialog>
             </div>
 
-<<<<<<< HEAD
-            <div className="mt-8">
-                <Dialog>
-                    <DialogTrigger>
-                        <Button>
-                            Add Product
-                        </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                        <DialogHeader>
-                            <DialogTitle>Add Product</DialogTitle>
-                            <DialogDescription>
-                                Enter Details of Product
-                            </DialogDescription>
-                        </DialogHeader>
-
-                        <div className="grid gap-4 py-4">
-                            <div className="grid grid-cols-4 items-center gap-4">
-                                <Label htmlFor="vesselName" className="text-right">
-                                    SKU
-                                </Label>
-                                <Input id="vesselName" placeholder="Enter SKU..." value={newProduct.sku} onChange={(e) => setNewProduct({ ...newProduct, sku: e.target.value })} className="col-span-3" />
-                            </div>
-                            <div className="grid grid-cols-4 items-center gap-4">
-                                <Label htmlFor="vesselName" className="text-right">
-                                    Name
-                                </Label>
-                                <Input id="vesselName" placeholder="Enter Name..." value={newProduct.name} onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })} className="col-span-3" />
-                            </div>
-                            <div className="grid grid-cols-4 items-center gap-4">
-                                <Label htmlFor="vesselName" className="text-right">
-                                    Description
-                                </Label>
-                                <Input id="vesselName" placeholder="Enter Description..." value={newProduct.description} onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })} className="col-span-3" />
-                            </div>
-                            {/* <div className="grid grid-cols-4 items-center gap-4">
-                                <Label htmlFor="vesselName" className="text-right">
-                                    Product Image
-                                </Label>
-                                <Input id="vesselName" placeholder="Enter Description..." type="file" className="col-span-3" onChange={handleProductImageUpload} />
-                            </div> */}
-                            <div className="grid grid-cols-4 items-center gap-4">
-                                <Label htmlFor="vesselName" className="text-right">
-                                    Quantity
-                                </Label>
-                                <Input id="vesselName" placeholder="Enter Quantity..." type="number" value={newProduct.quantity} onChange={(e) => setNewProduct({ ...newProduct, quantity: Number(e.target.value) })} className="col-span-3" />
-                            </div>
-                            <div className="grid grid-cols-4 items-center gap-4">
-                                <Label htmlFor="vesselName" className="text-right">
-                                    Price
-                                </Label>
-                                <Input id="vesselName" placeholder="Enter Price..." type="number" value={newProduct.price} onChange={(e) => setNewProduct({ ...newProduct, price: Number(e.target.value) })} className="col-span-3" />
-                            </div>
-                        </div>
-
-                        <DialogFooter>
-                            <Button type="submit" onClick={handleProductUpload}>Add Product</Button>
-                        </DialogFooter>
-                    </DialogContent>
-                </Dialog>
-            </div>
-
-            <div className="mt-4 mb-24">
-                <Table>
-                    <TableCaption>A list of your Products.</TableCaption>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead className="w-[100px]">SKU</TableHead>
-                            <TableHead>Name</TableHead>
-                            <TableHead>Description</TableHead>
-                            <TableHead className="text-right">Quantity</TableHead>
-                            <TableHead className="text-right">Price</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {products.map((product, i) =>
-                            <TableRow key={i}>
-                                <TableCell className="font-medium">{product.sku}</TableCell>
-                                <TableCell>{product.name}</TableCell>
-                                <TableCell>{product.description}</TableCell>
-                                <TableCell className="text-right">{product.quantity}</TableCell>
-                                <TableCell className="text-right">{product.price}</TableCell>
-                            </TableRow>
-                        )}
-                    </TableBody>
-                </Table>
-            </div>
-        </main>
-    )
-}
-=======
             
 
            <VendorItem/>
         </main>
     )
 }
->>>>>>> 1d4d186 (Updated code)

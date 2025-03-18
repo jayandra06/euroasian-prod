@@ -1,3 +1,4 @@
+
 'use client'
 
 import React, { createContext, useContext, useState } from 'react'
@@ -38,13 +39,10 @@ export function NavBar() {
   }
 
   return (
-<<<<<<< HEAD
-=======
     <>
     
 
     
->>>>>>> 1d4d186 (Updated code)
     <nav className="bg-gray-800 text-white p-4 flex justify-between items-center">
       <div className="text-2xl font-bold">MyApp</div>
       <div className="flex items-center">
@@ -52,11 +50,7 @@ export function NavBar() {
           <li
             onClick={() => navigate('/home')}
             className={`cursor-pointer ${currentPage === '/home' ? 'underline' : ''}`}
-<<<<<<< HEAD
-          >
-=======
             >
->>>>>>> 1d4d186 (Updated code)
             
           </li>
           <li
@@ -75,11 +69,7 @@ export function NavBar() {
         <div
           className="md:hidden text-2xl cursor-pointer text-white z-50"
           onClick={toggleMobileMenu}
-<<<<<<< HEAD
-        >
-=======
           >
->>>>>>> 1d4d186 (Updated code)
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="24"
@@ -91,11 +81,7 @@ export function NavBar() {
             strokeLinecap="round"
             strokeLinejoin="round"
             className="h-6 w-6"
-<<<<<<< HEAD
-          >
-=======
             >
->>>>>>> 1d4d186 (Updated code)
             <line x1="4" y1="12" x2="20" y2="12"></line>
             <line x1="4" y1="6" x2="20" y2="6"></line>
             <line x1="4" y1="18" x2="20" y2="18"></line>
@@ -110,11 +96,7 @@ export function NavBar() {
               toggleMobileMenu()
             }}
             className={`cursor-pointer ${currentPage === '/home' ? 'underline' : ''}`}
-<<<<<<< HEAD
-          >
-=======
             >
->>>>>>> 1d4d186 (Updated code)
             Home
           </li>
           <li
@@ -138,11 +120,7 @@ export function NavBar() {
         </ul>
       )}
     </nav>
-<<<<<<< HEAD
-=======
     
     </>
->>>>>>> 1d4d186 (Updated code)
   )
 }
-

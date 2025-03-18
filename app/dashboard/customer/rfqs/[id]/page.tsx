@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/table";
 import { createClient } from "@/utils/supabase/client";
 import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
 
 // function InfoCard() {
 //     return (
@@ -93,6 +94,7 @@ function RFQInfoCard({ rfq }) {
 }
 
 function VesselCard({ rfq }) {
+  console.log('rfq',rfq)
   return (
     <Card>
       <CardHeader>
@@ -106,7 +108,7 @@ function VesselCard({ rfq }) {
             type="text"
             id="clientName"
             placeholder="RFQ No."
-            value={rfq?.vessel_name}
+            value={rfq?.vessel}
             disabled
           />
         </div>
@@ -221,6 +223,7 @@ export default function RFQDetailPage({
     const rfq = await supabase.from("rfq").select("*").eq("id", id).single();
     console.log({ rfq });
     setRfq(rfq.data);
+    
 
     const items = await supabase
       .from("rfq_items")
@@ -230,6 +233,7 @@ export default function RFQDetailPage({
 
     console.log("Items", { data });
   }
+  console.log('fetch rfq',fetchRFQs)
 
   useEffect(() => {
     fetchRFQs();
@@ -238,7 +242,9 @@ export default function RFQDetailPage({
   return (
     <main className="grid">
       <div className="pt-4 max-w-6xl w-full grid justify-self-center">
-        <h1 className="text-3xl font-bold">RFQ Detail</h1>{" "}
+        <h1 className="text-3xl font-bold">RFQ Details</h1>{" "}
+
+        
         <span>
           status: <Badge color="orange">{rfq?.status}</Badge>
         </span>
@@ -249,6 +255,7 @@ export default function RFQDetailPage({
         <RFQInfoCard rfq={rfq} />
         <VesselCard rfq={rfq} />
         <EquipmentCard rfq={rfq} />
+      
       </main>
 
       {/* <main className="grid justify-self-center my-8 max-w-6xl w-full">
@@ -258,6 +265,7 @@ export default function RFQDetailPage({
       <div className="grid justify-self-center max-w-6xl w-full mb-24">
         <div>
           <h1 className="text-xl font-bold">Items</h1>
+          
         </div>
 
         <div className="mt-4 max-w-6xl overflow-x-scroll">

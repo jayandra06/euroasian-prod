@@ -5,10 +5,7 @@ import { User, Menu, X, ChevronDown } from "lucide-react"
 import { useNavigate } from "./Navigation"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-<<<<<<< HEAD
-=======
 
->>>>>>> 1d4d186 (Updated code)
 // import {AboutUs} from "./AboutUs.tsx"
 // import {ContactForm} from "./ContactForm.tsx"
 
@@ -218,4 +215,3 @@ export function Header() {
 }
 
 export default Header
-

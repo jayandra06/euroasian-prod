@@ -9,13 +9,9 @@
     "lint": "next lint"
   },
   "dependencies": {
-<<<<<<< HEAD
-    "@radix-ui/themes": "^1.0.0",
-=======
     "@heroui/system": "^2.4.12",
     "@heroui/tabs": "^2.2.13",
     "@heroui/theme": "^2.4.12",
->>>>>>> 1d4d186 (Updated code)
     "@radix-ui/react-accordion": "^1.2.3",
     "@radix-ui/react-alert-dialog": "^1.1.6",
     "@radix-ui/react-aspect-ratio": "^1.1.2",
@@ -43,10 +39,7 @@
     "@radix-ui/react-toggle": "^1.1.2",
     "@radix-ui/react-toggle-group": "^1.1.2",
     "@radix-ui/react-tooltip": "^1.1.8",
-<<<<<<< HEAD
-=======
     "@radix-ui/themes": "^1.0.0",
->>>>>>> 1d4d186 (Updated code)
     "@supabase/ssr": "^0.5.2",
     "@supabase/supabase-js": "^2.48.1",
     "aos": "^2.3.4",
@@ -54,26 +47,23 @@
     "clsx": "^2.1.1",
     "cmdk": "^1.0.4",
     "embla-carousel-react": "^8.5.2",
-<<<<<<< HEAD
-    "input-otp": "^1.4.2",
-    "lucide-react": "^0.475.0",
-    "mongodb": "^6.13.0",
-=======
+    "euroasiann": "file:",
     "framer-motion": "^12.5.0",
     "input-otp": "^1.4.2",
     "lucide-react": "^0.475.0",
     "mongodb": "^6.13.0",
     "motion": "^12.5.0",
->>>>>>> 1d4d186 (Updated code)
     "next": "15.1.6",
     "next-themes": "^0.4.4",
-    "react": "^19.0.0",
+    "react": "^18.3.1",
     "react-day-picker": "^9.5.1",
-    "react-dom": "^19.0.0",
+    "react-dom": "^18.3.1",
     "react-hook-form": "^7.54.2",
     "react-resizable-panels": "^2.1.7",
     "react-scroll": "^1.9.2",
+    "react-tagsinput": "^3.20.3",
     "recharts": "^2.15.1",
+    "rsuite": "^5.78.1",
     "sonner": "^2.0.0",
     "tailwind-merge": "^3.0.1",
     "tailwindcss-animate": "^1.0.7",

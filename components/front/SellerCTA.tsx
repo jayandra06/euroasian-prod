@@ -1,11 +1,7 @@
 'use client'
 
 import React from 'react';
-<<<<<<< HEAD
-import { TrendingUp, Users, Globe, FileText, PieChart, DollarSign } from 'lucide-react';
-=======
 import { TrendingUp, Users, Globe, FileText, PieChart, DollarSign, BellRing } from 'lucide-react';
->>>>>>> 1d4d186 (Updated code)
 import { useNavigate } from './Navigation';
 
 export function SellerCTA() {
@@ -30,11 +26,7 @@ export function SellerCTA() {
             </p>
           </div> */}
 
-<<<<<<< HEAD
-          <div className="bg-white shadow-md rounded-lg p-8 text-center">
-=======
           <div className="bg-white shadow-md rounded-lg p-8 text-center hover:shadow-2xl">
->>>>>>> 1d4d186 (Updated code)
             <FileText className="h-12 w-12 text-blue-600 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-blue-800 mb-2">Simplified Transactions</h3>
             <p className="text-gray-600">
@@ -42,11 +34,7 @@ export function SellerCTA() {
             </p>
           </div>
 
-<<<<<<< HEAD
-          <div className="bg-white shadow-md rounded-lg p-8 text-center">
-=======
           <div className="bg-white shadow-md rounded-lg p-8 text-center hover:shadow-2xl">
->>>>>>> 1d4d186 (Updated code)
             <PieChart className="h-12 w-12 text-blue-600 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-blue-800 mb-2">AI-Driven Insights</h3>
             <p className="text-gray-600">
@@ -54,11 +42,7 @@ export function SellerCTA() {
             </p>
           </div>
 
-<<<<<<< HEAD
-          <div className="bg-white shadow-md rounded-lg p-8 text-center">
-=======
           <div className="bg-white shadow-md rounded-lg p-8 text-center hover:shadow-2xl">
->>>>>>> 1d4d186 (Updated code)
             <Users className="h-12 w-12 text-blue-600 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-blue-800 mb-2">Verified Vendors</h3>
             <p className="text-gray-600">
@@ -66,11 +50,7 @@ export function SellerCTA() {
             </p>
           </div>
 
-<<<<<<< HEAD
-          <div className="bg-white shadow-md rounded-lg p-8 text-center" style={{position:"relative", left:"200px"}}>
-=======
           <div className="bg-white shadow-md rounded-lg p-8 text-center hover:shadow-2xl" style={{position:"relative", left:"200px"}}>
->>>>>>> 1d4d186 (Updated code)
             <TrendingUp className="h-12 w-12 text-blue-600 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-blue-800 mb-2">Business Growth</h3>
             <p className="text-gray-600">
@@ -78,11 +58,7 @@ export function SellerCTA() {
             </p>
           </div>
 
-<<<<<<< HEAD
-          <div className="bg-white shadow-md rounded-lg p-8 text-center" style={{position:"relative", left:"200px"}}>
-=======
           <div className="bg-white shadow-md rounded-lg p-8 text-center hover:shadow-2xl" style={{position:"relative", left:"200px"}}>
->>>>>>> 1d4d186 (Updated code)
             <DollarSign className="h-12 w-12 text-blue-600 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-blue-800 mb-2">Transparent Pricing</h3>
             <p className="text-gray-600">
@@ -94,19 +70,12 @@ export function SellerCTA() {
         <div className="text-center">
           <button
             onClick={() => navigate('/maintenance')}
-<<<<<<< HEAD
-            className="bg-blue-600 text-white px-10 py-4 rounded-md text-lg font-semibold shadow-lg hover:bg-blue-700 transition-transform transform hover:scale-105"
-          >
-            Subscribe
-=======
             className="bg-blue-600 flex mx-auto gap-3 text-white px-10 py-4 rounded-md text-lg font-semibold shadow-lg hover:bg-blue-700  transform transition-all hover:scale-105"
           >
            <BellRing className='mt-0.5' /> Subscribe
->>>>>>> 1d4d186 (Updated code)
           </button>
         </div>
       </div>
     </section>
   );
 }
-

@@ -116,59 +116,32 @@ const vendorData = {
           title: "Dashboard",
           url: "/dashboard/vendor",
         },
-<<<<<<< HEAD
-=======
         
->>>>>>> 1d4d186 (Updated code)
         {
           title: "RFQs",
           url: "/dashboard/vendor/rfqs",
         },
         {
-<<<<<<< HEAD
-=======
           title: "Orders",
           url: "/dashboard/vendor/orders",
         },
         {
->>>>>>> 1d4d186 (Updated code)
           title: "Details",
           url: "/dashboard/vendor/details",
         },
-        {
-          title: "Employees",
-          url: "/dashboard/vendor/branch",
-        },
+        
       ],
     },
     {
-      title: "Products",
+      title: "Catalog",
       url: "#",
       icon: Bot,
       items: [
         {
-<<<<<<< HEAD
-          title: "Inventory",
-          url: "/dashboard/vendor/inventory",
-        },
-        {
-          title: "Brands",
-          url: "/dashboard/vendor/brands",
-        },
-        {
-          title: "Models",
-          url: "/dashboard/vendor/models",
-        },
-        {
-          title: "Categories",
-          url: "/dashboard/vendor/categories",
-        },
-=======
           title: "Catalog Management",
           url: "/dashboard/vendor/inventory",
         },
        
->>>>>>> 1d4d186 (Updated code)
       ],
     },
     {
@@ -203,37 +176,76 @@ const customerData = {
     role: "customer"
   },
   navMain: [
+    
     {
-      title: "Dashboard",
-      url: "#",
-      icon: SquareTerminal,
-      isActive: true,
-      items: [
-        {
-          title: "Dashboard",
-          url: "/dashboard/customer",
-        },
+      title: "Fleet Overview",
+      url: "/dashboard/customer",
+      
+      
+    },
+    {
+      title: "Financial & Procurement",
+      url: "/dashboard/customer",
+      isActive: false,
+      items:[
         {
           title: "RFQs",
           url: "/dashboard/customer/rfqs",
         },
-      ],
+        {
+          title: "Vendor Management",
+          url: "/dashboard/customer/vendorManagement",
+        },
+      ]
+      
+      
+    },
+    {
+      title: "Fleet performance & Maintainece",
+      url: "/dashboard/customer",
+      
+      
+    },
+    {
+      title: "Vessel Finder & Route Opimization ",
+      url: "/dashboard/customer",
+      
+      
+    },
+    {
+      title: "Complaince & Certifcation",
+      url: "/dashboard/customer",
+      
+      
+    },
+    {
+      title: "Crew Management",
+      url: "/dashboard/customer",
+      
+      
+    },
+    {
+      title: "Risk & Incident Management",
+      url: "/dashboard/customer",
+      
+      
+    },
+    {
+      title: "Sustuabinability & ESG Reporting",
+      url: "/dashboard/customer",
+      
+      
     },
     {
       title: "Branch",
-      url: "#",
-      icon: Bot,
-      items: [
-        {
-          title: "All Branch",
-          url: "/dashboard/customer/branch",
-        },
-      ],
+      url: "/dashboard/customer/branch",
+     
+      
     },
     {
       title: "Support",
       url: "#",
-      icon: BookOpen,
+      
       items: [
         {
           title: "Become a Seller",

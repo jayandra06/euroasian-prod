@@ -100,8 +100,8 @@ export default function RFQsPage() {
           <React.Fragment key={rfq.id}>
          
             <tr key={i} className="border border-gray-300">
-              <td className="border border-gray-300 px-4 py-2">{rfq.id}</td>
-              <td className="border border-gray-300 px-4 py-2">{rfq.created_at}</td>
+              <td className="border border-gray-300 px-4 py-2">{` EA${new Date().getFullYear()}${rfq.id}`.slice(1, 15)}</td>
+              <td className="border border-gray-300 px-4 py-2">{new Date(rfq.created_at).toLocaleString('en-US', { year: 'numeric', month: 'short', day:"2-digit", hour: '2-digit', minute: '2-digit' })}</td>
               <td className="border border-gray-300 px-4 py-2">{rfq.supply_port || "-"}</td>
               <td className="border border-gray-300 px-4 py-2">{rfq.vessel_name || "-"}</td>
               <td className="border border-gray-300 px-4 py-2">{rfq.brand || "-"}</td>
@@ -117,7 +117,7 @@ export default function RFQsPage() {
             </tr>
             {expandedRow === i && (
               <tr className="bg-gray-50">
-                <td colSpan={5} className="px-4 py-2 border border-gray-300">
+                <td colSpan={5} className="px-4 py-2">
                   <div className="p-2">
                   <strong>Items:</strong>
                       {rfqItems[rfq.id] ? (
@@ -146,6 +146,12 @@ export default function RFQsPage() {
                     </Link> */}
                   </div>
                 </td>
+                <td><Button><Link
+                href={"/dashboard/customer/view-rfq"}
+                className="text-center text-white py-2 text-xs font-semibold grid w-full rounded-lg bg-black dark:text-black dark:bg-white "
+              >
+                View Rfq
+              </Link></Button></td>
               </tr>
             )}
           </React.Fragment>
