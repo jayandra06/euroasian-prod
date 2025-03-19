@@ -9,9 +9,12 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@heroicons/react": "^2.2.0",
     "@heroui/system": "^2.4.12",
     "@heroui/tabs": "^2.2.13",
     "@heroui/theme": "^2.4.12",
+    "@material-tailwind/react": "^2.1.10",
+    "@preline/tabs": "^3.0.0",
     "@radix-ui/react-accordion": "^1.2.3",
     "@radix-ui/react-alert-dialog": "^1.1.6",
     "@radix-ui/react-aspect-ratio": "^1.1.2",

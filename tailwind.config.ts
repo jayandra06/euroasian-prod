@@ -12,6 +12,22 @@ export default {
   theme: {
   	extend: {
   		colors: {
+			rfqr1: "#3b82f6", // Blue
+        rfq2: "#10b981", // Green
+        rfq3: "#ef4444", // Red
+        rfq4: "#8b5cf6", // Purple
+		blue: {
+			50: "#e6f1fe",
+			100: "#cce3fd",
+			200: "#99c7fb",
+			300: "#66aaf9",
+			400: "#338ef7",
+			500: "#006FEE",
+			600: "#005bc4",
+			700: "#004493",
+			800: "#002e62",
+			900: "#001731",
+		  },
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
   			card: {
@@ -26,6 +42,28 @@ export default {
   				DEFAULT: 'hsl(var(--primary))',
   				foreground: 'hsl(var(--primary-foreground))'
   			},
+			rfqreceived :{
+				DEFAULT: "#3b82f6", // Blue
+          light: "#60a5fa", // Lighter blue
+          dark: "#2563eb", // Darker blue
+
+			},
+			rfqsent:{
+				DEFAULT: "#180828", // Blue
+          light: "#60a5fa", // Lighter blue
+          dark: "#2563eb", // Darker blue
+
+			},
+			ordercancelled:{
+				DEFAULT:"black",
+				foreground:"red"
+
+			},
+			orderconfigm:{
+				DEFAULT:"black",
+				foreground:"red"
+
+			},
   			
   			muted: {
   				DEFAULT: 'hsl(var(--muted))',

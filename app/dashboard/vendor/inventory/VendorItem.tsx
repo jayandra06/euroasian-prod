@@ -135,7 +135,7 @@ const VendorItem = () => {
                                     <input 
                                         type="text" 
                                         value={item.part_no}
-                                        placeholder="portno" 
+                                        placeholder="partno" 
                                         className="border p-1 w-full text-sm rounded shadow-md border-gray-400"
                                         onChange={(e) => handleUpdateItem(item.id, "part_no", e.target.value)} 
                                     />
