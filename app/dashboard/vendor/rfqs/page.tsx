@@ -13,17 +13,24 @@ import {
 import { createClient } from "@/utils/supabase/client";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
-import { Checkbox } from "@/components/ui/checkbox";
-import { CornerRightDown } from "lucide-react";
-import { Tabs, Tab } from "@heroui/tabs";
+import { motion } from "framer-motion";
+
+const tabs = [
+  { id: "all", label: "All" , color:"bg-white" , text:"text-black" },
+  { id: "received", label: "RFQ Received" , color:"bg-blue-500" },
+  { id: "sent", label: "RFQ Sent", color:"bg-green-400" },
+  { id: "confirmed", label: "Order Confirmed", color:"bg-green-700" },
+  { id: "cancelled", label: "Order Cancelled" , color:"bg-red-600" },
+];
+
 
 export default function RFQsPage() {
   const [rfqs, setRfqs] = useState<any[]>([]);
   const [expandedRow, setExpandedRow] = useState<number | null>(null);
   const [rfqItems, setRfqItems] = useState<{ [key: number]: any[] }>({}); // Store items for each RFQ
-
   const [filterRfqs, setFilterRfq] = useState<any[]>([]);
-  const [selectedTab, setSelectedTab] = useState<string>("All");
+  const [activeTab, setActiveTab] = useState("all");
+  
 
   const supabase = createClient();
 
@@ -65,37 +72,44 @@ export default function RFQsPage() {
     fetchRfqs();
   }, []);
 
-  const handleTabChange = (tabkey: string) => {
-    setSelectedTab(tabkey);
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
 
-    if (tabkey === "All") {
-      setFilterRfq(rfqs);
-    } else if (tabkey === "received") {
-      setFilterRfq(rfqs.filter((rfq) => rfq.status === "receive"));
-    } else if (tabkey === "sent") {
-      setFilterRfq(rfqs.filter((rfq) => rfq.status === "sent"));
-    } else if (tabkey === "confirmed") {
-      setFilterRfq(rfqs.filter((rfq) => new Date(rfq.due_date) > new Date()));
-    } else if (tabkey === "cancelled") {
-      setFilterRfq(rfqs.filter((rfq) => new Date(rfq.due_date) < new Date()));
-    }
-  };
+    let filteredData = [...rfqs];
 
-  const activeTab = (key: string) => {
-    switch (key) {
-      case "All":
-        return "primary";
+    switch (tab) {
       case "received":
-        return "success";
-
+        filteredData = rfqs.filter((rfqs) => rfqs.supply_port === "Tamil Nadu");
+        break;
       case "sent":
-        return "primary";
+        filteredData = rfqs.filter((rfqs) => rfqs.supply_port === "Goa");
+        break;
       case "cancelled":
-        return "danger";
+        filteredData = rfqs.filter((rfqs) => rfqs.supply_port === "Kerala");
+        break;
       case "confirmed":
-        return "success";
+        filteredData = rfqs.filter((rfqs) => rfqs.supply_port === "Mumbai");
+        break;
+      default:
+        filteredData = rfqs;
     }
+
+    setFilterRfq(filteredData);
   };
+
+  const handleData = (rfqs:any)=>{
+    if(rfqs.supply_port === "Goa"){
+      return 'Sent'
+
+    }else if(rfqs.supply_port === 'Tamil Nadu'){
+      return 'Received'
+    }else if(rfqs.supply_port === 'Kerala'){
+      return 'Cancelled'
+    }else if(rfqs.supply_port === "Mumbai"){
+      return 'Confirmed'
+    }
+  }
+  
 
   return (
     <>
@@ -104,97 +118,71 @@ export default function RFQsPage() {
           RFQs (Request for Quotes)
         </h1>
       </div>
-      <div className="mx-auto">
-        <Tabs
-          aria-label="Tabs colors"
-          color={activeTab(selectedTab)}
-          radius="full"
-          selectedKey={selectedTab}
-          onSelectionChange={(key) => handleTabChange(key as string)}
-        >
-          <Tab key="All" title="All" />
-          <Tab key="received" title="RFQ Received" />
-          <Tab key="sent" title="RFQ Sent" />
-          <Tab key="cancelled" title="Order Cancelled" />
-          <Tab key="confirmed" title="Order Confirmed" />
-        </Tabs>
+      <div className="relative flex justify-center max-w-5xl mx-auto mt-4  bg-gray-100 rounded-full p-2 shadow-xl mb-4">
+        <div className="relative flex gap-4">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => handleTabChange(tab.id)}
+              className={`relative z-10 px-4 py-2 text-sm font-medium transition ${tab.text} ${
+                activeTab === tab.id ? "text-black" : "text-gray-700"
+              }`}
+            >
+              {tab.label}
+              {activeTab === tab.id && (
+                <motion.div
+                  layoutId="tab-indicator"
+                  className={`absolute inset-0 ${tab.color} ${tab.text} shadow-2xl rounded-full z-[-1]`}
+                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                />
+              )}
+            </button>
+          ))}
+        </div>
       </div>
+     
+
+      
 
       <table className="mt-4 w-full max-w-7xl border-collapse border border-gray-300">
         <thead>
           <tr className="bg-gray-100">
-            <th className="border border-gray-300 px-4 py-2 text-left">
-              Ref ID
-            </th>
-            <th className="border border-gray-300 px-4 py-2 text-left">
-              Lead Date
-            </th>
-            <th className="border border-gray-300 px-4 py-2 text-left">
-              Supply Port
-            </th>
-            <th className="border border-gray-300 px-4 py-2 text-left">
-              Vessel Name
-            </th>
-            <th className="border border-gray-300 px-4 py-2 text-left">
-              Brand
-            </th>
-            <th className="border border-gray-300 px-4 py-2 text-left">
-              RFQ Status
-            </th>
-            <th className="border border-gray-300 px-4 py-2 text-left">
-              Order Status
-            </th>
-            <th className="border border-gray-300 px-4 py-2 text-left">
-              Action
-            </th>
+            <th className="border border-gray-300 px-4 py-2 text-left">Ref ID</th>
+            <th className="border border-gray-300 px-4 py-2 text-left">Lead Date</th>
+            <th className="border border-gray-300 px-4 py-2 text-left">Supply Port</th>
+            <th className="border border-gray-300 px-4 py-2 text-left">Vessel Name</th>
+            <th className="border border-gray-300 px-4 py-2 text-left">Brand</th>
+            <th className="border border-gray-300 px-4 py-2 text-left">RFQ Status</th>
+            
+            <th className="border border-gray-300 px-4 py-2 text-left">Action</th>
           </tr>
         </thead>
         <tbody>
           {filterRfqs.map((rfq, i) => (
-            <React.Fragment key={rfq.id}>
-              <tr key={i} className={`border border-gray-300 ${rfq.status === "sent" && new Date(rfq.due_date) > new Date()
-                        ? "bg-red-700"
-                        : "bg-green-400"
-                    } `}>
+            <React.Fragment key={i}>
+              <tr key={i} className={`border border-gray-300 ${rfq.supply_port === "Goa"
+                ? "bg-green-600"
+                : rfq.supply_port === "Kerala"
+                ? "bg-red-600"
+                : rfq.supply_port === "Mumbai"
+                ? "bg-green-700"
+                : rfq.supply_port === "Tamil Nadu"
+                ? "bg-blue-500"
+                :"bg-none"} `}>
                 <td className="border border-gray-300 px-4 py-2">{rfq.id}</td>
-                <td className="border border-gray-300 px-4 py-2">
-                  {rfq.created_at}
-                </td>
-                <td className="border border-gray-300 px-4 py-2">
-                  {rfq.supply_port || "-"}
-                </td>
-                <td className="border border-gray-300 px-4 py-2">
-                  {rfq.vessel_name || "-"}
-                </td>
-                <td className="border border-gray-300 px-4 py-2">
-                  {rfq.brand || "-"}
-                </td>
+                <td className="border border-gray-300 px-4 py-2">{rfq.created_at}</td>
+                <td className="border border-gray-300 px-4 py-2">{rfq.supply_port || "-"}</td>
+                <td className="border border-gray-300 px-4 py-2">{rfq.vessel_name || "-"}</td>
+                <td className="border border-gray-300 px-4 py-2">{rfq.brand || "-"}</td>
                 <td className="text-center border border-gray-300">
                   <Badge
-                    className={`inline-flex items-center justify-center px-2 py-1 text-white rounded ${
-                      rfq.status === "sent"
-                        ? "bg-blue-600 hover:bg-blue-600"
-                        : "bg-red-700 hover:bg-red-600"
-                    }`}
+                    className="inline-flex items-center justify-center px-2 py-1 text-white b rounded"
                   >
-                    {rfq.status || "-"}
+                    {handleData(rfq)}
                   </Badge>
+                  
                 </td>
-                <td className="text-center">
-                  <Badge
-                    className={`inline-flex items-center justify-center px-2 py-1 text-white rounded ${
-                      new Date(rfq.due_date) > new Date()
-                        ? "bg-blue-600 hover:bg-blue-600"
-                        : "bg-red-700 hover:bg-red-700"
-                    }`}
-                  >
-                    {new Date(rfq.due_date) > new Date() ? (
-                      <p>Confirmed</p>
-                    ) : (
-                      <p>Cancelled</p>
-                    )}
-                  </Badge>
-                </td>
+                
                 <td className="border border-gray-300 px-4 py-2">
                   <button
                     onClick={() => toggleRow(i, rfq.id)}
