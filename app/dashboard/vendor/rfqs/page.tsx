@@ -16,13 +16,12 @@ import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 
 const tabs = [
-  { id: "all", label: "All" , color:"bg-white" , text:"text-black" },
-  { id: "received", label: "RFQ Received" , color:"bg-blue-500" },
-  { id: "sent", label: "RFQ Sent", color:"bg-green-400" },
-  { id: "confirmed", label: "Order Confirmed", color:"bg-green-700" },
-  { id: "cancelled", label: "Order Cancelled" , color:"bg-red-600" },
+  { id: "all", label: "All", color: "bg-white", text: "text-black" },
+  { id: "received", label: "RFQ Received", color: "bg-blue-500" },
+  { id: "sent", label: "RFQ Sent", color: "bg-green-400" },
+  { id: "confirmed", label: "Order Confirmed", color: "bg-green-700" },
+  { id: "cancelled", label: "Order Cancelled", color: "bg-red-600" },
 ];
-
 
 export default function RFQsPage() {
   const [rfqs, setRfqs] = useState<any[]>([]);
@@ -30,7 +29,6 @@ export default function RFQsPage() {
   const [rfqItems, setRfqItems] = useState<{ [key: number]: any[] }>({}); // Store items for each RFQ
   const [filterRfqs, setFilterRfq] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState("all");
-  
 
   const supabase = createClient();
 
@@ -97,19 +95,17 @@ export default function RFQsPage() {
     setFilterRfq(filteredData);
   };
 
-  const handleData = (rfqs:any)=>{
-    if(rfqs.supply_port === "Goa"){
-      return 'Sent'
-
-    }else if(rfqs.supply_port === 'Tamil Nadu'){
-      return 'Received'
-    }else if(rfqs.supply_port === 'Kerala'){
-      return 'Cancelled'
-    }else if(rfqs.supply_port === "Mumbai"){
-      return 'Confirmed'
+  const handleData = (rfqs: any) => {
+    if (rfqs.supply_port === "Goa") {
+      return "Sent";
+    } else if (rfqs.supply_port === "Tamil Nadu") {
+      return "Received";
+    } else if (rfqs.supply_port === "Kerala") {
+      return "Cancelled";
+    } else if (rfqs.supply_port === "Mumbai") {
+      return "Confirmed";
     }
-  }
-  
+  };
 
   return (
     <>
@@ -140,9 +136,6 @@ export default function RFQsPage() {
           ))}
         </div>
       </div>
-     
-
-      
 
       <table className="mt-4 w-full max-w-7xl border-collapse border border-gray-300">
         <thead>
@@ -153,22 +146,16 @@ export default function RFQsPage() {
             <th className="border border-gray-300 px-4 py-2 text-left">Vessel Name</th>
             <th className="border border-gray-300 px-4 py-2 text-left">Brand</th>
             <th className="border border-gray-300 px-4 py-2 text-left">RFQ Status</th>
-            
-            <th className="border border-gray-300 px-4 py-2 text-left">Action</th>
           </tr>
         </thead>
         <tbody>
           {filterRfqs.map((rfq, i) => (
             <React.Fragment key={i}>
-              <tr key={i} className={`border border-gray-300 ${rfq.supply_port === "Goa"
-                ? "bg-green-600"
-                : rfq.supply_port === "Kerala"
-                ? "bg-red-600"
-                : rfq.supply_port === "Mumbai"
-                ? "bg-green-700"
-                : rfq.supply_port === "Tamil Nadu"
-                ? "bg-blue-500"
-                :"bg-none"} `}>
+              <tr
+                key={i}
+                className="border border-gray-300 cursor-pointer"
+                onClick={() => toggleRow(i, rfq.id)}
+              >
                 <td className="border border-gray-300 px-4 py-2">{rfq.id}</td>
                 <td className="border border-gray-300 px-4 py-2">{rfq.created_at}</td>
                 <td className="border border-gray-300 px-4 py-2">{rfq.supply_port || "-"}</td>
@@ -176,25 +163,25 @@ export default function RFQsPage() {
                 <td className="border border-gray-300 px-4 py-2">{rfq.brand || "-"}</td>
                 <td className="text-center border border-gray-300">
                   <Badge
-                    className="inline-flex items-center justify-center px-2 py-1 text-white b rounded"
+                    className={`inline-flex items-center justify-center px-2 py-1 text-white b rounded ${
+                      rfq.supply_port === "Goa"
+                        ? "bg-green-600"
+                        : rfq.supply_port === "Kerala"
+                        ? "bg-red-600"
+                        : rfq.supply_port === "Mumbai"
+                        ? "bg-green-700"
+                        : rfq.supply_port === "Tamil Nadu"
+                        ? "bg-blue-500"
+                        : "bg-none"
+                    }`}
                   >
                     {handleData(rfq)}
                   </Badge>
-                  
-                </td>
-                
-                <td className="border border-gray-300 px-4 py-2">
-                  <button
-                    onClick={() => toggleRow(i, rfq.id)}
-                    className="text-white px-4 py-1 text-xs font-semibold rounded bg-black dark:text-black dark:bg-white"
-                  >
-                    {expandedRow === i ? "Hide Details" : "View Details"}
-                  </button>
                 </td>
               </tr>
               {expandedRow === i && (
                 <tr className="bg-gray-50">
-                  <td colSpan={5} className="px-4 py-2">
+                  <td colSpan={6} className="px-4 py-2">
                     <div className="p-2">
                       <strong>Items:</strong>
                       {rfqItems[rfq.id] ? (

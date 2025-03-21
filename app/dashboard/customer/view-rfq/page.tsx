@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { motion } from "framer-motion";
 // import { useRouter } from "next/router";
 
 import {
@@ -33,6 +34,13 @@ import {
 import { Loader, Trash2 } from "lucide-react";
 import ErrorToast from "@/components/ui/errorToast";
 import SuccessToast from "@/components/ui/successToast";
+
+const tabs = [
+  { id: "Vendor 1", label: "Vendor 1", color: "bg-white", text: "text-black" },
+  { id: "Vendor 2", label: "Vendor 2", color: "bg-blue-500" },
+  { id: "Vendor 3", label: "Vendor 3", color: "bg-green-400" },
+  
+];
 
 // function InfoCard() {
 //     return (
@@ -631,7 +639,9 @@ function Item({ item, handleUpdateItem, handleRemove, setErrors, errors }) {
   );
 }
 
-export default function CreateEnquiryPage() {
+
+
+export default function ViewRfq() {
   const [reqdVendors, updateReqdVendors] = useState({
     vendor1: {
       name: "",
@@ -646,6 +656,11 @@ export default function CreateEnquiryPage() {
       vendorId: "",
     },
   });
+   const [rfqs, setRfqs] = useState<any[]>([]);
+    const [expandedRow, setExpandedRow] = useState<number | null>(null);
+    const [rfqItems, setRfqItems] = useState<{ [key: number]: any[] }>({}); // Store items for each RFQ
+    const [filterRfqs, setFilterRfq] = useState<any[]>([]);
+    const [activeTab, setActiveTab] = useState("all");
 
   const [brands, setBrands] = useState<any[]>([]);
   const [offerQuality, setofferQuality] = useState<any[]>([]);
@@ -879,6 +894,45 @@ export default function CreateEnquiryPage() {
     }
   }
 
+  async function fetchRfqs() {
+      const supabase = createClient();
+  
+      const rfqs = await supabase.from("rfq").select();
+      console.log("rfq", rfqs);
+  
+      setRfqs([...rfqs.data!]);
+      setFilterRfq([...rfqs.data!]);
+    }
+  
+    useEffect(() => {
+      fetchRfqs();
+    }, []);
+
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+
+    let filteredData = [...rfqs];
+
+    switch (tab) {
+      case "received":
+        filteredData = rfqs.filter((rfqs) => rfqs.supply_port === "Tamil Nadu");
+        break;
+      case "sent":
+        filteredData = rfqs.filter((rfqs) => rfqs.supply_port === "Goa");
+        break;
+      case "cancelled":
+        filteredData = rfqs.filter((rfqs) => rfqs.supply_port === "Kerala");
+        break;
+      case "confirmed":
+        filteredData = rfqs.filter((rfqs) => rfqs.supply_port === "Mumbai");
+        break;
+      default:
+        filteredData = rfqs;
+    }
+
+    setFilterRfq(filteredData);
+  };
+
   useEffect(() => {
     void fetchDetails();
   }, []);
@@ -924,68 +978,28 @@ export default function CreateEnquiryPage() {
         <div className="flex w-full max-w-6xl justify-self-center items-center mt-8">
           <h1 className="text-xl font-bold">Choose vendors</h1>
         </div>
-        {vendorsError && (
-          <div className="text-red-500 text-sm ml-32 mt-2">
-            Please select all vendors.
-          </div>
-        )}
-
-        <div className="grid justify-self-center grid-cols-1 sm:grid-cols-1 md:grid-cols-3 gap-4 max-w-6xl w-full mt-4">
-          {(["vendor1", "vendor2", "vendor3"] as const).map(
-            (vendorKey, index) => {
-              const availableVendors = vendors.filter(
-                (v) =>
-                  !selectedVendors.includes(v.name) ||
-                  reqdVendors[vendorKey]?.name === v.name
-              );
-
-              return (
-                <div key={vendorKey} className="grid gap-1">
-                  <div className="flex gap-1">
-                    {reqdVendors[vendorKey]?.name && (
-                      <div className="text-xs text-white bg-zinc-600 rounded-full px-2">
-                        {reqdVendors[vendorKey].name}
-                      </div>
-                    )}
-                  </div>
-                  <div className="grid">
-                    <Label className="mb-3">
-                      Vendor {index + 1}{" "}
-                      <span className="text-red-500 ml-1">*</span>
-                    </Label>
-                    <Select
-                      onValueChange={(e) => {
-                        updateReqdVendors({
-                          ...reqdVendors,
-                          [vendorKey]: {
-                            name: e,
-                            vendorId:
-                              vendors.find((v) => v.name === e)?.id || "",
-                          },
-                        });
-                      }}
-                    >
-                      <SelectTrigger
-                        className={`w-full border ${
-                          vendorsError ? "border-red-500" : "border-gray-300"
-                        }`}
-                      >
-                        <SelectValue placeholder="Select Vendor" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {availableVendors.map((vendor) => (
-                          <SelectItem value={vendor.name} key={vendor.id}>
-                            {vendor.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              );
-            }
-          )}
+        <div className="relative flex justify-center max-w-5xl mx-auto mt-4  bg-gray-100 rounded-full p-2 shadow-xl mb-4">
+        <div className="relative flex gap-4">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => handleTabChange(tab.id)}
+              className={`relative z-10 px-4 py-2 text-sm font-medium transition ${tab.text} ${
+                activeTab === tab.id ? "text-black" : "text-gray-700"
+              }`}
+            >
+              {tab.label}
+              {activeTab === tab.id && (
+                <motion.div
+                  layoutId="tab-indicator"
+                  className={`absolute inset-0 ${tab.color} ${tab.text} shadow-2xl rounded-full z-[-1]`}
+                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                />
+              )}
+            </button>
+          ))}
         </div>
+      </div>
 
         {/* <div className="grid justify-self-center grid-cols-1 sm:grid-cols-1 md:grid-cols-3 gap-4 max-w-6xl w-full mt-4">
           <div className="grid gap-1">

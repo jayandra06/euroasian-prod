@@ -92,32 +92,27 @@ export default function RFQsPage() {
           <th className="border border-gray-300 px-4 py-2 text-left">Vessel Name</th>
           <th className="border border-gray-300 px-4 py-2 text-left">Brand</th>
           <th className="border border-gray-300 px-4 py-2 text-left">Status</th>
-          <th className="border border-gray-300 px-4 py-2 text-left">Action</th>
+          
         </tr>
       </thead>
       <tbody>
         {rfqs.map((rfq, i) => (
           <React.Fragment key={rfq.id}>
          
-            <tr key={i} className="border border-gray-300">
-              <td className="border border-gray-300 px-4 py-2">{rfq.id}</td>
-              <td className="border border-gray-300 px-4 py-2">{rfq.created_at}</td>
+            <tr  onClick={() => toggleRow(i, rfq.id)} key={i} className="border cursor-pointer border-gray-300">
+              <td className="border border-gray-300 px-4 py-2">{` EA${new Date().getFullYear()}${rfq.id}`.slice(1, 15)}</td>
+              <td className="border border-gray-300 px-4 py-2">{new Date(rfq.created_at).toLocaleString('en-US', { year: 'numeric', month: 'short', day:"2-digit", hour: '2-digit', minute: '2-digit' })}</td>
               <td className="border border-gray-300 px-4 py-2">{rfq.supply_port || "-"}</td>
               <td className="border border-gray-300 px-4 py-2">{rfq.vessel_name || "-"}</td>
               <td className="border border-gray-300 px-4 py-2">{rfq.brand || "-"}</td>
               <td className="border border-gray-300 px-4 py-2">{rfq.status || "-"}</td>
-              <td className="border border-gray-300 px-4 py-2">
-              <button
-                    onClick={() => toggleRow(i, rfq.id)}
-                    className="text-white px-4 py-1 text-xs font-semibold rounded bg-black dark:text-black dark:bg-white"
-                  >
-                  {expandedRow === i ? "Hide Details" : "View Details"}
-                </button>
-              </td>
+              
+             
+              
             </tr>
             {expandedRow === i && (
               <tr className="bg-gray-50">
-                <td colSpan={5} className="px-4 py-2 border border-gray-300">
+                <td colSpan={5} className="px-4 py-2">
                   <div className="p-2">
                   <strong>Items:</strong>
                       {rfqItems[rfq.id] ? (
@@ -146,6 +141,7 @@ export default function RFQsPage() {
                     </Link> */}
                   </div>
                 </td>
+                <td><Button className="mx-auto">View Rfq</Button></td>
               </tr>
             )}
           </React.Fragment>
