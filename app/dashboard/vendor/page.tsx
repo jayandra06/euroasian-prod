@@ -10,11 +10,21 @@ import {
     CardTitle,
 } from "@/components/ui/card"
 import { useState, useEffect } from "react";
+<<<<<<< HEAD
 import { createClient } from "@/utils/supabase/client"
 ;
 
 
 function RFQCard({rfqs}: {rfqs: number}) {
+=======
+import { createClient } from "@/utils/supabase/client";
+
+
+
+
+function RFQCard({rfqs}:{rfqs:number}) {
+
+>>>>>>> 1d4d186 (Updated code)
     return (
         <Card>
             <CardHeader>
@@ -24,6 +34,10 @@ function RFQCard({rfqs}: {rfqs: number}) {
             <CardContent>
                 <h1 className="text-3xl font-bold">
                     {rfqs}
+<<<<<<< HEAD
+=======
+                    
+>>>>>>> 1d4d186 (Updated code)
                 </h1>
             </CardContent>
             <CardFooter>

@@ -42,7 +42,11 @@ export default function ContactForm() {
               value={formData.name}
               onChange={handleChange}
               required
+<<<<<<< HEAD
               className="w-full px-3 py-2 text-gray-900 bg-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500"
+=======
+              className="w-full px-3 py-2 outline-none text-gray-900 bg-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500"
+>>>>>>> 1d4d186 (Updated code)
             />
           </div>
           <div className="mb-4">

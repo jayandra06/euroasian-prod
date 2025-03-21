@@ -60,14 +60,22 @@ export function PopularServices() {
           {steps.map((step, index) => (
             <div 
               key={index} 
+<<<<<<< HEAD
               className="p-8 bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-sm border border-cyan-500/10 rounded-lg hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1"
+=======
+              className="p-8 bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-sm border border-cyan-500/10 rounded-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1"
+>>>>>>> 1d4d186 (Updated code)
               style={{
                 backgroundImage: "url('/api/placeholder/800/600')",
                 backgroundSize: 'cover',
                 backgroundBlendMode: 'overlay'
               }}
             >
+<<<<<<< HEAD
               <div className="text-cyan-400 mb-4 transform transition-transform duration-300 hover:scale-110">
+=======
+              <div className="text-cyan-400 mb-4 transform transition-transform duration-300">
+>>>>>>> 1d4d186 (Updated code)
                 {step.icon}
               </div>
               <h3 className="text-xl font-semibold mb-4 text-white">{step.title}</h3>
@@ -86,8 +94,13 @@ export function PopularServices() {
             </div>
             <h2 className="text-2xl font-bold text-white" >For Buyers</h2>
             </div>
+<<<<<<< HEAD
             <p className="text-gray-300 max-w-lg" style={{marginLeft:"89px", textAlign:"center", marginTop:"10px"}}>
               Access our global network of verified maritime Vendors. Streamline your procurement
+=======
+            <p className="text-gray-300 max-w-lg text-center">
+              Access our global network of verified maritime Vendors.  <br />Streamline your procurement
+>>>>>>> 1d4d186 (Updated code)
               process and find the best deals for your fleet.
             </p>
             
@@ -105,8 +118,13 @@ export function PopularServices() {
             </div>
             <h2 className="text-2xl font-bold text-white">For Vendors</h2>
             </div>
+<<<<<<< HEAD
             <p className="text-gray-300 max-w-lg" style={{marginLeft:"89px", textAlign:"center", marginTop:"10px"}}>
               Expand your reach in the maritime industry. Connect with shipowners and managers
+=======
+            <p className="text-gray-300 max-w-lg text-center">
+              Expand your reach in the maritime industry. <br /> Connect with shipowners and managers
+>>>>>>> 1d4d186 (Updated code)
               worldwide and grow your business.
             </p>
             {/* <button

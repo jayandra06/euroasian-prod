@@ -32,6 +32,13 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import Link from "next/link";
+<<<<<<< HEAD
+=======
+import { Textarea } from "@/components/ui/textarea";
+import { SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Trash2 } from "lucide-react";
+import VendorItem from "./VendorItem";
+>>>>>>> 1d4d186 (Updated code)
 
 
 
@@ -77,9 +84,15 @@ function Drive({ drive }: { drive: any }) {
 export default function Inventory() {
     const [driveUpload, setDriveUpload] = useState<any>();
     const [products, setProducts] = useState<any[]>([]);
+<<<<<<< HEAD
     const [newProduct, setNewProduct] = useState({ sku: "", name: "", description: "", quantity: 0, price: 0 });
     const [drives, setDrives] = useState<any[]>([]);
 
+=======
+    const [newProduct, setNewProduct] = useState({ IMPA: "", name: "", description: "", quantity: 0, price: 0 });
+    const [drives, setDrives] = useState<any[]>([]);
+   
+>>>>>>> 1d4d186 (Updated code)
     async function handleDriveUpload(e: React.ChangeEvent<HTMLInputElement>) {
         if (e.target.files) {
             const supabase = createClient();
@@ -198,6 +211,15 @@ export default function Inventory() {
         fetchItems();
     }, []);
 
+<<<<<<< HEAD
+=======
+    // @ts-ignore
+
+    
+
+   
+
+>>>>>>> 1d4d186 (Updated code)
 
     return (
         <main className="max-w-6xl w-full grid justify-self-center mt-8">
@@ -278,7 +300,11 @@ export default function Inventory() {
                             <TableCaption>A list of your Products.</TableCaption>
                             <TableHeader>
                                 <TableRow>
+<<<<<<< HEAD
                                     <TableHead className="w-[100px]">SKU</TableHead>
+=======
+                                    <TableHead className="w-[100px]">IMPA</TableHead>
+>>>>>>> 1d4d186 (Updated code)
                                     <TableHead>Name</TableHead>
                                     <TableHead>Description</TableHead>
                                     <TableHead className="text-right">Quantity</TableHead>
@@ -305,6 +331,7 @@ export default function Inventory() {
                 </Dialog>
             </div>
 
+<<<<<<< HEAD
             <div className="mt-8">
                 <Dialog>
                     <DialogTrigger>
@@ -394,3 +421,11 @@ export default function Inventory() {
         </main>
     )
 }
+=======
+            
+
+           <VendorItem/>
+        </main>
+    )
+}
+>>>>>>> 1d4d186 (Updated code)

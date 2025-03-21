@@ -16,7 +16,11 @@ export function CoreFunctionality() {
         />
       </div>
 
+<<<<<<< HEAD
       <div className="container mx-auto px-6 relative z-10" style={{marginTop:"-78px"}}>
+=======
+      <div className="container mx-auto px-6 relative z-10">
+>>>>>>> 1d4d186 (Updated code)
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500 mb-6 py-1">
             Highlight of our System's Core Functionality
@@ -29,7 +33,11 @@ export function CoreFunctionality() {
 
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
           {/* Database Integration */}
+<<<<<<< HEAD
           <div className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm p-8 rounded-xl border border-cyan-500/10 hover:border-cyan-500/30 transition-all duration-300">
+=======
+          <div className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm p-8 rounded-xl border border-cyan-500/10 hover:border-cyan-500/30 transition-all duration-300 hover:shadow-2xl">
+>>>>>>> 1d4d186 (Updated code)
             <div className="bg-cyan-500/10 p-3 rounded-lg w-fit mb-6">
               <Database className="h-6 w-6 text-cyan-400" />
             </div>
@@ -41,7 +49,11 @@ export function CoreFunctionality() {
           </div>
 
           {/* Smart Search */}
+<<<<<<< HEAD
           <div className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm p-8 rounded-xl border border-cyan-500/10 hover:border-cyan-500/30 transition-all duration-300">
+=======
+          <div className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm p-8 hover:shadow-2xl rounded-xl border border-cyan-500/10 hover:border-cyan-500/30 transition-all duration-300">
+>>>>>>> 1d4d186 (Updated code)
             <div className="bg-cyan-500/10 p-3 rounded-lg w-fit mb-6">
               <Search className="h-6 w-6 text-cyan-400" />
             </div>
@@ -65,7 +77,11 @@ export function CoreFunctionality() {
           </div> */}
 
           {/* AI Recommendations */}
+<<<<<<< HEAD
           <div className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm p-8 rounded-xl border border-cyan-500/10 hover:border-cyan-500/30 transition-all duration-300">
+=======
+          <div className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm p-8 hover:shadow-2xl rounded-xl border border-cyan-500/10 hover:border-cyan-500/30 transition-all duration-300">
+>>>>>>> 1d4d186 (Updated code)
             <div className="bg-cyan-500/10 p-3 rounded-lg w-fit mb-6">
               <Brain className="h-6 w-6 text-cyan-400" />
             </div>
@@ -77,7 +93,11 @@ export function CoreFunctionality() {
           </div>
 
           {/* Streamlined Transactions */}
+<<<<<<< HEAD
           <div className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm p-8 rounded-xl border border-cyan-500/10 hover:border-cyan-500/30 transition-all duration-300">
+=======
+          <div className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm p-8 hover:shadow-2xl rounded-xl border border-cyan-500/10 hover:border-cyan-500/30 transition-all duration-300">
+>>>>>>> 1d4d186 (Updated code)
             <div className="bg-cyan-500/10 p-3 rounded-lg w-fit mb-6">
               <ArrowRightLeft className="h-6 w-6 text-cyan-400" />
             </div>

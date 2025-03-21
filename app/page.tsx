@@ -215,6 +215,10 @@
 
 
 "use client";
+<<<<<<< HEAD
+=======
+import { BlurFade } from "@/components/magicui/blur-fade";
+>>>>>>> 1d4d186 (Updated code)
 import { useEffect, useState } from "react";
 import { NavigationProvider } from "@/components/front/Navigation";
 import Header from "@/components/front/Header";
@@ -237,7 +241,14 @@ export default function Home() {
         <NavigationProvider>
           <AOSWrapper>
             <div className="flex flex-col min-h-screen dark relative">
+<<<<<<< HEAD
               <Header />
+=======
+           
+
+              <Header />
+            
+>>>>>>> 1d4d186 (Updated code)
               <main className="flex-grow">
                 <Hero />
                 <ShortCarousel />

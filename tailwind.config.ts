@@ -1,11 +1,23 @@
+<<<<<<< HEAD
+=======
+import {heroui} from '@heroui/theme';
+>>>>>>> 1d4d186 (Updated code)
 import type { Config } from "tailwindcss";
 
 export default {
     darkMode: ["class"],
+<<<<<<< HEAD
     content: [
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
+=======
+  content: [
+    "./pages/**/*.{js,ts,jsx,tsx,mdx}",
+    "./components/**/*.{js,ts,jsx,tsx,mdx}",
+    "./app/**/*.{js,ts,jsx,tsx,mdx}",
+    "./node_modules/@heroui/theme/dist/components/tabs.js"
+>>>>>>> 1d4d186 (Updated code)
   ],
   theme: {
   	extend: {
@@ -24,10 +36,14 @@ export default {
   				DEFAULT: 'hsl(var(--primary))',
   				foreground: 'hsl(var(--primary-foreground))'
   			},
+<<<<<<< HEAD
   			secondary: {
   				DEFAULT: 'hsl(var(--secondary))',
   				foreground: 'hsl(var(--secondary-foreground))'
   			},
+=======
+  			
+>>>>>>> 1d4d186 (Updated code)
   			muted: {
   				DEFAULT: 'hsl(var(--muted))',
   				foreground: 'hsl(var(--muted-foreground))'
@@ -90,5 +106,9 @@ export default {
   		}
   	}
   },
+<<<<<<< HEAD
   plugins: [require("tailwindcss-animate")],
+=======
+  plugins: [require("tailwindcss-animate"),heroui()],
+>>>>>>> 1d4d186 (Updated code)
 } satisfies Config;

@@ -6,6 +6,17 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+<<<<<<< HEAD
+=======
+html,body{
+  overflow-x: hidden ;
+}
+*{
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
+>>>>>>> 1d4d186 (Updated code)
 @layer base {
   :root {
     --background: 0 0% 100%;

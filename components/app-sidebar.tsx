@@ -116,11 +116,22 @@ const vendorData = {
           title: "Dashboard",
           url: "/dashboard/vendor",
         },
+<<<<<<< HEAD
+=======
+        
+>>>>>>> 1d4d186 (Updated code)
         {
           title: "RFQs",
           url: "/dashboard/vendor/rfqs",
         },
         {
+<<<<<<< HEAD
+=======
+          title: "Orders",
+          url: "/dashboard/vendor/orders",
+        },
+        {
+>>>>>>> 1d4d186 (Updated code)
           title: "Details",
           url: "/dashboard/vendor/details",
         },
@@ -136,6 +147,7 @@ const vendorData = {
       icon: Bot,
       items: [
         {
+<<<<<<< HEAD
           title: "Inventory",
           url: "/dashboard/vendor/inventory",
         },
@@ -151,6 +163,12 @@ const vendorData = {
           title: "Categories",
           url: "/dashboard/vendor/categories",
         },
+=======
+          title: "Catalog Management",
+          url: "/dashboard/vendor/inventory",
+        },
+       
+>>>>>>> 1d4d186 (Updated code)
       ],
     },
     {
