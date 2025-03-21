@@ -92,7 +92,7 @@ export default function RFQsPage() {
           <th className="border border-gray-300 px-4 py-2 text-left">Vessel Name</th>
           <th className="border border-gray-300 px-4 py-2 text-left">Brand</th>
           <th className="border border-gray-300 px-4 py-2 text-left">Status</th>
-          <th className="border border-gray-300 px-4 py-2 text-left">Action</th>
+          
         </tr>
       </thead>
       <tbody>
@@ -106,14 +106,9 @@ export default function RFQsPage() {
               <td className="border border-gray-300 px-4 py-2">{rfq.vessel_name || "-"}</td>
               <td className="border border-gray-300 px-4 py-2">{rfq.brand || "-"}</td>
               <td className="border border-gray-300 px-4 py-2">{rfq.status || "-"}</td>
-              <td className="border border-gray-300 px-4 py-2">
-              <button
-                    onClick={() => toggleRow(i, rfq.id)}
-                    className="text-white px-4 py-1 text-xs font-semibold rounded bg-black dark:text-black dark:bg-white"
-                  >
-                  {expandedRow === i ? "Hide Details" : "View Details"}
-                </button>
-              </td>
+              
+             
+              
             </tr>
             {expandedRow === i && (
               <tr className="bg-gray-50">

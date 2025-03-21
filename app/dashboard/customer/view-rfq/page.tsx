@@ -1207,4 +1207,8 @@ export default function ViewRfq() {
       </main>
     </>
   );
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> 8389b93 (updated code)

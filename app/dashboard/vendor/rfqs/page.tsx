@@ -105,8 +105,7 @@ export default function RFQsPage() {
     } else if (rfqs.supply_port === "Mumbai") {
       return "Confirmed";
     }
-  }
-  
+  };
 
   return (
     <>
@@ -137,9 +136,6 @@ export default function RFQsPage() {
           ))}
         </div>
       </div>
-     
-
-      
 
       <table className="mt-4 w-full max-w-7xl border-collapse border border-gray-300">
         <thead>
