@@ -1,4 +1,6 @@
-"use client"
+
+"use client";
+
 import {AppSidebar} from "@/components/app-sidebar"
 import {ModeToggle} from "@/components/ModeToggle";
 import {

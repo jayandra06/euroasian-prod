@@ -11,6 +11,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { motion } from "framer-motion";
 // import { useRouter } from "next/router";
+import { Separator } from "@/components/ui/separator"
+
 
 import {
   Table,
@@ -454,6 +456,30 @@ function RFQInfoCard({
                 
               </div>
               <div className="flex flex-col">
+                <Label htmlFor="clientName">Serial Number</Label>
+                <Input
+                  type="text"
+                  id="clientName"
+                  placeholder="Serial Number"
+                  value={currentTag}
+                  className="mt-2"
+                  onChange={(e) => setCurrentTag(e.target.value)}
+                />
+                
+              </div>
+              <div className="flex flex-col">
+              <Label htmlFor="clientName">Uploaded File</Label>
+              <Input
+                  type="text"
+                  id="clientName"
+                  placeholder="Uploaded file"
+                  value={currentTag}
+                  className="mt-2"
+                  
+                />
+                
+              </div>
+              <div className="flex flex-col">
                 <Label htmlFor="model">
                   Offered Quality <span className="text-red-500">*</span>
                 </Label>
@@ -516,23 +542,11 @@ function Item({ item, handleUpdateItem, handleRemove, setErrors, errors }) {
       <TableRow>
         <TableCell className="font-medium">{item.id}</TableCell>
         <TableCell colSpan={3}>
-          <div className="grid gap-2 grid-cols-4 items-center">
-            <div className="col-span-1">
-              <Textarea
-                placeholder="Enter Item Description.."
-                value={item.description}
-                name="description"
-                //   onChange={(e) => {
-                //     const {name, value} = e.target;
-                //     handleUpdateItem(item.id, name, value);
-                //     // setErrors({ ...errors, description: "" });
-                //   }}
-                onChange={handleChange}
-              />
-              {errors.description && (
-                <p className="text-red-500 text-sm">{errors.description}</p>
-              )}
-            </div>
+          
+
+          
+          <div className="grid gap-2 grid-cols-2 items-center">
+            
             <div className="col-span-1 ">
               <Input
                 type="text"
@@ -584,12 +598,51 @@ function Item({ item, handleUpdateItem, handleRemove, setErrors, errors }) {
                 </p>
               )}
             </div>
+            <div className="col-span-1 ">
+              <Input
+                type="text"
+                placeholder="Enter Alternate Position No."
+                value={item.alternative_part_no}
+                name="alternative_position_no"
+                //    onChange={(e) => {
+                //     handleChange(e);
+                //     setErrors({ ...errors, alternative_part_no: "" });
+                //   }}
+                onChange={handleChange}
+              />
+              {errors.alternative_part_no && (
+                <p className="text-red-500 text-sm">
+                  {errors.alternative_part_no}
+                </p>
+              )}
+            </div>
           </div>
+          
+            
+         
         </TableCell>
         <TableCell>
-          <Input
+        <div className="col-span-1">
+              <Textarea
+                placeholder="Enter Item Description.."
+                value={item.description}
+                name="description"
+                //   onChange={(e) => {
+                //     const {name, value} = e.target;
+                //     handleUpdateItem(item.id, name, value);
+                //     // setErrors({ ...errors, description: "" });
+                //   }}
+                onChange={handleChange}
+              />
+              {errors.description && (
+                <p className="text-red-500 text-sm">{errors.description}</p>
+              )}
+            </div>
+        </TableCell>
+        <TableCell>
+        <Input
             type="number"
-            placeholder="Enter Required Quanity"
+            placeholder="W"
             value={item.req_qty}
             name="req_qty"
             // onChange={(e) => {
@@ -601,6 +654,55 @@ function Item({ item, handleUpdateItem, handleRemove, setErrors, errors }) {
           {errors.req_qty && (
             <p className="text-red-500 text-sm">{errors.req_qty}</p>
           )}
+        </TableCell>
+        <TableCell>
+        <Input
+            type="number"
+            placeholder="B"
+            value={item.req_qty}
+            name="req_qty"
+            // onChange={(e) => {
+            //     handleChange(e);
+            //     setErrors({ ...errors, req_qty: "" });
+            //   }}
+            onChange={handleChange}
+          />
+          {errors.req_qty && (
+            <p className="text-red-500 text-sm">{errors.req_qty}</p>
+          )}
+        </TableCell>
+        <TableCell>
+        <Input
+            type="number"
+            placeholder="H"
+            value={item.req_qty}
+            name="req_qty"
+            // onChange={(e) => {
+            //     handleChange(e);
+            //     setErrors({ ...errors, req_qty: "" });
+            //   }}
+            onChange={handleChange}
+          />
+          {errors.req_qty && (
+            <p className="text-red-500 text-sm">{errors.req_qty}</p>
+          )}
+        </TableCell>
+        <TableCell>
+        <Input
+            type="number"
+            placeholder="offered quanity"
+            value={item.req_qty}
+            name="req_qty"
+            // onChange={(e) => {
+            //     handleChange(e);
+            //     setErrors({ ...errors, req_qty: "" });
+            //   }}
+            onChange={handleChange}
+          />
+          {errors.req_qty && (
+            <p className="text-red-500 text-sm">{errors.req_qty}</p>
+          )}
+         
         </TableCell>
         <TableCell>
           {/* <Input type="text" placeholder="Enter UOM..." value={item.uom} name="uom" onChange={} /> */}
@@ -626,14 +728,55 @@ function Item({ item, handleUpdateItem, handleRemove, setErrors, errors }) {
           {errors.uom && <p className="text-red-500 text-sm">{errors.uom}</p>}
         </TableCell>
         <TableCell className="text-right relative">
-          <Button
-            onClick={() => handleRemove(item.id)}
-            className="absolute top-4 right-4"
-            variant={"outline"}
-          >
-            <Trash2 />
-          </Button>
+        <Input
+            type="number"
+            placeholder=""
+            value={item.req_qty}
+            name="req_qty"
+            // onChange={(e) => {
+            //     handleChange(e);
+            //     setErrors({ ...errors, req_qty: "" });
+            //   }}
+            onChange={handleChange}
+          />
         </TableCell>
+        <TableCell>
+          {/* <Input type="text" placeholder="Enter UOM..." value={item.uom} name="uom" onChange={} /> */}
+          <Select
+            name="uom"
+            onValueChange={
+              (v) =>
+                // {
+                handleUpdateItem(item.id, "uom", v)
+              //  setErrors({ ...errors, uom: "" });
+              // }
+            }
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select UOM" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Pieces">Pieces</SelectItem>
+              <SelectItem value="KiloGrams">KiloGrams</SelectItem>
+              <SelectItem value="Litres">Litres</SelectItem>
+            </SelectContent>
+          </Select>
+          {errors.uom && <p className="text-red-500 text-sm">{errors.uom}</p>}
+        </TableCell>
+        <TableCell className="text-right relative">
+        <Input
+            type="number"
+            placeholder=""
+            value={item.req_qty}
+            name="req_qty"
+            // onChange={(e) => {
+            //     handleChange(e);
+            //     setErrors({ ...errors, req_qty: "" });
+            //   }}
+            onChange={handleChange}
+          />
+        </TableCell>
+        
       </TableRow>
     </>
   );
@@ -1140,17 +1283,27 @@ export default function ViewRfq() {
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-[100px]">No.</TableHead>
-                    <TableHead colSpan={3}>
+                    <TableHead colSpan={7}>
                       Description<span className="text-red-500 ml-1">*</span>
                     </TableHead>
+                    
+
                     <TableHead>
                       Req. Qty.<span className="text-red-500 ml-1">*</span>
                     </TableHead>
                     <TableHead>
                       UOM<span className="text-red-500 ml-1">*</span>
                     </TableHead>
+                    <TableHead>
+                      Offered. Qty.<span className="text-red-500 ml-1">*</span>
+                    </TableHead>
+                    <TableHead>
+                      UOM<span className="text-red-500 ml-1">*</span>
+                    </TableHead>
+                    
+
                     <TableHead className="text-right">
-                      Actions<span className="text-red-500 ml-1">*</span>
+                      Offered Price<span className="text-red-500 ml-1">*</span>
                     </TableHead>
                   </TableRow>
                 </TableHeader>
@@ -1168,47 +1321,52 @@ export default function ViewRfq() {
                   ))}
                 </TableBody>
               </Table>
-              <div className="flex justify-end mt-2 mb-2">
-                <Button
-                  onClick={() => {
-                    setItems([
-                      ...items,
-                      {
-                        id: items.length + 1,
-                        description: "",
-                        part_no: "",
-                        position_no: "",
-                        alternative_part_no: "",
-                        uom: "",
-                        req_qty: "",
-                        offered_qty: "0",
-                      },
-                    ]);
-                  }}
-                >
-                  Add Item
-                </Button>
-              </div>
+              
             </div>
           </div>
+          <Separator />
+        <div className="flex gap-4 items-center mx-auto mt-10">
+        <div>
+            <label htmlFor="first_name" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Freight Charges
+</label>
+            <input type="text" id="first_name" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="John" required />
+            
+            
+        </div>
+        <div>
+            <label htmlFor="first_name" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Customs Charges
+</label>
+           
+         <input type="text" id="first_name" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="John" required />
+         
+            
+        </div>
+        <div>
+            <label htmlFor="first_name" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Shipment CHarges
+            </label>
+            <input type="text" id="first_name" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="John" required />
+            
+        </div>
+        
         </div>
 
-        <div className="max-w-6xl w-full grid justify-self-center justify-center mt-8 mb-24">
-          <div>
-            <Button
-              onClick={handleAddQuote}
-              className="flex items-center justify-center gap-2"
-              disabled={isloading}
-            >
-              Get Quote {isloading && <Loader size="small" />}
-            </Button>
-          </div>
+        <div className="text-right mt-3">
+        <Button className="bg-blue-500 mt-3">Save as Draft</Button>
+        <Button className="bg-green-600 mt-3 mx-2">Send for Approval</Button>
+        <Button className="bg-red-600 mt-3 mx-2">Cancel</Button>
         </div>
+        </div>
+
+       
+
+
+      
       </main>
     </>
   );
-<<<<<<< HEAD
+
+
 }
-=======
-}
->>>>>>> 8389b93 (updated code)
+
+
+

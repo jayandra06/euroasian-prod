@@ -99,7 +99,7 @@ export default function RFQsPage() {
         {rfqs.map((rfq, i) => (
           <React.Fragment key={rfq.id}>
          
-            <tr key={i} className="border border-gray-300">
+            <tr  onClick={() => toggleRow(i, rfq.id)} key={i} className="border cursor-pointer border-gray-300">
               <td className="border border-gray-300 px-4 py-2">{` EA${new Date().getFullYear()}${rfq.id}`.slice(1, 15)}</td>
               <td className="border border-gray-300 px-4 py-2">{new Date(rfq.created_at).toLocaleString('en-US', { year: 'numeric', month: 'short', day:"2-digit", hour: '2-digit', minute: '2-digit' })}</td>
               <td className="border border-gray-300 px-4 py-2">{rfq.supply_port || "-"}</td>

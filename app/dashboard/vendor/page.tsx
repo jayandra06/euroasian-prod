@@ -1,4 +1,6 @@
-"use client"
+
+"use client";
+
 import { Chart2Component } from "@/components/Chart2Component"
 import { ChartsComponent } from "@/components/ChartsComponents"
 import {

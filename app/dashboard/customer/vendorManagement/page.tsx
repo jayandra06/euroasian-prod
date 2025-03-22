@@ -4,7 +4,7 @@ import { createClient } from "@/utils/supabase/client";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import React from "react";
-<<<<<<< HEAD
+
 import {
   Dialog,
   DialogContent,
@@ -22,20 +22,18 @@ import 'react-tagsinput/react-tagsinput.css';
 
 
 
-=======
->>>>>>> 8389b93 (updated code)
+
 
 export default function vendorManagement() {
   const [rfqs, setRfqs] = useState<any[]>([]);
   const [enable, setEnable] = useState(false)
   const [expandedRow, setExpandedRow] = useState<number | null>(null);
   const [rfqItems, setRfqItems] = useState<{ [key: number]: any[] }>({}); // Store items for each RFQ
-<<<<<<< HEAD
+
   const [tags, setTags] = useState([]);
   const [inputValue, setInputValue] = useState('');
 
-=======
->>>>>>> 8389b93 (updated code)
+
 
   const supabase = createClient();
 
@@ -98,7 +96,7 @@ export default function vendorManagement() {
     setEnable((prev)=>!prev)
   }
 
-<<<<<<< HEAD
+
   const addTag = (event) => {
     if (event.key === 'Enter' && event.target.value.trim() !== '') {
       setTags([...tags, event.target.value.trim()]);
@@ -116,8 +114,6 @@ export default function vendorManagement() {
   };
 
 
-=======
->>>>>>> 8389b93 (updated code)
   return (
     <>
       <div
@@ -125,7 +121,7 @@ export default function vendorManagement() {
         style={{ display: "flex", justifyContent: "space-between" }}
       >
         <h1 className="text-3xl font-bold">Your Vendors</h1>
-<<<<<<< HEAD
+
         <Dialog>
   <DialogTrigger>
     
@@ -165,8 +161,7 @@ export default function vendorManagement() {
   </DialogContent>
 </Dialog>
 
-        
-=======
+
         <Button className="ml-9">
           <Link
             href={"/dashboard/customer/view-rfq"}
@@ -175,7 +170,7 @@ export default function vendorManagement() {
             Invite Vendor
           </Link>
         </Button>
->>>>>>> 8389b93 (updated code)
+
       </div>
       <table className="mt-4 w-full max-w-7xl border-collapse border border-gray-300">
         <thead>
@@ -232,8 +227,4 @@ export default function vendorManagement() {
       </table>
     </>
   );
-<<<<<<< HEAD
-}
-=======
-}
->>>>>>> 8389b93 (updated code)
+

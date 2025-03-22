@@ -126,7 +126,7 @@ export default async function BranchParticulerPage({
                 <h1 className="text-xl font-bold">
                     Creator Id: {branch.data?.creator}
                 </h1>
-            </div>z
+            </div>
 
             <div className="py-8">
                 <div className="mb-4">
