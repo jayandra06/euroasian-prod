@@ -17,10 +17,11 @@ import { motion } from "framer-motion";
 
 const tabs = [
   { id: "all", label: "All", color: "bg-white", text: "text-black" },
-  { id: "received", label: "RFQ Received", color: "bg-blue-500" },
+  { id: "received", label: "RFQ Received", color: "bg-blue-300" },
   { id: "sent", label: "RFQ Sent", color: "bg-green-400" },
   { id: "confirmed", label: "Order Confirmed", color: "bg-green-700" },
   { id: "cancelled", label: "Order Cancelled", color: "bg-red-600" },
+  { id: "completed", label: "Order Completed", color: "bg-blue-600", text:"text-black" },
 ];
 
 export default function RFQsPage() {
@@ -204,7 +205,11 @@ export default function RFQsPage() {
                         <p>Loading...</p>
                       )}
                     </div>
+                    <td>
+                    <Button><Link href="/dashboard/vendor/vendorRfq">view Rfq</Link></Button>
                   </td>
+                  </td>
+                  
                 </tr>
               )}
             </React.Fragment>

@@ -37,12 +37,7 @@ import { Loader, Trash2 } from "lucide-react";
 import ErrorToast from "@/components/ui/errorToast";
 import SuccessToast from "@/components/ui/successToast";
 
-const tabs = [
-  { id: "Vendor 1", label: "Vendor 1", color: "bg-white", text: "text-black" },
-  { id: "Vendor 2", label: "Vendor 2", color: "bg-blue-500" },
-  { id: "Vendor 3", label: "Vendor 3", color: "bg-green-400" },
-  
-];
+
 
 // function InfoCard() {
 //     return (
@@ -519,6 +514,33 @@ function RFQInfoCard({
                   onChange={(e) => setCurrentTag(e.target.value)}
                 />
                 
+              </div>
+
+              <div>
+              <Label htmlFor="model">
+                  Payment Terms <span className="text-red-500">*</span>
+                </Label>
+                <Select
+                 
+                >
+                  <SelectTrigger
+                    
+                  >
+                    <SelectValue placeholder="select payment" />
+                  </SelectTrigger>
+                  <SelectContent>
+                  <SelectItem value="light">Net 30</SelectItem>
+                  <SelectItem value="light">Net 45</SelectItem>
+                  <SelectItem value="light">Net 50</SelectItem>
+                    
+                  </SelectContent>
+                 
+                  
+                </Select>
+                {errors.offerQuality && (
+                  <p className="text-red-500 text-sm">{errors.offerQuality}</p>
+                )}
+
               </div>
             </div>
           </div>
@@ -1118,31 +1140,8 @@ export default function ViewRfq() {
           />
         </main>
 
-        <div className="flex w-full max-w-6xl justify-self-center items-center mt-8">
-          <h1 className="text-xl font-bold">Choose vendors</h1>
-        </div>
-        <div className="relative flex justify-center max-w-5xl mx-auto mt-4  bg-gray-100 rounded-full p-2 shadow-xl mb-4">
-        <div className="relative flex gap-4">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => handleTabChange(tab.id)}
-              className={`relative z-10 px-4 py-2 text-sm font-medium transition ${tab.text} ${
-                activeTab === tab.id ? "text-black" : "text-gray-700"
-              }`}
-            >
-              {tab.label}
-              {activeTab === tab.id && (
-                <motion.div
-                  layoutId="tab-indicator"
-                  className={`absolute inset-0 ${tab.color} ${tab.text} shadow-2xl rounded-full z-[-1]`}
-                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                />
-              )}
-            </button>
-          ))}
-        </div>
-      </div>
+        
+       
 
         {/* <div className="grid justify-self-center grid-cols-1 sm:grid-cols-1 md:grid-cols-3 gap-4 max-w-6xl w-full mt-4">
           <div className="grid gap-1">
@@ -1351,10 +1350,9 @@ export default function ViewRfq() {
         </div>
 
         <div className="text-right mt-3">
-        <Button className="bg-blue-500 mt-3">Save as Draft</Button>
-        <Button className="bg-green-600 mt-3 mx-2">Send for Approval</Button>
-        <Button className="bg-pink-500 mt-3 mx-2">Print RFQ</Button>
-        <Button className="bg-red-600 mt-3 mx-2">Cancel</Button>
+        
+        <Button className="bg-green-600 mt-3 mx-2">Send for Delivery</Button>
+        <Button className="bg-blue-600 mt-3 mx-2">Print Invoice</Button>
         </div>
         </div>
 

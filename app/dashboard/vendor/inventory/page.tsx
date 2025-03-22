@@ -219,13 +219,11 @@ export default function Inventory() {
 
             <div className="mt-4">
                 <div className="flex justify-between">
-                    <div className="font-bold">
-                        Drive
-                    </div>
+                    
 
                     <div>
                         <Dialog>
-                            <DialogTrigger>Add File</DialogTrigger>
+                            <DialogTrigger><Button>Upload File</Button></DialogTrigger>
                             <DialogContent>
                                 <DialogHeader>
                                     <DialogTitle>Add File</DialogTitle>
