@@ -510,7 +510,8 @@ export default function BranchPage() {
 
 
 
-function BranchCard({ branch }: { branch: any }) {
+// function BranchCard({ branch }: { branch: any }) {       changed by jay ...BranchCard was previous one   - changed to BranchCard2
+function BranchCard2({ branch }: { branch: any }) { 
     const [admin, setAdmin] = useState<any>(null);
     const [memberCount, setMemberCount] = useState(0);
     const [rfqCount, setRfqCount] = useState(0);
