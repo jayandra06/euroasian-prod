@@ -61,59 +61,34 @@ import SuccessToast from "@/components/ui/successToast";
 
 // @ts-ignore
 function RFQInfoCard({
-  rfqInfo,
-  setRfqInfo,
-  vesselInfo,
-  setVesselInfo,
-  equipmentTags,
-  setEquipmentTags,
+  createRfq,
+  setcreateRfq,
   models,
   brands,
   category,
-  offerQuality,
+  setSelectedFile,
+
   errors,
   setErrors,
 }: {
-  rfqInfo: any;
-  setRfqInfo: React.Dispatch<React.SetStateAction<any>>;
-  vesselInfo: any;
-  setVesselInfo: React.Dispatch<React.SetStateAction<any>>;
-  equipmentTags: any;
-  setEquipmentTags: React.Dispatch<React.SetStateAction<any>>;
+  createRfq: any;
+  setcreateRfq: React.Dispatch<React.SetStateAction<any>>;
   models: any[];
   brands: any[];
   category: any[];
-  offerQuality: any[];
+  setSelectedFile: React.Dispatch<React.SetStateAction<File | null>>
+
   errors: any;
   setErrors: React.Dispatch<React.SetStateAction<any>>;
 }) {
   useEffect(() => {
-    if (!rfqInfo.lead_date) {
+    if (!createRfq.lead_date) {
       const currentDate = new Date().toISOString().split("T")[0];
-      setRfqInfo((prev: any) => ({ ...prev, lead_date: currentDate }));
+      setcreateRfq((prev: any) => ({ ...prev, lead_date: currentDate }));
     }
-  }, [rfqInfo.lead_date, setRfqInfo]);
-
-  const [tags, setTags] = useState([]);
-  const [currentTag, setCurrentTag] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  const handleAddTag = () => {
-    if (!currentTag.trim()) return; // Prevent empty tags
-    setLoading(true);
-
-    setTimeout(() => {
-      setEquipmentTags((prev: any) => ({
-        ...prev,
-        tags: [...prev.tags, currentTag],
-      }));
-      setCurrentTag("");
-      setLoading(false);
-    }, 1000); // Simulating API or processing delay
-  };
+  }, [createRfq.lead_date, setcreateRfq]);
 
   const [vessels, setVessels] = useState<any[]>([]);
-  console.log("vessels", vessels);
 
   async function fetchVessels() {
     const supabase = createClient();
@@ -199,18 +174,19 @@ function RFQInfoCard({
           {/* RFQ Info Section */}
           <div className="w-full p-6">
             <div className="grid grid-cols-4 gap-6">
-            <div className="flex flex-col">
+              <div className="flex flex-col">
                 <Label htmlFor="vesselName">
                   Vessel Name <span className="text-red-500">*</span>
                 </Label>
                 <Select
+                  name="vessel_name"
                   onValueChange={(e) =>
-                    setVesselInfo({ ...vesselInfo, name: e })
+                    setcreateRfq({ ...createRfq, vessel_name: e })
                   }
                 >
                   <SelectTrigger
                     className={`border mt-2 ${
-                      errors.name ? "border-red-500" : "border-gray-300"
+                      errors.vessel_name ? "border-red-500" : "border-gray-300"
                     }`}
                   >
                     <SelectValue placeholder="Select Vessel" />
@@ -223,20 +199,21 @@ function RFQInfoCard({
                     ))}
                   </SelectContent>
                 </Select>
-                {errors.name && (
-                  <p className="text-red-500 text-sm">{errors.name}</p>
+                {errors.vessel_name && (
+                  <p className="text-red-500 text-sm">{errors.vessel_name}</p>
                 )}
               </div>
-             
+
               <div className="flex flex-col">
                 <Label htmlFor="supplyPort">
                   Supply Port <span className="text-red-500">*</span>
                 </Label>
                 <Select
+                  name="supply_port"
                   onValueChange={(value) =>
-                    setRfqInfo({ ...rfqInfo, supply_port: value })
+                    setcreateRfq({ ...createRfq, supply_port: value })
                   }
-                  value={rfqInfo.supply_port || ""}
+                  value={createRfq.supply_port || ""}
                 >
                   <SelectTrigger
                     className={`border mt-2 ${
@@ -260,56 +237,63 @@ function RFQInfoCard({
                 )}
               </div>
               <div className="flex flex-col">
-                <Label htmlFor="leadDate">Created Date</Label>
+                <Label htmlFor="createdDate">Created Date</Label>
                 <Input
                   type="date"
                   className="mt-2"
-                  id="leadDate"
-                  
-                  value={new Date().toISOString().split('T')[0]}
+                  id="createDate"
+                  value={new Date().toISOString().split("T")[0]}
                   disabled
-                 
                 />
               </div>
               <div className="flex flex-col">
-              <Label htmlFor="expireDate">
-              Lead Date <span className="text-red-500 ml-1">*</span>
-            </Label>
-            <Input
-              type="date"
-              id="expireDate"
-             value={rfqInfo.lead_date}
-              onChange={(e) => {
-                setRfqInfo({ ...rfqInfo, expire_date: e.target.value });
-                setErrors({ ...errors, expire_date: "" });
-              }}
-              className={`grid  mt-2 border ${
-                errors.expire_date ? "border-red-500" : "border-gray-300"
-              }`}
-            />
-            {errors.expire_date && (
-              <p className="text-red-500 text-sm">{errors.expire_date}</p>
-            )}
+                <Label htmlFor="leadDate">
+                  Lead Date <span className="text-red-500 ml-1">*</span>
+                </Label>
+                <Input
+                  type="date"
+                  id="lead_date"
+                  name="lead_date"
+                  placeholder="Lead date"
+                  value={createRfq.lead_date}
+                  onChange={(e) => {
+                    setcreateRfq({ ...createRfq, lead_date: e.target.value });
+                  }}
+                  className={`grid  mt-2 border ${
+                    errors.lead_date ? "border-red-500" : "border-gray-300"
+                  }`}
+                />
+                {errors.lead_date && (
+                  <p className="text-red-500 text-sm">{errors.lead_date}</p>
+                )}
               </div>
-              
+
               <div className="flex flex-col">
-                <Label htmlFor="clientName">Drawing Number</Label>
+                <Label htmlFor="drawingNumber">Drawing Number</Label>
                 <Input
                   type="text"
-                  id="clientName"
+                  id="drawingNumber"
+                  name="drawing_number"
                   placeholder="Drawing Number"
-                  value={currentTag}
-                  className="mt-2"
-                  onChange={(e) => setCurrentTag(e.target.value)}
+                  value={createRfq.drawing_number}
+                  onChange={(e) => {
+                    setcreateRfq({
+                      ...createRfq,
+                      drawing_number: e.target.value,
+                    });
+                    setErrors({ ...errors, drawing_number: "" });
+                  }}
+                  className={`grid  mt-2 border ${
+                    errors.drawing_number ? "border-red-500" : "border-gray-300"
+                  }`}
                 />
-                
+                {errors.drawing_number && (
+                  <p className="text-red-500 text-sm">
+                    {errors.drawing_number}
+                  </p>
+                )}
               </div>
-             
-             
-              
-             
-              
-              
+
               <div className="flex flex-col">
                 <Label htmlFor="imoNo">
                   IMO No <span className="text-red-500">*</span>
@@ -317,10 +301,11 @@ function RFQInfoCard({
                 <Input
                   type="text"
                   id="imoNo"
-                  placeholder="Enter IMO No."
-                  value={vesselInfo.imo_no}
+                  placeholder="IMO No."
+                  name="imo_no"
+                  value={createRfq.imo_no}
                   onChange={(e) =>
-                    setVesselInfo({ ...vesselInfo, imo_no: e.target.value })
+                    setcreateRfq({ ...createRfq, imo_no: e.target.value })
                   }
                   className={`border mt-2 ${
                     errors.imo_no ? "border-red-500" : "border-gray-300"
@@ -331,16 +316,29 @@ function RFQInfoCard({
                 )}
               </div>
               <div className="flex flex-col">
-                <Label htmlFor="clientName">Equipment Tags</Label>
+                <Label htmlFor="equipmentTag">Equipment Tags</Label>
                 <Input
                   type="text"
-                  id="clientName"
-                  placeholder="Enter Equipment Tags"
-                  value={currentTag}
-                  className="mt-2"
-                  onChange={(e) => setCurrentTag(e.target.value)}
+                  id="equpipmentTag"
+                  placeholder="Equipment Tag"
+                  name="equipement_tag"
+                  value={createRfq.equipement_tag}
+                  onChange={(e) => {
+                    setcreateRfq({
+                      ...createRfq,
+                      equipement_tag: e.target.value,
+                    });
+                    setErrors({ ...errors, equipement_tag: "" });
+                  }}
+                  className={`grid  mt-2 border ${
+                    errors.equipement_tag ? "border-red-500" : "border-gray-300"
+                  }`}
                 />
-                
+                {errors.equipement_tag && (
+                  <p className="text-red-500 text-sm">
+                    {errors.equipement_tag}
+                  </p>
+                )}
               </div>
 
               <div className="flex flex-col">
@@ -348,8 +346,9 @@ function RFQInfoCard({
                   Brand <span className="text-red-500">*</span>
                 </Label>
                 <Select
+                  name="brand"
                   onValueChange={(v) => {
-                    setEquipmentTags({ ...equipmentTags, brand: v });
+                    setcreateRfq({ ...createRfq, brand: v });
                     setErrors({ ...errors, brand: "" });
                   }}
                 >
@@ -378,8 +377,9 @@ function RFQInfoCard({
                   Model <span className="text-red-500">*</span>
                 </Label>
                 <Select
+                  name="model"
                   onValueChange={(v) => {
-                    setEquipmentTags({ ...equipmentTags, model: v });
+                    setcreateRfq({ ...createRfq, model: v });
                     setErrors({ ...errors, model: "" });
                   }}
                 >
@@ -408,8 +408,9 @@ function RFQInfoCard({
                   Category <span className="text-red-500">*</span>
                 </Label>
                 <Select
+                  name="category"
                   onValueChange={(v) => {
-                    setEquipmentTags({ ...equipmentTags, category: v });
+                    setcreateRfq({ ...createRfq, category: v });
                     setErrors({ ...errors, category: "" });
                   }}
                 >
@@ -440,18 +441,19 @@ function RFQInfoCard({
                 </Label>
                 <Input
                   type="text"
-                  id="imoNo"
-                  placeholder="Enter HULL No."
-                  value={vesselInfo.imo_no}
+                  id="hullNo"
+                  placeholder="HULL No."
+                  name="hull_no"
+                  value={createRfq.hull_no}
                   onChange={(e) =>
-                    setVesselInfo({ ...vesselInfo, imo_no: e.target.value })
+                    setcreateRfq({ ...createRfq, hull_no: e.target.value })
                   }
                   className={`border mt-2 ${
-                    errors.imo_no ? "border-red-500" : "border-gray-300"
+                    errors.hull_no ? "border-red-500" : "border-gray-300"
                   }`}
                 />
-                {errors.imo_no && (
-                  <p className="text-red-500 text-sm">{errors.imo_no}</p>
+                {errors.hull_no && (
+                  <p className="text-red-500 text-sm">{errors.hull_no}</p>
                 )}
               </div>
               <div className="flex flex-col">
@@ -459,70 +461,114 @@ function RFQInfoCard({
                   Offered Quality <span className="text-red-500">*</span>
                 </Label>
                 <Select
+                  name="offer_quality"
                   onValueChange={(v) => {
-                    setEquipmentTags({ ...equipmentTags, offerquality: v });
-                    setErrors({ ...errors, offerquality: "" });
+                    setcreateRfq({ ...createRfq, offer_quality: v });
+                    setErrors({ ...errors, offer_quality: "" });
                   }}
+                  value={createRfq.offer_quality || ""}
                 >
                   <SelectTrigger
                     className={`border mt-2 ${
-                      errors.model ? "border-red-500" : "border-gray-300"
+                      errors.offer_quality
+                        ? "border-red-500"
+                        : "border-gray-300"
                     }`}
                   >
                     <SelectValue placeholder="Select Quality" />
                   </SelectTrigger>
                   <SelectContent>
-                    {offerQuality.map((offerquality, i) => (
-                      <SelectItem value={offerquality.name} key={i}>
-                        {offerquality.name}
+                    {["Genuine", "OEM", "Copy", "Parts"].map((quality) => (
+                      <SelectItem key={quality} value={quality}>
+                        {quality}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-                {errors.offerQuality && (
-                  <p className="text-red-500 text-sm">{errors.offerQuality}</p>
+                {errors.offer_quality && (
+                  <p className="text-red-500 text-sm">{errors.offer_quality}</p>
                 )}
               </div>
               <div className="flex flex-col">
-                <Label htmlFor="clientName">General Remarks</Label>
+                <Label htmlFor="remark">General Remarks</Label>
                 <Input
                   type="text"
-                  id="clientName"
-                  placeholder="Enter General Remark"
-                  value={currentTag}
-                  className="mt-2"
-                  onChange={(e) => setCurrentTag(e.target.value)}
+                  id="remark"
+                  placeholder="Remark"
+                  name="remark"
+                  value={createRfq.remark}
+                  onChange={(e) =>
+                    setcreateRfq({ ...createRfq, remark: e.target.value })
+                  }
+                  className={`border mt-2 ${
+                    errors.remark ? "border-red-500" : "border-gray-300"
+                  }`}
                 />
-                
+                {errors.remark && (
+                  <p className="text-red-500 text-sm">{errors.remark}</p>
+                )}
               </div>
               <div className="flex flex-col">
-                <Label htmlFor="clientName">Serial Number</Label>
+                <Label htmlFor="serialNumber">Serial Number</Label>
                 <Input
                   type="text"
-                  id="clientName"
-                  placeholder="Enter Serial Number"
-                  value={currentTag}
-                  className="mt-2"
-                  onChange={(e) => setCurrentTag(e.target.value)}
+                  id="serialNumber"
+                  placeholder="Serial Number"
+                  name="serial_no"
+                  value={createRfq.serial_no}
+                  onChange={(e) =>
+                    setcreateRfq({ ...createRfq, serial_no: e.target.value })
+                  }
+                  className={`border mt-2 ${
+                    errors.serial_no ? "border-red-500" : "border-gray-300"
+                  }`}
                 />
-                
+                {errors.serial_no && (
+                  <p className="text-red-500 text-sm">{errors.serial_no}</p>
+                )}
               </div>
               <div className="flex flex-col">
-                <Label htmlFor="clientName">Vessel Ex Name</Label>
+                <Label htmlFor="vesselExNumber">Vessel Ex Name</Label>
                 <Input
                   type="text"
-                  id="clientName"
-                  placeholder="Enter vessel ex name"
-                  value={currentTag}
-                  className="mt-2"
-                  onChange={(e) => setCurrentTag(e.target.value)}
+                  id="vesselExNumber"
+                  placeholder="Vessel Ex Number"
+                  name="vessel_ex_name"
+                  value={createRfq.vessel_ex_name}
+                  onChange={(e) =>
+                    setcreateRfq({
+                      ...createRfq,
+                      vessel_ex_name: e.target.value,
+                    })
+                  }
+                  className={`border mt-2 ${
+                    errors.vessel_ex_name ? "border-red-500" : "border-gray-300"
+                  }`}
                 />
-                
+                {errors.vessel_ex_name && (
+                  <p className="text-red-500 text-sm">
+                    {errors.vessel_ex_name}
+                  </p>
+                )}
               </div>
               <div className="flex flex-col">
-              <Label htmlFor="clientName">Upload</Label>
+                <Label htmlFor="upload">Upload File</Label>
+                <Input
+                  id="upload"
+                  type="file"
+                  className="mt-2"
+                  onChange={(e) => {
+                    if (e.target.files && e.target.files[0]) {
+                      setSelectedFile(e.target.files[0]);
+                      setErrors({ ...errors, upload: "" }); // Clear upload error
+                    }
+                  }}
+                />
+                {errors.upload && (
+                  <p className="text-red-500 text-sm">{errors.upload}</p>
+                )}
 
-              <Input id="picture" type="file" className="mt-2" />
+                
               </div>
             </div>
           </div>
@@ -537,6 +583,7 @@ function Item({ item, handleUpdateItem, handleRemove, setErrors, errors }) {
   const handleChange = (e: any) => {
     const { name, value } = e.target;
     handleUpdateItem(item.id, name, value);
+    console.log("Field:", name, "Value:", value);
     if (errors?.description) {
       setErrors({ ...errors, description: "" });
     }
@@ -582,30 +629,31 @@ function Item({ item, handleUpdateItem, handleRemove, setErrors, errors }) {
             <div className="col-span-1 ">
               <Input
                 type="text"
-                placeholder="Impa No"
-                value={item.impa_no}
-                name="part_no"
+                placeholder="alter native Part No."
+                value={item.alternate_part_no}
+                name="alternative_part_no"
                 //    onChange={(e) => {
                 //     handleChange(e);
                 //     setErrors({ ...errors, part_no: "" });
                 //   }}
                 onChange={handleChange}
               />
-              {errors.part_no && (
-                <p className="text-red-500 text-sm">{errors.part_no}</p>
+              {errors.alternate_part_no && (
+                <p className="text-red-500 text-sm">
+                  {errors.alternate_part_no}
+                </p>
               )}
             </div>
             <div className="col-span-1 ">
               <Input
                 type="text"
-                placeholder="Position No."
+                placeholder="position no"
                 value={item.position_no}
                 name="position_no"
                 //    onChange={(e) => {
                 //     handleChange(e);
-                //     setErrors({ ...errors, position_no: "" });
+                //     setErrors({ ...errors, part_no: "" });
                 //   }}
-
                 onChange={handleChange}
               />
               {errors.position_no && (
@@ -615,19 +663,100 @@ function Item({ item, handleUpdateItem, handleRemove, setErrors, errors }) {
             <div className="col-span-1 ">
               <Input
                 type="text"
-                placeholder="Alternate Part No."
-                value={item.alternative_part_no}
-                name="alternative_part_no"
+                placeholder="alternative position no"
+                value={item.alternative_position_no}
+                name="alternative_position_no"
+                //    onChange={(e) => {
+                //     handleChange(e);
+                //     setErrors({ ...errors, part_no: "" });
+                //   }}
+                onChange={handleChange}
+              />
+              {errors.alternative_position_no && (
+                <p className="text-red-500 text-sm">
+                  {errors.alternative_position_no}
+                </p>
+              )}
+            </div>
+            <div className="col-span-1 ">
+              <Input
+                type="text"
+                placeholder="Impa No"
+                value={item.impa_no}
+                name="impa_no"
+                //    onChange={(e) => {
+                //     handleChange(e);
+                //     setErrors({ ...errors, part_no: "" });
+                //   }}
+                onChange={handleChange}
+              />
+              {errors.impa_no && (
+                <p className="text-red-500 text-sm">{errors.impa_no}</p>
+              )}
+            </div>
+            <div className="col-span-1 ">
+              <Input
+                type="text"
+                placeholder="Offered Quantity"
+                value={item.offered_qty}
+                name="offered_qty"
+                //    onChange={(e) => {
+                //     handleChange(e);
+                //     setErrors({ ...errors, position_no: "" });
+                //   }}
+
+                onChange={handleChange}
+              />
+              {errors.offered_qty && (
+                <p className="text-red-500 text-sm">{errors.offered_qty}</p>
+              )}
+            </div>
+            <div className="col-span-1 ">
+              <Input
+                type="text"
+                placeholder="required quanitity"
+                value={item.req_qty}
+                name="req_qty"
                 //    onChange={(e) => {
                 //     handleChange(e);
                 //     setErrors({ ...errors, alternative_part_no: "" });
                 //   }}
                 onChange={handleChange}
               />
-              {errors.alternative_part_no && (
-                <p className="text-red-500 text-sm">
-                  {errors.alternative_part_no}
-                </p>
+              {errors.req_qty && (
+                <p className="text-red-500 text-sm">{errors.req_qty}</p>
+              )}
+            </div>
+            <div className="col-span-1 ">
+              <Input
+                type="text"
+                placeholder="Beadth"
+                value={item.beadth}
+                name="beadth"
+                //    onChange={(e) => {
+                //     handleChange(e);
+                //     setErrors({ ...errors, alternative_part_no: "" });
+                //   }}
+                onChange={handleChange}
+              />
+              {errors.beadth && (
+                <p className="text-red-500 text-sm">{errors.beadth}</p>
+              )}
+            </div>
+            <div className="col-span-1 ">
+              <Input
+                type="text"
+                placeholder="Height"
+                value={item.height}
+                name="height"
+                //    onChange={(e) => {
+                //     handleChange(e);
+                //     setErrors({ ...errors, alternative_part_no: "" });
+                //   }}
+                onChange={handleChange}
+              />
+              {errors.height && (
+                <p className="text-red-500 text-sm">{errors.height}</p>
               )}
             </div>
           </div>
@@ -635,17 +764,17 @@ function Item({ item, handleUpdateItem, handleRemove, setErrors, errors }) {
         <TableCell>
           <Input
             type="number"
-            placeholder="Required Quanity"
-            value={item.req_qty}
-            name="req_qty"
+            placeholder="width"
+            value={item.width}
+            name="width"
             // onChange={(e) => {
             //     handleChange(e);
             //     setErrors({ ...errors, req_qty: "" });
             //   }}
             onChange={handleChange}
           />
-          {errors.req_qty && (
-            <p className="text-red-500 text-sm">{errors.req_qty}</p>
+          {errors.width && (
+            <p className="text-red-500 text-sm">{errors.width}</p>
           )}
         </TableCell>
         <TableCell>
@@ -702,51 +831,48 @@ export default function CreateEnquiryPage() {
   });
 
   const [brands, setBrands] = useState<any[]>([]);
-  const [offerQuality, setofferQuality] = useState<any[]>([]);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [category, setCategory] = useState<any[]>([]);
   const [model, setModels] = useState<any[]>([]);
   const [vendors, updateVendors] = useState<any[]>([]);
   const [vendorsError, setVendorsError] = useState(false);
-  const [rfqInfo, setRfqInfo] = useState({
-    lead_date: "",
+  const [createRfq, setCreateRfq] = useState({
+    vessel_name: "",
     supply_port: "",
-    rfq_no: "",
-  });
-  const [vesselInfo, setVesselInfo] = useState({
-    name: "",
+    created_date: "",
+    lead_date: "",
+    drawing_number: "",
     imo_no: "",
-    hull_no: "",
-    port: "",
-  });
-  const [equipmentTags, setEquipmentTags] = useState({
-    tags: [],
+    equipement_tag: "",
     brand: "",
     model: "",
     category: "",
-    offerquality: "",
+    hull_no: "",
+    offer_quality: "",
+    remark: "",
+    serial_no: "",
+    vessel_ex_name: "",
+    upload: "",
   });
   const [items, setItems] = useState<any>([
     {
       id: 1,
       description: "",
       part_no: "",
-      impa_no: "",
-      position_no: "",
       alternative_part_no: "",
+      position_no: "",
+      alternative_position_no: "",
+      impa_no: "",
       uom: "",
       req_qty: "",
       offered_qty: "0",
+      width: "",
+      beadth: "",
+      height: "",
     },
   ]);
-  const [fiedData, setFieldData] = useState({
-    description: "",
-    part_no: "",
-    position_no: "",
-    alternative_part_no: "",
-    uom: "",
-    req_qty: "",
-    offered_qty: "0",
-  });
+  console.log("Items", items);
+
   const [isMem, setIsMem] = useState(false);
   const [errors, setErrors] = useState({ supply_port: "", items: [] });
   const handleUpdateItem = (id: number, key: any, value: any) => {
@@ -756,54 +882,77 @@ export default function CreateEnquiryPage() {
       )
     );
   };
+
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isloading, setIsLoading] = useState(false);
-  console.log(errors);
 
   const getQuote = async () => {
     setIsLoading(true);
     setErrorMessage(null);
     setSuccessMessage(null);
     let newErrors = {
+      vessel_name: "",
       supply_port: "",
-      expire_date: "",
-      name: "",
+      created_date: "",
+      lead_date: "",
+      drawing_number: "",
       imo_no: "",
-      hull_no: "",
-      port: "",
+      equipement_tag: "",
       brand: "",
       model: "",
       category: "",
+      hull_no: "",
+      offer_quality: "",
+      remark: "",
+      serial_no: "",
+      vessel_ex_name: "",
+      upload: "",
       items: [],
-      offerquality: "",
     };
-    if (!rfqInfo.supply_port)
-      newErrors.supply_port = "Supply Port is required.";
 
-    if (!vesselInfo.name) newErrors.name = "Vessel Name is required.";
-    if (!vesselInfo.imo_no) newErrors.imo_no = "IMO No is required.";
-    // if(!vesselInfo.hull_no) newErrors.hull_no="Hull No is required.";
-    if (!vesselInfo.port) newErrors.port = "Port is required.";
-    if (!equipmentTags.brand) newErrors.brand = "Brand is required";
-    if (!equipmentTags.model) newErrors.model = "Model is required.";
-    if (!equipmentTags.category) newErrors.category = "Catrgory is required.";
-    if (!equipmentTags.offerquality)
-      newErrors.offerquality = "Offer quality is required";
+    if (!createRfq.brand) newErrors.brand = "Brand is Required";
+    if (!createRfq.category) newErrors.category = "Category is requied";
+    if (!createRfq.drawing_number)
+      newErrors.drawing_number = "Drawing Number is required";
+    if (!createRfq.equipement_tag)
+      newErrors.equipement_tag = "Equipment Tag is required";
+    if (!createRfq.hull_no) newErrors.hull_no = "Hull no is required";
+    if (!createRfq.imo_no) newErrors.imo_no = "Impo no is required";
+    if (!createRfq.lead_date) newErrors.lead_date = "Lead date is required";
+    if (!createRfq.model) newErrors.model = "Model is rquired";
+    if (!createRfq.offer_quality)
+      newErrors.offer_quality = "Qffered quality is requied";
+    if (!createRfq.remark) newErrors.remark = "Remark is required";
+    if (!createRfq.serial_no) newErrors.serial_no = "Serial Number is required";
+    if (!createRfq.upload) newErrors.upload = "Upload the file";
+    if (!createRfq.vessel_ex_name)
+      newErrors.vessel_ex_name = "Vessel ex name is required";
+    if (!createRfq.vessel_name)
+      newErrors.vessel_name = "Veseel name is requied";
+    if (!createRfq.supply_port)
+      newErrors.supply_port = "Supply Port is required.";
 
     const itemErrors = items.map((item: any) => ({
       description: item.description ? "" : "Description is required.",
       part_no: item.part_no ? "" : "Part No is required.",
-      position_no: item.position_no ? "" : "Position No is required.",
       alternative_part_no: item.alternative_part_no
         ? ""
         : "Alternative Part No is required.",
+      position_no: item.position_no ? "" : "Position No is required.",
+      alternative_position_no: item.alternative_position_no
+        ? ""
+        : "Alternative position nnumber is required",
+      impa_no: item.impa_no ? "" : "Impa code is required",
       uom: item.uom ? "" : "UOM is required.",
       offered_qty: item.offered_qty ? "" : "Offered Quantity is required.",
       req_qty: item.req_qty ? "" : "Required Quantity is required.",
+      width: item.width ? "" : "Width is required",
+      beadth: item.beadth ? "" : "Breadth is required",
+      height: item.height ? "" : "Height is required",
     }));
-    setErrors(newErrors);
     newErrors.items = itemErrors;
+    setErrors(newErrors);
     if (
       !reqdVendors.vendor1.vendorId ||
       !reqdVendors.vendor2.vendorId ||
@@ -823,60 +972,151 @@ export default function CreateEnquiryPage() {
       return;
 
     const supabase = createClient();
+   
     try {
+
+      // File image start
+      let fileUrl = ""
+
+      if (selectedFile) {
+        const fileExt = selectedFile.name.split(".").pop();
+        const fileName = `${Math.random()}.${fileExt}`;
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from("rfq-image") // Replace with your bucket name
+          .upload(`uploads/${fileName}`, selectedFile);
+  
+        if (uploadError) {
+          console.error("Error uploading file:", uploadError);
+          setErrorMessage("Failed to upload file. Please try again.");
+          setIsLoading(false);
+          return;
+        }
+        const { data: publicUrlData } = supabase.storage
+        .from("rfq-image")
+        .getPublicUrl(uploadData.path);
+
+      fileUrl = publicUrlData.publicUrl;
+
+
+
+      // File image end
       const {
         data: { user },
+        error: userError,
       } = await supabase.auth.getUser();
       const member = await supabase
         .from("member")
-        .select("*")
-        .eq("member_profile", user!.id)
-        .single();
+        .select("branch")
+        .eq("member_profile", user!.id);
+
       console.log(
         "selected vendors",
         Object.values(reqdVendors).map((vendor) => vendor.vendorId)
       );
-      const rfq = await supabase
-        .from("rfq")
-        .insert({
-          vessel_name: vesselInfo.name,
-          imo_no: vesselInfo.imo_no,
-          hull_no: vesselInfo.hull_no,
-          requested_by: user!.id,
-          port: vesselInfo.port,
-          supply_port: rfqInfo.supply_port,
-          suppliers: Object.values(reqdVendors)
-            .filter((vendor) => vendor.vendorId)
-            .map((vendor) => vendor.vendorId),
-          created_at: new Date().toISOString(),
+      if (userError) {
+        console.error("Error fetching member:", userError);
+      } else {
+        console.log("Fetched Member Data:", member);
+      }
+      console.log("createRfq state before insertion:", createRfq);
+      console.log("Member Data:", member.data);
 
-          equipment_tags: equipmentTags.tags,
-          branch: member.data.branch,
-          status: Object.values(reqdVendors).filter((vendor) => vendor.vendorId)
-            .length
-            ? "sent"
-            : "draft",
-        })
-        .select()
+      const branchValues = member.data?.map((m) => m.branch) ?? [];
+      console.log("All Branch Values:", branchValues);
+
+      const { data: rfqData, error: rfqError } = await supabase
+        .from("rfq")
+        .insert([
+          {
+            vessel_name: createRfq.vessel_name,
+            supply_port: createRfq.supply_port,
+            lead_date: createRfq.lead_date,
+            drawing_number: createRfq.drawing_number,
+            imo_no: createRfq.imo_no,
+            equipement_tag: createRfq.equipement_tag,
+            brand: createRfq.brand,
+            model: createRfq.model,
+            category: createRfq.category,
+            hull_no: createRfq.hull_no,
+            offer_quality: createRfq.offer_quality,
+            remarks: createRfq.remark,
+            serial_no: createRfq.serial_no,
+            vessel_ex_name: createRfq.vessel_ex_name,
+            upload: fileUrl,
+            requested_by: user!.id,
+            suppliers: Object.values(reqdVendors)
+              .filter((vendor) => vendor.vendorId)
+              .map((vendor) => vendor.vendorId),
+            created_at: new Date().toISOString(),
+            branch: branchValues[0] ?? null, // Handling null
+            status: Object.values(reqdVendors).filter(
+              (vendor) => vendor.vendorId
+            ).length
+              ? "sent"
+              : "draft",
+          },
+        ])
+        .select("*")
         .single();
-      console.log("rfq", rfq);
+      console.log("RFQ Insert Response:", { rfqData, rfqError });
+
+      if (rfqError) {
+        console.error("Supabase RFQ Insert Error:", rfqError);
+        setErrorMessage(`Error inserting RFQ: ${rfqError.message}`);
+        setIsLoading(false);
+        return; // ✅ Stop execution if RFQ insertion fails
+      }
+
+      if (!rfqData) {
+        console.error("RFQ Insertion Failed: No data returned.");
+        setErrorMessage("Failed to create RFQ. Please try again.");
+        setIsLoading(false);
+        return;
+      }
+
+      console.log("Raw RFQ Data:", rfqData);
+      const rfq = Array.isArray(rfqData) ? rfqData[0] : rfqData;
+      console.log("Extracted RFQ:", rfq);
+      console.log("RFQ ID:", rfq?.id);
 
       for (let i = 0; i < items.length; i++) {
         const item = items[i];
-        await supabase.from("rfq_items").insert({
-          rfq_id: rfq.data!.id,
-          item_part_no: item.part_no,
-          item_position_no: item.position_no,
-          alternate_part_no: item.alternative_part_no,
-          description: item.description,
-          req_qty: item.req_qty,
-          uom: item.uom,
-        });
+
+        console.log("Inserting RFQ Item for RFQ ID:", rfqData.id);
+
+        const { data: rfqItemData, error: rfqItemError } = await supabase
+          .from("rfq_items")
+          .insert([
+            {
+              rfq_id: rfqData.id,
+              item_part_no: item.part_no,
+              alternate_part_no: item.alternative_part_no,
+              impa_no: item.impa_no,
+              item_position_no: item.position_no,
+              alternative_position_no: item.alternative_position_no,
+              description: item.description,
+              req_qty: item.req_qty,
+              uom: item.uom,
+              width: item.width,
+              height: item.height,
+              beadth: item.beadth,
+            },
+          ])
+          .select("*")
+          .single();
+        if (rfqItemError) {
+          console.error("RFQ Item Insert Error:", rfqItemError);
+        }
+
+        console.log("Inserted RFQ Item:", rfqItemData);
       }
+
       setSuccessMessage("RFQ Successfully Created!");
       window.location.reload();
       setIsLoading(false);
-    } catch (e) {
+    }
+  } catch (e) {
+      console.error("Error:", e);
       setErrorMessage("Unable to create RFQ. Please try again!");
       setIsLoading(false);
     }
@@ -886,9 +1126,11 @@ export default function CreateEnquiryPage() {
     reqdVendors.vendor2?.name,
     reqdVendors.vendor3?.name,
   ].filter(Boolean);
+
   const handleAddQuote = () => {
     getQuote();
   };
+
   function handleRemove(itemId: number) {
     const filteredItem = items.filter((i: any) => i.id !== itemId);
 
@@ -961,18 +1203,14 @@ export default function CreateEnquiryPage() {
 
         <main className="grid justify-self-center max-w-6xl w-full md:grid-cols-3 gap-4 mt-4">
           <RFQInfoCard
-            rfqInfo={rfqInfo}
-            setRfqInfo={setRfqInfo}
-            vesselInfo={vesselInfo}
-            setVesselInfo={setVesselInfo}
-            errors={errors}
-            setErrors={setErrors}
-            equipmentTags={equipmentTags}
-            setEquipmentTags={setEquipmentTags}
+            createRfq={createRfq}
+            setcreateRfq={setCreateRfq}
             models={model}
             brands={brands}
+            setSelectedFile={setSelectedFile}
             category={category}
-            offerQuality={offerQuality}
+            errors={errors}
+            setErrors={setErrors}
           />
         </main>
 
@@ -1198,7 +1436,7 @@ export default function CreateEnquiryPage() {
 
                 <TableBody>
                   {items.map((item: any, i: any) => (
-                    <Item 
+                    <Item
                       key={i}
                       item={item}
                       handleRemove={handleRemove}
@@ -1217,13 +1455,17 @@ export default function CreateEnquiryPage() {
                       {
                         id: items.length + 1,
                         description: "",
+                        alternative_position_no: "",
                         part_no: "",
                         impa_no: "",
                         position_no: "",
                         alternative_part_no: "",
                         uom: "",
                         req_qty: "",
-                        offered_qty: "0",
+                        offered_qty: "",
+                        width: "",
+                        height: "",
+                        beadth: "",
                       },
                     ]);
                   }}

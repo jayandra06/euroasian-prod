@@ -277,6 +277,8 @@ const VendorItem = () => {
                     Add Product
                 </Button>
             </div>
+
+            <div><Button className="mx-auto flex items-center justify-center mt-4">Save</Button></div>
             
         </div>
     );

@@ -18,6 +18,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import TagsInput from 'react-tagsinput';
 import 'react-tagsinput/react-tagsinput.css';
+import { set } from "react-hook-form";
+import { loadComponents } from "next/dist/server/load-components";
 
 
 
@@ -32,6 +34,9 @@ export default function vendorManagement() {
 
   const [tags, setTags] = useState([]);
   const [inputValue, setInputValue] = useState('');
+  const [loding, setloding] = useState(false)
+  const [email, setemail] = useState("")
+  
 
 
 
@@ -97,6 +102,30 @@ export default function vendorManagement() {
   }
 
 
+
+  const handleVendorEmail = async(e)=>{
+    e.preventDefault()
+    setloding(true)
+    
+
+  const response = await fetch('/api/send-email',{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({email})
+  })
+
+  const data = await response.json()
+    if(data.success){
+      alert("Email sent successfull")
+    }else{
+      console.log("error",data.error)
+      alert("Faiiled to send email"+ data.error)
+    }
+  
+
+  }
+
+
   const addTag = (event) => {
     if (event.key === 'Enter' && event.target.value.trim() !== '') {
       setTags([...tags, event.target.value.trim()]);
@@ -112,6 +141,8 @@ export default function vendorManagement() {
       removeTag(tags.length - 1); // Remove last tag
     }
   };
+
+
 
 
   return (
@@ -135,6 +166,9 @@ export default function vendorManagement() {
       <DialogDescription className="mt-4">
       <Label className="text-black font-bold" htmlFor="email">Email</Label>
       
+
+      
+      
       <div className="flex flex-wrap gap-2 border border-black rounded-md mt-2">
         {tags.map((tag, index) => (
           <div key={index} className="flex items-center bg-black text-white px-2 py-1 ml-1 rounded-md">
@@ -144,8 +178,8 @@ export default function vendorManagement() {
         <input
           type="text"
           placeholder="Enter a Email"
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
+          value={email}
+          onChange={(e) => setemail(e.target.value)}
           onKeyDown={(e) => {
             addTag(e);
             handleBackspace(e);
@@ -157,19 +191,13 @@ export default function vendorManagement() {
 
       </DialogDescription>
     </DialogHeader>
-    <DialogFooter><Button className="mx-auto">Submit</Button></DialogFooter>
+    <DialogFooter><Button disabled={loding} onClick={handleVendorEmail} className="mx-auto">{loding ? "Sending..." : "Send Invite"}</Button></DialogFooter>
+    
   </DialogContent>
 </Dialog>
 
 
-        <Button className="ml-9">
-          <Link
-            href={"/dashboard/customer/view-rfq"}
-            className="text-center text-white py-2 text-xs font-semibold grid w-full rounded-lg bg-black dark:text-black dark:bg-white "
-          >
-            Invite Vendor
-          </Link>
-        </Button>
+        
 
       </div>
       <table className="mt-4 w-full max-w-7xl border-collapse border border-gray-300">
@@ -227,4 +255,5 @@ export default function vendorManagement() {
       </table>
     </>
   );
+}
 
