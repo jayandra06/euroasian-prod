@@ -1,7 +1,4 @@
-<<<<<<< HEAD
 
-=======
->>>>>>> 8389b9365a68938c0370c4b810916e19e5572937
 "use client";
 
 import { Button } from "@/components/ui/button";
