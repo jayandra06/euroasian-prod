@@ -533,7 +533,8 @@ export  function BranchPage() {
 
 
 
-export  function BranchAdminCard({ branch }: { branch: any }) {
+
+function BranchCard1({ branch }: { branch: any }) { 
     const [admin, setAdmin] = useState<any>(null);
     const [memberCount, setMemberCount] = useState(0);
     const [rfqCount, setRfqCount] = useState(0);
@@ -829,4 +830,3 @@ export  function BranchMerchantPage() {
         </main>
     )
 }
-
