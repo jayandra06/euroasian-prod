@@ -1,7 +1,4 @@
-<<<<<<< HEAD
 
-=======
->>>>>>> 8389b9365a68938c0370c4b810916e19e5572937
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -320,7 +317,7 @@ function BranchCard({ branch, vessels }: { branch: Branch; vessels: string[] }) 
   );
 }
 
-export default function BranchPage() {
+export  function BranchPage() {
   const [vesselName, setVesselName] = useState("");
   const [vessels, setVessels] = useState<string[]>([]);
   const [branches, setBranches] = useState<Branch[]>([]);
@@ -337,7 +334,12 @@ export default function BranchPage() {
       const {
         data: { user },
       } = await supabase.auth.getUser();
-      const profileData = await supabase.from("profiles").select("*").eq("id", user?.id).single();
+      const {data:profileData , error:profileError} = await supabase.from("profiles").select("*").eq("id", user?.id).single();
+      console.log("Profile data",profileData)
+      console.log("Profile error",profileError)
+      if (profileError) {
+        throw new Error("Error fetching user profile");
+      }
 
       if (profileData.data?.vessels) {
         await supabase
@@ -371,19 +373,36 @@ export default function BranchPage() {
       const {
         data: { user },
       } = await supabase.auth.getUser();
-      const profileData = await supabase.from("profiles").select("*").eq("id", user?.id).single();
+      const {data:profileData , error:profileError} = await supabase.from("profiles").select("*").eq("id", user?.id).single();
+      console.log("Profile data",profileData)
+      console.log("Profile error",profileError)
+      if (profileError) {
+        throw new Error("Error fetching user profile");
+      }
 
       const currentTime = new Date().toISOString();
-      const branchData = await supabase
+      const {data:branchData , error:branchError} = await supabase
         .from("branch")
-        .insert({ name: newBranch.name, vessels: newBranch.vessels, creator: user!.id, created_at: currentTime })
-        .select()
+        .insert([{ name: newBranch.name, vessels: newBranch.vessels, creator: user!.id, created_at: currentTime }])
+        .select("*")
         .single();
-      await supabase
+
+        console.log("branch data",branchData)
+
+        if (branchError || !branchData) {
+          throw new Error("Failed to create branch: " + branchError?.message);
+        }
+        console.log("Branch inserted:", branchData);
+        const { error: memberError } = await supabase
         .from("member")
         .insert({ branch: branchData.data?.id, member_profile: user?.id, member_role: "creator" });
 
+        if (memberError) {
+          throw new Error("Failed to insert into member table: " + memberError.message);
+        }
+
       alert("Branch Created Successfully!");
+      console.log("create branch",branchData)
       window.location.reload();
     } catch (e) {
       console.log("Unable to Create Branch, ", e);
@@ -426,6 +445,7 @@ export default function BranchPage() {
   useEffect(() => {
     fetchDetails();
   }, []);
+  console.log("fetched detials",fetchDetails)
 
   return (
     <main className="grid max-w-6xl w-full justify-self-center">
@@ -513,7 +533,7 @@ export default function BranchPage() {
 
 
 
-function BranchCard({ branch }: { branch: any }) {
+export  function BranchAdminCard({ branch }: { branch: any }) {
     const [admin, setAdmin] = useState<any>(null);
     const [memberCount, setMemberCount] = useState(0);
     const [rfqCount, setRfqCount] = useState(0);
@@ -649,7 +669,7 @@ function BranchCard({ branch }: { branch: any }) {
 }
 
 
-export default function BranchPage() {
+export  function BranchMerchantPage() {
     const [vesselName, setVesselName] = useState("");
     const [vessels, setVessels] = useState<string[]>([]);
     const [branches, setBranches] = useState<any[]>([]);
@@ -803,10 +823,10 @@ export default function BranchPage() {
 
             <div className="mt-4 grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
                 {branches.map((branch, i) =>
-                    <BranchCard key={i} branch={branch} />
+                    <BranchAdminCard key={i} branch={branch} />
                 )}
             </div>
         </main>
     )
 }
->>>>>>> 8389b9365a68938c0370c4b810916e19e5572937
+

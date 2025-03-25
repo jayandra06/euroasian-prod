@@ -20,6 +20,7 @@ import TagsInput from 'react-tagsinput';
 import 'react-tagsinput/react-tagsinput.css';
 import { set } from "react-hook-form";
 import { loadComponents } from "next/dist/server/load-components";
+import { inviteVendorWithEmail } from "@/app/actions";
 
 
 
@@ -34,7 +35,7 @@ export default function vendorManagement() {
 
   const [tags, setTags] = useState([]);
   const [inputValue, setInputValue] = useState('');
-  const [loding, setloding] = useState(false)
+  const [loading, setLoading] = useState(false)
   const [email, setemail] = useState("")
   
 
@@ -104,26 +105,26 @@ export default function vendorManagement() {
 
 
   const handleVendorEmail = async(e)=>{
-    e.preventDefault()
-    setloding(true)
-    
-
-  const response = await fetch('/api/send-email',{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({email})
-  })
-
-  const data = await response.json()
-    if(data.success){
-      alert("Email sent successfull")
-    }else{
-      console.log("error",data.error)
-      alert("Faiiled to send email"+ data.error)
+    e.preventDefault();
+      setLoading(true);
+  
+      const formData = new FormData();
+      formData.append("email", email);
+  
+      const response = await inviteVendorWithEmail(formData);
+  
+      if (response.success) {
+        alert("Vendor invite email sent successfully!");
+      } else {
+        alert("Failed to send invite: " + response.error);
+      }
+  
+      setLoading(false);
     }
   
 
-  }
+  
+
 
 
   const addTag = (event) => {
@@ -141,6 +142,7 @@ export default function vendorManagement() {
       removeTag(tags.length - 1); // Remove last tag
     }
   };
+
 
 
 
@@ -191,7 +193,7 @@ export default function vendorManagement() {
 
       </DialogDescription>
     </DialogHeader>
-    <DialogFooter><Button disabled={loding} onClick={handleVendorEmail} className="mx-auto">{loding ? "Sending..." : "Send Invite"}</Button></DialogFooter>
+    <DialogFooter><Button disabled={loading} onClick={handleVendorEmail} className="mx-auto">{loading ? "Sending..." : "Send Invite"}</Button></DialogFooter>
     
   </DialogContent>
 </Dialog>
@@ -255,5 +257,6 @@ export default function vendorManagement() {
       </table>
     </>
   );
-}
 
+
+}

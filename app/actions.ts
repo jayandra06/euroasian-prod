@@ -139,7 +139,7 @@ export const inviteVendorWithEmail = async (formData: FormData) => {
 
   const profile = await supabase.from("profiles").update({user_role: "vendor"}).eq("id", data.user?.id);
   const {error:optError} = await supabase.auth.signInWithOtp({email: email , options:{
-    emailRedirectTo:`${origin}/invite-vendor`
+    emailRedirectTo:`/sign-in`
   }});
 
   if(optError){

@@ -52,9 +52,11 @@ interface Profile {
 
 function BranchCard({ branch, vessels }: { branch: Branch; vessels: string[] }) {
   const [admin, setAdmin] = useState<Member | null>(null);
+  console.log('admin emaplor',admin)
   const [memberCount, setMemberCount] = useState(0);
   const [rfqCount, setRfqCount] = useState(0);
   const [adminProfile, setAdminProfile] = useState<Profile | null>(null);
+  
   const [newBranch, setNewBranch] = useState<{ name: string; vessels: string[] }>({
     name: "",
     vessels: [],
@@ -67,9 +69,12 @@ function BranchCard({ branch, vessels }: { branch: Branch; vessels: string[] }) 
 
     const res = await fetch("/api/add-admin-to-branch/", {
       method: "POST",
+      headers:{"Content-Type":"application/json"},
       body: JSON.stringify({ email: formData.get("email"), branch: branch.id }),
     });
     const data = await res.json();
+    console.log('admin',data)
+    console.log('admin' , data.email)
     alert("Successfully Added Admin");
     window.location.reload();
   }
@@ -81,6 +86,7 @@ function BranchCard({ branch, vessels }: { branch: Branch; vessels: string[] }) 
 
     const res = await fetch("/api/add-manager-to-branch/", {
       method: "POST",
+      
       body: JSON.stringify({ email: formData.get("email"), branch: branch.id }),
     });
     const data = await res.json();
@@ -291,10 +297,14 @@ export default function BranchPage() {
   const [vessels, setVessels] = useState<string[]>([]);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [isClient, setIsClient] = useState(true);
+  const [loading, setloading] = useState(false)
   const [newBranch, setNewBranch] = useState<{ name: string; vessels: string[] }>({
     name: "",
     vessels: [],
   });
+
+  console.log('vessels',vessels)
+  
 
   async function addVessel() {
     const supabase = createClient();
@@ -332,6 +342,8 @@ export default function BranchPage() {
 
   async function addBranch() {
     const supabase = createClient();
+    setloading(true)
+    
 
     try {
       const {
@@ -340,17 +352,27 @@ export default function BranchPage() {
       const profileData = await supabase.from("profiles").select("*").eq("id", user?.id).single();
 
       const currentTime = new Date().toISOString();
-      const branchData = await supabase
+      const {data:branchData, error:branchError} = await supabase
         .from("branch")
         .insert({ name: newBranch.name, vessels: newBranch.vessels, creator: user!.id, created_at: currentTime })
         .select()
         .single();
-      await supabase
+
+        console.log("branch data",branchData)
+        console.log("branch data",branchData.id)
+
+
+        
+      const data = await supabase
         .from("member")
-        .insert({ branch: branchData.data?.id, member_profile: user?.id, member_role: "creator" });
+        .insert({ branch: branchData?.id, member_profile: user?.id, member_role: "creator" });
+      console.log('member data',data)
+      setloading(false)
 
       alert("Branch Created Successfully!");
+      
       window.location.reload();
+      
     } catch (e) {
       console.log("Unable to Create Branch, ", e);
       alert("Unable to Create Branch!!");
@@ -421,16 +443,10 @@ export default function BranchPage() {
                   />
                 </div>
               </div>
-              <div className="my-1 flex gap-1">
-                {newBranch.vessels.map((vessel, i) => (
-                  <div className="px-1 bg-zinc-500 rounded-full text-white text-xs" key={i}>
-                    {vessel}
-                  </div>
-                ))}
-              </div>
+              
               <DialogFooter>
-                <Button type="submit" onClick={addBranch}>
-                  Add Branch
+                <Button  type="submit" disabled={loading} onClick={addBranch}>
+                  {loading ? "Adding branch" : "Add Branch" }
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -459,8 +475,8 @@ export default function BranchPage() {
                 </div>
               </div>
               <DialogFooter>
-                <Button type="submit" onClick={addVessel}>
-                  Add Vessel
+                <Button type="submit"  onClick={addVessel}>
+                  Add vessel
                 </Button>
               </DialogFooter>
             </DialogContent>

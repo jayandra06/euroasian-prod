@@ -1,4 +1,4 @@
-"use client";
+"use client"
 import { createClient } from "@/utils/supabase/client"
 
 import { redirect } from "next/navigation";
@@ -10,14 +10,33 @@ export default function DashboardProfile() {
     const supabase = createClient();
 
     async function getUser() {
-        const { data: { user } } = await supabase.auth.getUser();
-        const { data } = await supabase
+        const { data: userData, error: authError } = await supabase.auth.getUser();
+        
+        if (authError || !userData.user) {
+            console.error("Authentication error or user not found:", authError);
+            return;
+        }
+    
+        console.log("Authenticated user:", userData.user);
+        
+        const { data: profileData, error: profileError } = await supabase
             .from("profiles")
             .select("*")
-            .eq("id", user?.id).single();
-
-        redirect(`/dashboard/${data.user_role}`)
+            .eq("id", userData.user.id)
+            .single();
+    
+        if (profileError) {
+            console.error("Profile fetch error:", profileError);
+            return;
+        }
+    
+        console.log("Profile data:", profileData);
+    
+        if (profileData) {
+            redirect(`/dashboard/${profileData.user_role}`);
+        }
     }
+    
 
     useEffect(() => {
         getUser();
