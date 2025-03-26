@@ -21,6 +21,7 @@ import 'react-tagsinput/react-tagsinput.css';
 import { set } from "react-hook-form";
 import { loadComponents } from "next/dist/server/load-components";
 import { inviteVendorWithEmail } from "@/app/actions";
+import { useRouter } from "next/navigation";
 
 
 
@@ -29,6 +30,7 @@ import { inviteVendorWithEmail } from "@/app/actions";
 
 export default function vendorManagement() {
   const [rfqs, setRfqs] = useState<any[]>([]);
+  const [vendors, setVendors] = useState<any[]>([]);
   const [enable, setEnable] = useState(false)
   const [expandedRow, setExpandedRow] = useState<number | null>(null);
   const [rfqItems, setRfqItems] = useState<{ [key: number]: any[] }>({}); // Store items for each RFQ
@@ -37,12 +39,26 @@ export default function vendorManagement() {
   const [inputValue, setInputValue] = useState('');
   const [loading, setLoading] = useState(false)
   const [email, setemail] = useState("")
+  const router = useRouter()
   
 
 
 
   const supabase = createClient();
 
+
+  const getVendors = async () => {
+    const { data: vendorData, error: vendorError } = await supabase.from("externalvendor").select();
+    if (vendorError) {
+      console.log("Failed to fetch vendors", vendorError);
+    } else {
+      setVendors(vendorData || []);
+    }
+  };
+
+  useEffect(() => {
+    getVendors();
+  }, []);
   const toggleRow = async (index: number, rfqId: number) => {
     if (expandedRow === index) {
       setExpandedRow(null);
@@ -115,8 +131,10 @@ export default function vendorManagement() {
   
       if (response.success) {
         alert("Vendor invite email sent successfully!");
+        
       } else {
         alert("Failed to send invite: " + response.error);
+        router.push('/invite-vendor')
       }
   
       setLoading(false);
@@ -223,36 +241,34 @@ export default function vendorManagement() {
           </tr>
         </thead>
         <tbody>
-          {rfqs.map((rfq, i) => (
-            <React.Fragment key={rfq.id}>
-              <tr
-                
-                key={i}
-                className="border cursor-pointer border-gray-300"
-              >
-                <td className="border border-gray-300 px-4 py-2">3849479340</td>
+          {vendors.length > 0 ? (
+            vendors.map((vendor, i) => (
+              <tr key={vendor.id} className="border border-gray-300">
+                <td className="border border-gray-300 px-4 py-2">{(vendor.id).slice(0,8)}</td>
+                <td className="border border-gray-300 px-4 py-2">{vendor.username}</td>
+                <td className="border border-gray-300 px-4 py-2">{vendor.email}</td>
+                <td className="border border-gray-300 px-4 py-2">{vendor.phonenumber}</td>
                 <td className="border border-gray-300 px-4 py-2">
-                  Abhinav spares Pvt. Ltd
-                </td>
-                <td className="border border-gray-300 px-4 py-2">
-                  supplier@abhinav.com
-                </td>
-                <td className="border border-gray-300 px-4 py-2">
-                  +95174397408
-                </td>
-                <td className="border border-gray-300 px-4 py-2">
-                  <label  className="inline-flex items-center cursor-pointer">
-                    <input checked={enable} onChange={handleToogle}   type="checkbox" value="" className="sr-only peer" />
-                    <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600 dark:peer-checked:bg-blue-600"></div>
-                    <span className="ms-3 text-sm font-medium text-gray-900 dark:text-gray-300">
-                      {enable ? "Enable":"Disable"}
-                    </span>
+                  <label className="inline-flex items-center cursor-pointer">
+                    <input
+                      checked={enable}
+                      onChange={() => setEnable((prev) => !prev)}
+                      type="checkbox"
+                      className="sr-only peer"
+                    />
+                    <div className="relative w-11 h-6 bg-gray-200 rounded-full peer-checked:bg-blue-600 after:absolute after:top-[2px] after:left-[2px] after:bg-white after:h-5 after:w-5 after:rounded-full after:transition-all peer-checked:after:translate-x-full"></div>
+                    <span className="ml-3 text-sm font-medium">{enable ? "Enable" : "Disable"}</span>
                   </label>
                 </td>
               </tr>
-            
-            </React.Fragment>
-          ))}
+            ))
+          ) : (
+            <tr>
+              <td colSpan={5} className="text-center py-4 text-gray-500">
+                No Vendors Found
+              </td>
+            </tr>
+          )}
         </tbody>
       </table>
     </>

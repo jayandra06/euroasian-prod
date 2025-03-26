@@ -1140,8 +1140,11 @@ export default function CreateEnquiryPage() {
   async function fetchDetails() {
     const supabase = createClient();
 
-    const merchants = await supabase.from("merchant").select("*").select("*");
-    updateVendors([...merchants.data!]);
+    const externalVendor  = await supabase.from("externalvendor").select("*")
+    updateVendors([...externalVendor.data!])
+
+   
+    
 
     const brands = await supabase
       .from("brand")
@@ -1228,8 +1231,8 @@ export default function CreateEnquiryPage() {
             (vendorKey, index) => {
               const availableVendors = vendors.filter(
                 (v) =>
-                  !selectedVendors.includes(v.name) ||
-                  reqdVendors[vendorKey]?.name === v.name
+                  !selectedVendors.includes(v.username) ||
+                  reqdVendors[vendorKey]?.name === v.username
               );
 
               return (
@@ -1253,7 +1256,7 @@ export default function CreateEnquiryPage() {
                           [vendorKey]: {
                             name: e,
                             vendorId:
-                              vendors.find((v) => v.name === e)?.id || "",
+                              vendors.find((v) => v.username === e)?.id || "",
                           },
                         });
                       }}
@@ -1267,8 +1270,8 @@ export default function CreateEnquiryPage() {
                       </SelectTrigger>
                       <SelectContent>
                         {availableVendors.map((vendor) => (
-                          <SelectItem value={vendor.name} key={vendor.id}>
-                            {vendor.name}
+                          <SelectItem value={vendor.username} key={vendor.id}>
+                            {vendor.username}
                           </SelectItem>
                         ))}
                       </SelectContent>

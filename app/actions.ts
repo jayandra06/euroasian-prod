@@ -104,6 +104,41 @@ export const inviteAdminWithEmail = async (formData: FormData) => {
 };
 
 
+export const signUpInviteVednorAction = async (formData: FormData) => {
+  const email = formData.get("email")?.toString();
+  const password = formData.get("password")?.toString();
+  const supabase = await createClient();
+  const origin = (await headers()).get("origin");
+
+  if (!email || !password) {
+    return encodedRedirect(
+      "error",
+      "/sign-up",
+      "Email and password are required",
+    );
+  }
+
+  const { error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      emailRedirectTo: `${origin}/auth/callback`,
+    },
+  });
+
+  if (error) {
+    console.error(error.code + " " + error.message);
+    return encodedRedirect("error", "/sign-up", error.message);
+  } else {
+    return encodedRedirect(
+      "success",
+      "/sign-up",
+      "Thanks for signing up! Please check your email for a verification link.",
+    );
+  }
+};
+
+
 
 export const inviteManagerWithEmail = async (formData: FormData) => {
   const email = formData.get("email") as string;
@@ -139,7 +174,7 @@ export const inviteVendorWithEmail = async (formData: FormData) => {
 
   const profile = await supabase.from("profiles").update({user_role: "vendor"}).eq("id", data.user?.id);
   const {error:optError} = await supabase.auth.signInWithOtp({email: email , options:{
-    emailRedirectTo:`/sign-in`
+    emailRedirectTo:`/invite-vendor`
   }});
 
   if(optError){
@@ -262,6 +297,46 @@ export const resetPasswordAction = async (formData: FormData) => {
 
   encodedRedirect("success", "/dashboard/reset-password", "Password updated");
 };
+
+
+
+export const signInVendorExternal = async (formData: FormData) => {
+  const username = formData.get("username") as string;
+  const phonenumber = formData.get("phonenumber") as string;
+  const email = formData.get("email") as string;
+  const password = formData.get("password") as string;
+
+  const supabase = await createClient();
+
+  // Sign in with Supabase
+  const { data: userData, error:userError } = await supabase.auth.signUp({
+    email,
+    password,
+  });
+
+  if (userError) {
+    return encodedRedirect("error", "/sign-in", userError.message);
+  }
+
+  // Insert vendor data into externalvendor table
+  const { data: updateData, error: updateError } = await supabase.from("externalvendor").insert([
+    {
+      email,
+      phonenumber,
+      username,
+    },
+  ]);
+
+  if (updateError) {
+    console.error("Failed to insert vendor:", updateError);
+    return encodedRedirect("error", "/sign-in", updateError.message);
+  }
+
+  console.log("Vendor inserted:", updateData);
+
+  return redirect("/dashboard/customer/vendorManagement");
+};
+
 
 export const signOutAction = async () => {
   const supabase = await createClient();

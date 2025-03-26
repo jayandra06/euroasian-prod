@@ -220,7 +220,7 @@ const customerData = {
     },
     {
       title: "Crew Management",
-      url: "/dashboard/customer",
+      url: "/dashboard/customer/crew-management",
       
       
     },
