@@ -142,7 +142,7 @@ export default function RFQsPage() {
                   </div>
                 </td>
                 <td><Button><Link
-                href={"/dashboard/customer/view-rfq"}
+                href={`/dashboard/customer/view-rfq/${rfq.id}`}
                 className="text-center text-white py-2 text-xs font-semibold grid w-full rounded-lg bg-black dark:text-black dark:bg-white "
               >
                 View Rfq

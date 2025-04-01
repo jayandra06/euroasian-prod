@@ -301,9 +301,9 @@ export const resetPasswordAction = async (formData: FormData) => {
 
 
 export const signInVendorExternal = async (formData: FormData) => {
-  const username = formData.get("username") as string;
+  const name = formData.get("name") as string;
   const phonenumber = formData.get("phonenumber") as string;
-  const email = formData.get("email") as string;
+  const email = formData.get("business_email") as string;
   const password = formData.get("password") as string;
 
   const supabase = await createClient();
@@ -319,11 +319,11 @@ export const signInVendorExternal = async (formData: FormData) => {
   }
 
   // Insert vendor data into externalvendor table
-  const { data: updateData, error: updateError } = await supabase.from("externalvendor").insert([
+  const { data: updateData, error: updateError } = await supabase.from("merchant").insert([
     {
-      email,
+      business_email :email,
       phonenumber,
-      username,
+      name,
     },
   ]);
 

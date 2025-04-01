@@ -30,6 +30,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import Link from "next/link";
+import { Router } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 interface Branch {
   id: string;
@@ -52,7 +54,8 @@ interface Profile {
 
 function BranchCard({ branch, vessels }: { branch: Branch; vessels: string[] }) {
   const [admin, setAdmin] = useState<Member | null>(null);
-  console.log('admin emaplor',admin)
+  
+  
   const [memberCount, setMemberCount] = useState(0);
   const [rfqCount, setRfqCount] = useState(0);
   const [adminProfile, setAdminProfile] = useState<Profile | null>(null);
@@ -72,33 +75,47 @@ function BranchCard({ branch, vessels }: { branch: Branch; vessels: string[] }) 
       headers:{"Content-Type":"application/json"},
       body: JSON.stringify({ email: formData.get("email"), branch: branch.id }),
     });
+    
     const data = await res.json();
     console.log('admin',data)
     console.log('admin' , data.email)
     alert("Successfully Added Admin");
-    window.location.reload();
+    // window.location.reload();
   }
 
   async function addEmployee(e: React.FormEvent) {
+    
     e.preventDefault();
 
     const formData = new FormData(e.target as HTMLFormElement);
 
     const res = await fetch("/api/add-manager-to-branch/", {
       method: "POST",
-      
-      body: JSON.stringify({ email: formData.get("email"), branch: branch.id }),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: formData.get("email"),
+        branch: branch.id,
+        vessels: newBranch.vessels,  // Send selected vessels
+      }),
     });
-    const data = await res.json();
 
-    alert("Successfully Added Employee");
-    window.location.reload();
-  }
+    const data = await res.json();
+    console.log("Manager Added:", data);
+
+    if (data.success) {
+      
+        alert("Successfully Added Manager");
+        // Reload to reflect changes
+        
+    } else {
+        alert("Error: " + data.error);
+    }
+}
 
   async function fetchBranch() {
     const supabase = createClient();
 
-    const member = await supabase.from("member").select("*").eq("branch", branch.id);
+    const member = await supabase.from("manager").select("*").eq("branch_id", branch.id);
     setMemberCount(member.data?.length || 0);
 
     const rfq = await supabase.from("rfq").select("*").eq("branch", branch.id);
@@ -130,7 +147,7 @@ function BranchCard({ branch, vessels }: { branch: Branch; vessels: string[] }) 
     <Card>
       <CardHeader>
         <CardTitle>{branch.name}</CardTitle>
-        <CardDescription>Id: {`${branch.id}`.slice(1, 8)}</CardDescription>
+        <CardDescription>Id: {`${branch.id}`.slice(0, 8)}</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="mb-2 grid grid-cols-2 gap-2 text-sm">
@@ -240,22 +257,24 @@ function BranchCard({ branch, vessels }: { branch: Branch; vessels: string[] }) 
                       <Label htmlFor="vessels" className="text-right">
                         Select Vessels
                       </Label>
-                      <Select
-                        onValueChange={(value) =>
-                          setNewBranch({ ...newBranch, vessels: [...newBranch.vessels, value] })
-                        }
-                      >
-                        <SelectTrigger className="w-[180px]">
-                          <SelectValue placeholder="Select Vessels..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {vessels.map((vessel, i) => (
-                            <SelectItem value={vessel} key={i}>
-                              {vessel}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <Select onValueChange={(value) =>
+  setNewBranch((prev) => ({
+    ...prev,
+    vessels: prev.vessels.includes(value) ? prev.vessels : [...prev.vessels, value], // Prevent duplicates
+  }))
+}>
+  <SelectTrigger className="w-[180px]">
+    <SelectValue placeholder="Select Vessels..." />
+  </SelectTrigger>
+  <SelectContent>
+    {[...new Set(vessels)].map((vessel, index) => (
+      <SelectItem value={vessel} key={`${vessel}-${index}`}>
+        {vessel}
+      </SelectItem>
+    ))}
+  </SelectContent>
+</Select>
+
                     </div>
                 <Button type="submit">Add Manager</Button>
               </form>
@@ -342,43 +361,64 @@ export default function BranchPage() {
 
   async function addBranch() {
     const supabase = createClient();
-    setloading(true)
-    
-
+    setloading(true);
+  
     try {
       const {
         data: { user },
       } = await supabase.auth.getUser();
-      const profileData = await supabase.from("profiles").select("*").eq("id", user?.id).single();
-
+  
+      if (!user) {
+        console.error("User not logged in.");
+        alert("Please log in first!");
+        setloading(false);
+        return;
+      }
+  
+      const creatorId = user.id;
+      console.log("Creator ID:", creatorId);
+  
       const currentTime = new Date().toISOString();
-      const {data:branchData, error:branchError} = await supabase
+  
+      const { data: branchData, error: branchError } = await supabase
         .from("branch")
-        .insert({ name: newBranch.name, vessels: newBranch.vessels, creator: user!.id, created_at: currentTime })
+        .insert({ name: newBranch.name, creator: creatorId, created_at: currentTime })
         .select()
         .single();
-
-        console.log("branch data",branchData)
-        console.log("branch data",branchData.id)
-
-
-        
-      const data = await supabase
+  
+      if (branchError) {
+        console.error("Branch Insert Error:", branchError.message);
+        alert("Branch creation failed!");
+        setloading(false);
+        return;
+      }
+  
+      console.log("Branch Data:", branchData);
+      
+      // Insert into member table
+      const { data: memberData, error: memberError } = await supabase
         .from("member")
-        .insert({ branch: branchData?.id, member_profile: user?.id, member_role: "creator" });
-      console.log('member data',data)
-      setloading(false)
-
+        .insert({ branch: branchData?.id, member_profile: creatorId, member_role: "creator" });
+  
+      if (memberError) {
+        console.error("Member Insert Error:", memberError.message);
+        alert("Failed to add creator to members.");
+        setloading(false);
+        return;
+      }
+  
+      console.log("Member Data:", memberData);
+      setloading(false);
+  
       alert("Branch Created Successfully!");
-      
       window.location.reload();
-      
     } catch (e) {
-      console.log("Unable to Create Branch, ", e);
+      console.error("Unable to Create Branch:", e);
       alert("Unable to Create Branch!!");
+      setloading(false);
     }
   }
-
+  
   async function fetchDetails() {
     const supabase = createClient();
 

@@ -21,7 +21,12 @@ const tabs = [
   { id: "sent", label: "Quote Sent", color: "bg-green-400" },
   { id: "confirmed", label: "Order Confirmed", color: "bg-green-700" },
   { id: "cancelled", label: "Order Cancelled", color: "bg-red-600" },
-  { id: "completed", label: "Order Completed", color: "bg-blue-600", text:"text-black" },
+  {
+    id: "completed",
+    label: "Order Completed",
+    color: "bg-blue-600",
+    text: "text-black",
+  },
 ];
 
 export default function RFQsPage() {
@@ -60,11 +65,54 @@ export default function RFQsPage() {
   async function fetchRfqs() {
     const supabase = createClient();
 
-    const rfqs = await supabase.from("rfq").select();
-    console.log("rfq", rfqs);
+    // Get the logged-in user's email
+    const { data: user, error: userError } = await supabase.auth.getUser();
+    console.log("Logged-in User:", user);
+    console.log("🔍 Checking Merchant for Email:", user.user.email);
 
-    setRfqs([...rfqs.data!]);
-    setFilterRfq([...rfqs.data!]);
+    const { data: merchant, error: merchantError } = await supabase
+      .from("merchant")
+      .select("*")
+      .ilike("business_email", user.user.email) // Case-insensitive match
+      .maybeSingle();
+
+    console.log("Merchant Data:", merchant);
+
+    // Fetch merchant ID based on email
+
+    if (merchantError) {
+      console.error("Error fetching merchant:", merchantError);
+      return;
+    }
+
+    const { data: rfqSupplierData, error: rfqSupplierError } = await supabase
+      .from("rfq_supplier")
+      .select("*") // Fetch all fields for debugging
+      .eq("vendor_id", merchant.id);
+
+    console.log("RFQ Supplier Data:", rfqSupplierData);
+
+    const rfqIds = rfqSupplierData
+      ? rfqSupplierData.map((rfq) => rfq.rfq_id)
+      : [];
+    console.log("RFQ IDs for Vendor:", rfqIds);
+
+    const { data: rfqDetails, error: rfqDetailsError } = await supabase
+      .from("rfq")
+      .select("*")
+      .in("id", rfqIds);
+
+    console.log("RFQ Details:", rfqDetails);
+
+    // Fetch RFQ details
+
+    if (rfqDetailsError) {
+      console.error("Error fetching RFQ details:", rfqDetailsError);
+      return;
+    }
+
+    setRfqs(rfqDetails);
+    setFilterRfq(rfqDetails);
   }
 
   useEffect(() => {
@@ -121,9 +169,9 @@ export default function RFQsPage() {
             <button
               key={tab.id}
               onClick={() => handleTabChange(tab.id)}
-              className={`relative z-10 px-4 py-2 text-sm font-medium transition ${tab.text} ${
-                activeTab === tab.id ? "text-black" : "text-gray-700"
-              }`}
+              className={`relative z-10 px-4 py-2 text-sm font-medium transition ${
+                tab.text
+              } ${activeTab === tab.id ? "text-black" : "text-gray-700"}`}
             >
               {tab.label}
               {activeTab === tab.id && (
@@ -141,12 +189,24 @@ export default function RFQsPage() {
       <table className="mt-4 w-full max-w-7xl border-collapse border border-gray-300">
         <thead>
           <tr className="bg-gray-100">
-            <th className="border border-gray-300 px-4 py-2 text-left">Ref ID</th>
-            <th className="border border-gray-300 px-4 py-2 text-left">Lead Date</th>
-            <th className="border border-gray-300 px-4 py-2 text-left">Supply Port</th>
-            <th className="border border-gray-300 px-4 py-2 text-left">Vessel Name</th>
-            <th className="border border-gray-300 px-4 py-2 text-left">Brand</th>
-            <th className="border border-gray-300 px-4 py-2 text-left">RFQ Status</th>
+            <th className="border border-gray-300 px-4 py-2 text-left">
+              Ref ID
+            </th>
+            <th className="border border-gray-300 px-4 py-2 text-left">
+              Lead Date
+            </th>
+            <th className="border border-gray-300 px-4 py-2 text-left">
+              Supply Port
+            </th>
+            <th className="border border-gray-300 px-4 py-2 text-left">
+              Vessel Name
+            </th>
+            <th className="border border-gray-300 px-4 py-2 text-left">
+              Brand
+            </th>
+            <th className="border border-gray-300 px-4 py-2 text-left">
+              RFQ Status
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -158,10 +218,18 @@ export default function RFQsPage() {
                 onClick={() => toggleRow(i, rfq.id)}
               >
                 <td className="border border-gray-300 px-4 py-2">{rfq.id}</td>
-                <td className="border border-gray-300 px-4 py-2">{rfq.created_at}</td>
-                <td className="border border-gray-300 px-4 py-2">{rfq.supply_port || "-"}</td>
-                <td className="border border-gray-300 px-4 py-2">{rfq.vessel_name || "-"}</td>
-                <td className="border border-gray-300 px-4 py-2">{rfq.brand || "-"}</td>
+                <td className="border border-gray-300 px-4 py-2">
+                  {rfq.created_at}
+                </td>
+                <td className="border border-gray-300 px-4 py-2">
+                  {rfq.supply_port || "-"}
+                </td>
+                <td className="border border-gray-300 px-4 py-2">
+                  {rfq.vessel_name || "-"}
+                </td>
+                <td className="border border-gray-300 px-4 py-2">
+                  {rfq.brand || "-"}
+                </td>
                 <td className="text-center border border-gray-300">
                   <Badge
                     className={`inline-flex items-center justify-center px-2 py-1 text-white b rounded ${
@@ -206,10 +274,13 @@ export default function RFQsPage() {
                       )}
                     </div>
                     <td>
-                    <Button><Link href={`/dashboard/vendor/vendorRfq/${rfq.id}`}>View RFQ</Link></Button>
+                      <Button>
+                        <Link href={`/dashboard/vendor/vendorRfq/${rfq.id}`}>
+                          View RFQ
+                        </Link>
+                      </Button>
+                    </td>
                   </td>
-                  </td>
-                  
                 </tr>
               )}
             </React.Fragment>

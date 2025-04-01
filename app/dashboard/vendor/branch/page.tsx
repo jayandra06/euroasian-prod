@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/select";
 import Link from "next/link";
 import { create } from "domain";
+import { redirect, useRouter } from "next/navigation";
 
 interface Branch {
   id: string;
@@ -55,6 +56,9 @@ interface Profile {
 
 function BranchCard({ branch, vessels }: { branch: Branch; vessels: string[] }) {
   const [email, setemail] = useState("")
+  const router = useRouter();
+ 
+  
   const [admin, setAdmin] = useState<Member | null>(null);
   const [memberCount, setMemberCount] = useState(0);
   const [rfqCount, setRfqCount] = useState(0);
@@ -66,6 +70,7 @@ function BranchCard({ branch, vessels }: { branch: Branch; vessels: string[] }) 
 
   async function addAdmin(e: React.FormEvent) {
     e.preventDefault();
+    
 
     const formData = new FormData(e.target as HTMLFormElement);
 
@@ -75,11 +80,12 @@ function BranchCard({ branch, vessels }: { branch: Branch; vessels: string[] }) 
     });
     const data = await res.json();
     alert("Successfully Added Admin");
-    window.location.reload();
+    
   }
 
   async function addEmployee(e: React.FormEvent) {
     e.preventDefault();
+    
 
     const formData = new FormData(e.target as HTMLFormElement);
 
@@ -89,8 +95,16 @@ function BranchCard({ branch, vessels }: { branch: Branch; vessels: string[] }) 
     });
     const data = await res.json();
 
-    alert("Successfully Added Employee");
-    window.location.reload();
+  
+
+    if (data.success) {
+      alert("Successfully Added Employee");
+      router.push("/dashbard/reset-password"); // Redirect only on success
+    } else {
+      alert(`Error: ${data.error}`);
+    }
+   
+   
   }
 
   async function fetchBranch() {
@@ -155,7 +169,7 @@ function BranchCard({ branch, vessels }: { branch: Branch; vessels: string[] }) 
     <Card>
       <CardHeader>
         <CardTitle>{branch.name}</CardTitle>
-        <CardDescription>Id: {`${branch.id}`.slice(1, 8)}</CardDescription>
+        <CardDescription>Id: {`${branch.id}`.slice(0, 8)}</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="mb-2 grid grid-cols-2 gap-2 text-sm">

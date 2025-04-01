@@ -39,17 +39,17 @@ export function InviteVednorForm({
               <div className="grid gap-2">
                   <Label htmlFor="username">User Name</Label>
                   <Input
-                    id="username"
-                    type="username"
-                    name="username"
-                    placeholder="username"
+                    id="name"
+                    type="name"
+                    name="name"
+                    placeholder="name"
                     required
                   />
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="phonenumber">Phone Number</Label>
                   <Input
-                    id="phoneNumber"
+                    id="phonenumber"
                     type="phonenumber"
                     name="phonenumber"
                     placeholder="+903809580"
@@ -57,11 +57,11 @@ export function InviteVednorForm({
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="business_email">Email</Label>
                   <Input
-                    id="email"
-                    type="email"
-                    name="email"
+                    id="business_email"
+                    type="business_email"
+                    name="business_email"
                     placeholder="m@example.com"
                     required
                   />

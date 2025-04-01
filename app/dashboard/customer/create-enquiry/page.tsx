@@ -76,7 +76,7 @@ function RFQInfoCard({
   models: any[];
   brands: any[];
   category: any[];
-  setSelectedFile: React.Dispatch<React.SetStateAction<File | null>>
+  setSelectedFile: React.Dispatch<React.SetStateAction<File | null>>;
 
   errors: any;
   setErrors: React.Dispatch<React.SetStateAction<any>>;
@@ -567,8 +567,6 @@ function RFQInfoCard({
                 {errors.upload && (
                   <p className="text-red-500 text-sm">{errors.upload}</p>
                 )}
-
-                
               </div>
             </div>
           </div>
@@ -815,6 +813,7 @@ function Item({ item, handleUpdateItem, handleRemove, setErrors, errors }) {
 }
 
 export default function CreateEnquiryPage() {
+  const supabase = createClient();
   const [reqdVendors, updateReqdVendors] = useState({
     vendor1: {
       name: "",
@@ -830,11 +829,14 @@ export default function CreateEnquiryPage() {
     },
   });
 
+ 
+
   const [brands, setBrands] = useState<any[]>([]);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [category, setCategory] = useState<any[]>([]);
   const [model, setModels] = useState<any[]>([]);
   const [vendors, updateVendors] = useState<any[]>([]);
+  console.log("vendor", vendors);
   const [vendorsError, setVendorsError] = useState(false);
   const [createRfq, setCreateRfq] = useState({
     vessel_name: "",
@@ -971,12 +973,9 @@ export default function CreateEnquiryPage() {
     )
       return;
 
-    const supabase = createClient();
-   
     try {
-
       // File image start
-      let fileUrl = ""
+      let fileUrl = "";
 
       if (selectedFile) {
         const fileExt = selectedFile.name.split(".").pop();
@@ -984,7 +983,7 @@ export default function CreateEnquiryPage() {
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from("rfq-image") // Replace with your bucket name
           .upload(`uploads/${fileName}`, selectedFile);
-  
+
         if (uploadError) {
           console.error("Error uploading file:", uploadError);
           setErrorMessage("Failed to upload file. Please try again.");
@@ -992,140 +991,215 @@ export default function CreateEnquiryPage() {
           return;
         }
         const { data: publicUrlData } = supabase.storage
-        .from("rfq-image")
-        .getPublicUrl(uploadData.path);
+          .from("rfq-image")
+          .getPublicUrl(uploadData.path);
 
-      fileUrl = publicUrlData.publicUrl;
+        fileUrl = publicUrlData.publicUrl;
 
+        // File image end
+        const {
+          data: { user },
+          error: userError,
+        } = await supabase.auth.getUser();
+        const member = await supabase
+          .from("member")
+          .select("branch")
+          .eq("member_profile", user!.id);
 
+        console.log(
+          "selected vendors",
+          Object.values(reqdVendors).map((vendor) => vendor.vendorId)
+        );
+        if (userError) {
+          console.error("Error fetching member:", userError);
+        } else {
+          console.log("Fetched Member Data:", member);
+        }
+        console.log("createRfq state before insertion:", createRfq);
+        console.log("Member Data:", member.data);
 
-      // File image end
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser();
-      const member = await supabase
-        .from("member")
-        .select("branch")
-        .eq("member_profile", user!.id);
+        const branchValues = member.data?.map((m) => m.branch) ?? [];
+        console.log("All Branch Values:", branchValues);
 
-      console.log(
-        "selected vendors",
-        Object.values(reqdVendors).map((vendor) => vendor.vendorId)
-      );
-      if (userError) {
-        console.error("Error fetching member:", userError);
-      } else {
-        console.log("Fetched Member Data:", member);
-      }
-      console.log("createRfq state before insertion:", createRfq);
-      console.log("Member Data:", member.data);
-
-      const branchValues = member.data?.map((m) => m.branch) ?? [];
-      console.log("All Branch Values:", branchValues);
-
-      const { data: rfqData, error: rfqError } = await supabase
-        .from("rfq")
-        .insert([
-          {
-            vessel_name: createRfq.vessel_name,
-            supply_port: createRfq.supply_port,
-            lead_date: createRfq.lead_date,
-            drawing_number: createRfq.drawing_number,
-            imo_no: createRfq.imo_no,
-            equipement_tag: createRfq.equipement_tag,
-            brand: createRfq.brand,
-            model: createRfq.model,
-            category: createRfq.category,
-            hull_no: createRfq.hull_no,
-            offer_quality: createRfq.offer_quality,
-            remarks: createRfq.remark,
-            serial_no: createRfq.serial_no,
-            vessel_ex_name: createRfq.vessel_ex_name,
-            upload: fileUrl,
-            requested_by: user!.id,
-            suppliers: Object.values(reqdVendors)
-              .filter((vendor) => vendor.vendorId)
-              .map((vendor) => vendor.vendorId),
-            created_at: new Date().toISOString(),
-            branch: branchValues[0] ?? null, // Handling null
-            status: Object.values(reqdVendors).filter(
-              (vendor) => vendor.vendorId
-            ).length
-              ? "sent"
-              : "draft",
-          },
-        ])
-        .select("*")
-        .single();
-      console.log("RFQ Insert Response:", { rfqData, rfqError });
-
-      if (rfqError) {
-        console.error("Supabase RFQ Insert Error:", rfqError);
-        setErrorMessage(`Error inserting RFQ: ${rfqError.message}`);
-        setIsLoading(false);
-        return; // ✅ Stop execution if RFQ insertion fails
-      }
-
-      if (!rfqData) {
-        console.error("RFQ Insertion Failed: No data returned.");
-        setErrorMessage("Failed to create RFQ. Please try again.");
-        setIsLoading(false);
-        return;
-      }
-
-      console.log("Raw RFQ Data:", rfqData);
-      const rfq = Array.isArray(rfqData) ? rfqData[0] : rfqData;
-      console.log("Extracted RFQ:", rfq);
-      console.log("RFQ ID:", rfq?.id);
-
-      for (let i = 0; i < items.length; i++) {
-        const item = items[i];
-
-        console.log("Inserting RFQ Item for RFQ ID:", rfqData.id);
-
-        const { data: rfqItemData, error: rfqItemError } = await supabase
-          .from("rfq_items")
+        const { data: rfqData, error: rfqError } = await supabase
+          .from("rfq")
           .insert([
             {
-              rfq_id: rfqData.id,
-              item_part_no: item.part_no,
-              alternate_part_no: item.alternative_part_no,
-              impa_no: item.impa_no,
-              item_position_no: item.position_no,
-              alternative_position_no: item.alternative_position_no,
-              description: item.description,
-              req_qty: item.req_qty,
-              uom: item.uom,
-              width: item.width,
-              height: item.height,
-              beadth: item.beadth,
+              vessel_name: createRfq.vessel_name,
+              supply_port: createRfq.supply_port,
+              lead_date: createRfq.lead_date,
+              drawing_number: createRfq.drawing_number,
+              imo_no: createRfq.imo_no,
+              equipement_tag: createRfq.equipement_tag,
+              brand: createRfq.brand,
+              model: createRfq.model,
+              category: createRfq.category,
+              hull_no: createRfq.hull_no,
+              offer_quality: createRfq.offer_quality,
+              remarks: createRfq.remark,
+              serial_no: createRfq.serial_no,
+              vessel_ex_name: createRfq.vessel_ex_name,
+              upload: fileUrl,
+              requested_by: user!.id,
+              suppliers: Object.values(reqdVendors)
+                .filter((vendor) => vendor.vendorId)
+                .map((vendor) => vendor.vendorId),
+              created_at: new Date().toISOString(),
+              branch: branchValues[0] ?? null, // Handling null
+              status: Object.values(reqdVendors).filter(
+                (vendor) => vendor.vendorId
+              ).length
+                ? "sent"
+                : "draft",
             },
           ])
           .select("*")
           .single();
-        if (rfqItemError) {
-          console.error("RFQ Item Insert Error:", rfqItemError);
+        console.log("RFQ Insert Response:", { rfqData, rfqError });
+        console.log("RFQ ID before inserting into rfq_supplier:", rfqData?.id);
+
+
+        if (rfqError) {
+          console.error("Supabase RFQ Insert Error:", rfqError);
+          setErrorMessage(`Error inserting RFQ: ${rfqError.message}`);
+          setIsLoading(false);
+          return; // ✅ Stop execution if RFQ insertion fails
         }
 
-        console.log("Inserted RFQ Item:", rfqItemData);
-      }
+        if (!rfqData || !rfqData.id) {
 
-      setSuccessMessage("RFQ Successfully Created!");
-      window.location.reload();
-      setIsLoading(false);
-    }
-  } catch (e) {
+          console.log("RFQ creation failed, no ID returned!");
+          setErrorMessage("RFQ creation failed, please try again.");
+          setIsLoading(false);
+          return;
+        }
+        console.log("✅ RFQ Created with ID:", rfqData.id);
+        
+
+        console.log("Raw RFQ Data:", rfqData);
+        const rfq = Array.isArray(rfqData) ? rfqData[0] : rfqData;
+        console.log("Extracted RFQ:", rfq);
+        console.log("RFQ ID:", rfq?.id);
+
+       
+
+        
+
+        const vendorsToInsert = Object.values(reqdVendors)
+  .filter((vendor) => vendor.vendorId)
+  .map((vendor) => ({
+    rfq_id: rfqData.id,
+    vendor_id: vendor.vendorId, // Ensure vendorId is a valid UUID
+  }));
+
+  console.log("🟢 Step 1: Raw vendor IDs before filtering:", vendorsToInsert);
+
+if (vendorsToInsert.length === 0) {
+  console.warn("⚠️ No vendors selected, skipping rfq_supplier insert.");
+} else {
+  console.log("✅ Vendors to insert:", vendorsToInsert);
+}
+
+// 🟢 Fetch merchants from Supabase to validate vendor IDs
+const { data: validMerchants, error: merchantError } = await supabase
+  .from("merchant")
+  .select("id")
+  .in(
+    "id",
+    vendorsToInsert.map((v) => v.vendor_id)
+  );
+
+console.log("🟢 Step 2: Valid Merchants from merchant table:", validMerchants);
+
+if (merchantError) {
+  console.error("❌ Error fetching merchants:", merchantError);
+} else if (!validMerchants || validMerchants.length === 0) {
+  console.warn("⚠️ No matching merchants found. Vendor IDs might be incorrect.");
+}
+
+// 🟢 Filter vendors that exist in the `merchant` table
+const validVendorIds = validMerchants?.map((m) => m.id) ?? [];
+const filteredVendorsToInsert = vendorsToInsert.filter((v) =>
+  validVendorIds.includes(v.vendor_id)
+);
+
+console.log("🟢 Step 3: Filtered vendor IDs after validation:", filteredVendorsToInsert);
+
+if (filteredVendorsToInsert.length === 0) {
+  console.warn("⚠️ No valid suppliers found after filtering, skipping rfq_supplier insert.");
+} else {
+  console.log("✅ Proceeding to insert into rfq_supplier");
+
+  const { data: suppliersData, error: suppliersError } = await supabase
+    .from("rfq_supplier") // ✅ Ensure table name is correct
+    .insert(filteredVendorsToInsert)
+    .select("*");
+
+  console.log("🟢 Step 4: RFQ Suppliers Insert Response:", suppliersData, suppliersError);
+
+  if (suppliersError) {
+    console.error("❌ Error inserting suppliers:", suppliersError);
+  } else {
+    console.log("✅ RFQ Suppliers inserted successfully:", suppliersData);
+  }
+}
+
+
+  
+
+
+        for (let i = 0; i < items.length; i++) {
+          const item = items[i];
+
+          console.log("Inserting RFQ Item for RFQ ID:", rfqData.id);
+
+          const { data: rfqItemData, error: rfqItemError } = await supabase
+            .from("rfq_items")
+            .insert([
+              {
+                rfq_id: rfqData.id,
+                item_part_no: item.part_no,
+                alternate_part_no: item.alternative_part_no,
+                impa_no: item.impa_no,
+                item_position_no: item.position_no,
+                alternative_position_no: item.alternative_position_no,
+                description: item.description,
+                req_qty: item.req_qty,
+                uom: item.uom,
+                width: item.width,
+                height: item.height,
+                beadth: item.beadth,
+              },
+            ])
+            .select("*")
+            .single();
+            
+          if (rfqItemError) {
+            console.error("RFQ Item Insert Error:", rfqItemError);
+          }
+
+          console.log("Inserted RFQ Item:", rfqItemData);
+        }
+
+
+        setSuccessMessage("RFQ Successfully Created!");
+        // window.location.reload();
+        setIsLoading(false);
+      }
+    } catch (e) {
       console.error("Error:", e);
       setErrorMessage("Unable to create RFQ. Please try again!");
       setIsLoading(false);
     }
   };
+
   const selectedVendors = [
     reqdVendors.vendor1?.name,
     reqdVendors.vendor2?.name,
     reqdVendors.vendor3?.name,
   ].filter(Boolean);
+
+  
 
   const handleAddQuote = () => {
     getQuote();
@@ -1140,11 +1214,8 @@ export default function CreateEnquiryPage() {
   async function fetchDetails() {
     const supabase = createClient();
 
-    const externalVendor  = await supabase.from("externalvendor").select("*")
-    updateVendors([...externalVendor.data!])
-
-   
-    
+    const externalVendor = await supabase.from("merchant").select("*");
+    updateVendors([...externalVendor.data!]);
 
     const brands = await supabase
       .from("brand")
@@ -1182,8 +1253,8 @@ export default function CreateEnquiryPage() {
   useEffect(() => {
     void fetchDetails();
   }, []);
-  if (!isMem)
-    return "Create a Branch or be the Part of any Branch to Create Enquiry...";
+  // if (!isMem)
+  //   return "Create a Branch or be the Part of any Branch to Create Enquiry...";
   return (
     <>
       {errorMessage && (
@@ -1231,8 +1302,8 @@ export default function CreateEnquiryPage() {
             (vendorKey, index) => {
               const availableVendors = vendors.filter(
                 (v) =>
-                  !selectedVendors.includes(v.username) ||
-                  reqdVendors[vendorKey]?.name === v.username
+                  !selectedVendors.includes(v.name) ||
+                  reqdVendors[vendorKey]?.name === v.name
               );
 
               return (
@@ -1256,7 +1327,7 @@ export default function CreateEnquiryPage() {
                           [vendorKey]: {
                             name: e,
                             vendorId:
-                              vendors.find((v) => v.username === e)?.id || "",
+                              vendors.find((v) => v.name === e)?.id || "",
                           },
                         });
                       }}
@@ -1270,8 +1341,8 @@ export default function CreateEnquiryPage() {
                       </SelectTrigger>
                       <SelectContent>
                         {availableVendors.map((vendor) => (
-                          <SelectItem value={vendor.username} key={vendor.id}>
-                            {vendor.username}
+                          <SelectItem value={vendor.name} key={vendor.id}>
+                            {vendor.name}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -1282,133 +1353,6 @@ export default function CreateEnquiryPage() {
             }
           )}
         </div>
-
-        {/* <div className="grid justify-self-center grid-cols-1 sm:grid-cols-1 md:grid-cols-3 gap-4 max-w-6xl w-full mt-4">
-          <div className="grid gap-1">
-            <div className="flex gap-1">
-              {reqdVendors.vendor1?.name ? (
-                <div className="text-xs text-white bg-zinc-600 rounded-full px-2">
-                  {reqdVendors.vendor1.name}
-                </div>
-              ) : (
-                ""
-              )}
-            </div>
-            <div className="grid ">
-              <Label className={"mb-3"}>
-                Vendor 1 <span className="text-red-500 ml-1">*</span>
-              </Label>
-              <Select
-                onValueChange={(e) =>
-                  updateReqdVendors({
-                    ...reqdVendors,
-                    vendor1: {
-                      name: e,
-                      vendorId: vendors.find((v) => v.name === e).id,
-                    },
-                  })
-                }
-              >
-                <SelectTrigger
-                  className={`w-full border ${
-                    vendorsError ? "border-red-500" : "border-gray-300"
-                  }`}
-                >
-                  <SelectValue placeholder="Select Vendor" />
-                </SelectTrigger>
-                <SelectContent>
-                  {vendors.map((vendor: any, i: number) => (
-                    <SelectItem value={vendor.name} key={vendor.id}>
-                      {vendor.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <div className="grid gap-1">
-            <div className="flex gap-1">
-              {reqdVendors.vendor2?.name ? (
-                <div className="text-xs text-white bg-zinc-600 rounded-full px-2">
-                  {reqdVendors.vendor2.name}
-                </div>
-              ) : (
-                ""
-              )}
-            </div>
-            <div className="grid ">
-              <Label className={"mb-3"}>
-                Vendor 2 <span className="text-red-500 ml-1">*</span>
-              </Label>
-              <Select
-                onValueChange={(e) =>
-                  updateReqdVendors({
-                    ...reqdVendors,
-                    vendor2: {
-                      name: e,
-                      vendorId: vendors.find((v) => v.name === e).id,
-                    },
-                  })
-                }
-              >
-                <SelectTrigger className={`w-full border ${
-                    vendorsError ? "border-red-500" : "border-gray-300"
-                  }`}>
-                  <SelectValue placeholder="Select vendor" />
-                </SelectTrigger>
-                <SelectContent>
-                  {vendors.map((vendor: any, i: number) => (
-                    <SelectItem value={vendor.name} key={vendor.id}>
-                      {vendor.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="grid gap-1">
-            <div className="flex gap-1">
-              {reqdVendors.vendor3?.name ? (
-                <div className="text-xs text-white bg-zinc-600 rounded-full px-2">
-                  {reqdVendors.vendor3.name}
-                </div>
-              ) : (
-                ""
-              )}
-            </div>
-            <div className="grid ">
-              <Label className={"mb-3"}>
-                Vendor 3 <span className="text-red-500 ml-1">*</span>
-              </Label>
-              <Select
-                onValueChange={(e) => {
-                  updateReqdVendors({
-                    ...reqdVendors,
-                    vendor3: {
-                      name: e,
-                      vendorId: vendors.find((v) => v.name === e).id,
-                    },
-                  });
-                  setVendorsError(false);
-                }}
-              >
-                <SelectTrigger className={`w-full border ${
-                    vendorsError ? "border-red-500" : "border-gray-300"
-                  }`}>
-                  <SelectValue placeholder="Select vendor" />
-                </SelectTrigger>
-                <SelectContent>
-                  {vendors.map((vendor: any, i: number) => (
-                    <SelectItem value={vendor.name} key={vendor.id}>
-                      {vendor.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </div> */}
 
         <div className="grid justify-self-center max-w-6xl w-full mt-8">
           <div className="flex justify-between items-center">
