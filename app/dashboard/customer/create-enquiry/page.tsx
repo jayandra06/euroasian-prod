@@ -1362,7 +1362,7 @@ if (filteredVendorsToInsert.length === 0) {
 
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[100px]">No.</TableHead>
+                    <TableHead >No.</TableHead>
                     <TableHead colSpan={3}>
                       Description<span className="text-red-500 ml-1">*</span>
                     </TableHead>

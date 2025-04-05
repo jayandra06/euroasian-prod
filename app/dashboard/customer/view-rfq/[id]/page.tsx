@@ -488,6 +488,8 @@ const [currentUserRole, setCurrentUserRole] = useState<string | null>(null);
 const [isCreator, setIsCreator] = useState(false);
 const [approvalStatus, setApprovalStatus] = useState(rfqData?.status || 'draft');
 const [vendors, setVendors] = useState<any[]>([]);
+const [vendorApprovalStatus, setVendorApprovalStatus] = useState<Record<string, string>>({});
+const [selectedVendorNumber, setSelectedVendorNumber] = useState<number | null>(null)
 
   console.log("filtered items" , filteredItems)
 
@@ -496,6 +498,16 @@ const [vendors, setVendors] = useState<any[]>([]);
   
 
   const [isMem, setIsMem] = useState(true);
+
+  const [user, setUser] = useState<any>(null);
+
+useEffect(() => {
+  const getUser = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    setUser(user);
+  };
+  getUser();
+}, []);
   
   
   useEffect(() => {
@@ -572,15 +584,15 @@ const [vendors, setVendors] = useState<any[]>([]);
 
 
   
- const handleVendorClick = (vendorId) => {
-  setSelectedVendor(vendorId);
-
-  const vendorResponses = rfqItems.filter(
-    (item) => item.vendor_id === vendorId
-  );
-
-  setFilteredItems(vendorResponses);
-};
+  const handleVendorClick = (vendorId, vendorNumber) => {
+    setSelectedVendor(vendorId);
+    setSelectedVendorNumber(vendorNumber);
+    
+    const vendorResponses = rfqItems.filter(
+      (item) => item.vendor_id === vendorId
+    );
+    setFilteredItems(vendorResponses);
+  };
 
 
   console.log("geetting rfqitems",rfqItems)
@@ -624,43 +636,124 @@ const [vendors, setVendors] = useState<any[]>([]);
   fetchUserData();
 }, [id]);
 
+useEffect(() => {
+  const fetchApprovalStatus = async () => {
+    const { data: approvals, error } = await supabase
+      .from('rfq_approvals')
+      .select('vendor_key, status')
+      .eq('rfq_id', id);
 
-  const handleSendForApproval = async () => {
-    try {
-      const { error } = await supabase
-        .from('rfq')
-        .update({ status: 'pending_approval' })
-        .eq('id', id);
-        
-      if (error) throw error;
-      
-      setApprovalStatus('pending_approval');
-      alert("Sent for approval successfully!");
-    } catch (err) {
-      console.error("Error sending for approval:", err);
-      alert("Failed to send for approval");
+    if (!error && approvals) {
+      const statusMap: Record<string, string> = {};
+      approvals.forEach(approval => {
+        statusMap[approval.vendor_key] = approval.status;
+      });
+      setVendorApprovalStatus(statusMap);
     }
   };
 
-  const handleApproveReject = async (action: 'approve' | 'reject') => {
-    try {
-      const newStatus = action === 'approve' ? 'approved' : 'rejected';
-      
-      const { error } = await supabase
-        .from('rfq')
-        .update({ status: newStatus })
-        .eq('id', id);
-        
-      if (error) throw error;
-      
-      setApprovalStatus(newStatus);
-      alert(`RFQ ${newStatus} successfully!`);
-    } catch (err) {
-      console.error(`Error ${action}ing RFQ:`, err);
-      alert(`Failed to ${action} RFQ`);
-    }
-  };
+  if (id) fetchApprovalStatus();
+}, [id]);
+
+
+
+const handleSendVendorForApproval = async () => {
+  if (!selectedVendor || !selectedVendorNumber) return;
   
+  try {
+    const vendorKey = `vendor${selectedVendorNumber}`;
+    
+    // Update approval status in database
+    const { error } = await supabase
+      .from('rfq_approvals')
+      .upsert({
+        rfq_id: id,
+        vendor_key: vendorKey,
+        status: 'pending_approval',
+        decided_by: user?.id,
+        decided_at: new Date().toISOString()
+      });
+
+    if (error) throw error;
+
+    // Update local state
+    setVendorApprovalStatus(prev => ({
+      ...prev,
+      [vendorKey]: 'pending_approval'
+    }));
+
+    alert(`Vendor  sent for approval successfully!`);
+  } catch (err) {
+    console.error("Error sending for approval:", err);
+    alert("Failed to send for approval");
+  }
+};
+
+
+const handleVendorApproveReject = async (action: 'approve' | 'reject') => {
+  if (!selectedVendor || !selectedVendorNumber || !user) {
+    alert("Please select a vendor and ensure you're logged in");
+    return;
+  }
+  
+  try {
+    const vendorKey = `vendor${selectedVendorNumber}`;
+    const newStatus = action === 'approve' ? 'approved' : 'rejected';
+    
+    // Start a transaction to update both tables
+    const { error: approvalError } = await supabase
+      .from('rfq_approvals')
+      .upsert({
+        rfq_id: id,
+        vendor_key: vendorKey,
+        status: newStatus,
+        decided_by: user.id
+      });
+
+    if (approvalError) throw approvalError;
+
+    // Update the main RFQ status if all vendors are approved
+    if (action === 'approve') {
+      // Check if all vendors are approved
+      const { data: approvals, error: fetchError } = await supabase
+        .from('rfq_approvals')
+        .select('status')
+        .eq('rfq_id', id);
+
+      if (fetchError) throw fetchError;
+
+      const allApproved = vendors.every((_, index) => {
+        const vendorNum = index + 1;
+        return approvals.some(a => 
+          a.vendor_key === `vendor${vendorNum}` && 
+          a.status === 'approved'
+        );
+      });
+
+      if (allApproved) {
+        const { error: rfqError } = await supabase
+          .from('rfq')
+          .update({ status: 'approved' })
+          .eq('id', id);
+
+        if (rfqError) throw rfqError;
+        setApprovalStatus('approved');
+      }
+    }
+
+    // Update local state
+    setVendorApprovalStatus(prev => ({
+      ...prev,
+      [vendorKey]: newStatus
+    }));
+
+    alert(`Vendor ${selectedVendorNumber} ${newStatus} successfully!`);
+  } catch (err) {
+    console.error(`Error ${action}ing vendor:`, err);
+    alert(`Failed to ${action} vendor`);
+  }
+};
+
   
   
 
@@ -705,25 +798,32 @@ const [vendors, setVendors] = useState<any[]>([]);
         </div>
         <div className="relative flex justify-center max-w-5xl mx-auto mt-4  bg-gray-100 rounded-full p-2 shadow-xl mb-4">
         <div className="relative flex gap-4">
-        {vendors.map((vendorId, index) => (
-  <button
-    key={vendorId}
-    onClick={() => rfqItems.length > 0 && handleVendorClick(vendorId)}
-    disabled={rfqItems.length === 0}
-    className={`relative z-10 px-4 py-2 text-sm font-medium transition ${
-      selectedVendor === vendorId ? "text-black font-bold bg-gray-200" : "text-gray-700"
-    } ${rfqItems.length === 0 ? "opacity-50 cursor-not-allowed" : ""}`}
-  >
-    Vendor {index + 1}
-    {selectedVendor === vendorId && (
-      <motion.div
-        layoutId="tab-indicator"
-        className="absolute inset-0 shadow-2xl rounded-full z-[-1]"
-        transition={{ type: "spring", stiffness: 300, damping: 20 }}
-      />
-    )}
-  </button>
-))}
+        {vendors.map((vendorId, index) => {
+  const vendorNumber = index + 1;
+  const vendorKey = `vendor${vendorNumber}`;
+  const status = vendorApprovalStatus[vendorKey] || 'draft';
+
+  return (
+    <button
+      key={vendorId}
+      onClick={() => rfqItems.length > 0 && handleVendorClick(vendorId, vendorNumber)}
+      disabled={rfqItems.length === 0}
+      className={`relative z-10 px-4 py-2 text-sm font-medium transition ${
+        selectedVendor === vendorId ? "text-black font-bold bg-gray-200" : "text-gray-700"
+      } ${rfqItems.length === 0 ? "opacity-50 cursor-not-allowed" : ""}`}
+    >
+      Vendor {vendorNumber}
+      
+      {selectedVendor === vendorId && (
+        <motion.div
+          layoutId="tab-indicator"
+          className="absolute inset-0 shadow-2xl rounded-full z-[-1]"
+          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+        />
+      )}
+    </button>
+  );
+})}
 
 </div>
 
@@ -768,7 +868,7 @@ const [vendors, setVendors] = useState<any[]>([]);
   ) : selectedVendor ? (
     <TableRow>
       <TableCell colSpan={12} className="text-center py-4">
-        No items found for {selectedVendor}
+        No items found
       </TableCell>
     </TableRow>
   ) : (
@@ -782,102 +882,182 @@ const [vendors, setVendors] = useState<any[]>([]);
             </div>
           </div>
           <Separator />
-        {rfqItems.map((item,i)=>(<>
-       <div key={item.id} className="flex gap-4 items-center mx-auto mt-10">
+
+          {selectedVendor ? (
+  filteredItems.length > 0 ? (
+    filteredItems.map((item, i) => (
+      <div key={item.id} className="flex gap-4 items-center mx-auto mt-10">
         <div>
-            <label htmlFor="first_name" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Freight Charges
-</label>
-            <input type="text" id="freight_charges" name="freight_charges" disabled value={item.freight_charges} className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="John" required />
-            
-            
+          <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Freight Charges</label>
+          <input 
+            type="text" 
+            disabled 
+            value={item.freight_charges} 
+            className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
+          />
         </div>
+        {/* Repeat for other charge fields */}
         <div>
-            <label htmlFor="first_name" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Customs Charges
-</label>
+          <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Customs Charges</label>
+          <input 
+            type="text" 
+            disabled 
+            value={item.custom_charges} 
+            className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
+          />
+        </div>
+        
+       <div>
+           <label htmlFor="first_name" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Shipment CHarges
+           </label>
+           <input type="text" id="first_name" value={item.shipment_charges} disabled className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="John" required />
            
-         <input type="text" id="first_name" value={item.custom_charges} disabled className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="John" required />
-         
-            
-        </div>
+       </div>
+       
+       <div>
+           <label htmlFor="first_name" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Port Connectivity CHarges
+           </label>
+           <input type="text" id="first_name" value={item.port_connectivity_charges} disabled className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="John" required />
+           
+       </div>
+       <div>
+           <label htmlFor="first_name" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Agent Charges
+           </label>
+           <input type="text" id="first_name" value={item.agent_charges} disabled className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="John" required />
+           
+       </div>
+       <div>
+           <label htmlFor="first_name" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Other  CHarges
+           </label>
+           <input type="text" id="first_name" value={item.other_charges}disabled className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="John" required />
+           
+       </div>
+       
+        {/* Add remaining charge fields here */}
         <div>
-            <label htmlFor="first_name" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Shipment CHarges
-            </label>
-            <input type="text" id="first_name" value={item.shipment_charges} disabled className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="John" required />
-            
+          <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Remark</label>
+          <input 
+            type="text" 
+            disabled 
+            value={item.remarks} 
+            className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
+          />
         </div>
+      </div>
+    ))
+  ) : (
+    <div className="text-center py-4">
+      No items found
+    </div>
+  )
+) : (
+  rfqItems.map((item, i) => (
+    <div key={item.id} className="flex gap-4 items-center mx-auto mt-10">
+      {/* Same charge fields as above */}
+      <div>
+        <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Freight Charges</label>
+        <input 
+          type="text" 
+          disabled 
+          value={item.freight_charges} 
+          className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
+        />
+      </div>
+
+      <div>
+           <label htmlFor="first_name" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Customs Charges
+</label>
+          
+        <input type="text" id="first_name" value={item.custom_charges} disabled className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="John" required />
         
-        <div>
-            <label htmlFor="first_name" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Port Connectivity CHarges
-            </label>
-            <input type="text" id="first_name" value={item.port_connectivity_charges} disabled className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="John" required />
-            
-        </div>
-        <div>
-            <label htmlFor="first_name" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Agent Charges
-            </label>
-            <input type="text" id="first_name" value={item.agent_charges} disabled className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="John" required />
-            
-        </div>
-        <div>
-            <label htmlFor="first_name" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Other  CHarges
-            </label>
-            <input type="text" id="first_name" value={item.other_charges}disabled className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="John" required />
-            
-        </div>
-        <div>
-        <label htmlFor="first_name" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Remark
-        </label>
-        <input type="text" id="first_name" value={item.remarks} disabled className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="John" required />
-        </div>
+           
+       </div>
+       <div>
+           <label htmlFor="first_name" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Shipment CHarges
+           </label>
+           <input type="text" id="first_name" value={item.shipment_charges} disabled className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="John" required />
+           
+       </div>
+       
+       <div>
+           <label htmlFor="first_name" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Port Connectivity CHarges
+           </label>
+           <input type="text" id="first_name" value={item.port_connectivity_charges} disabled className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="John" required />
+           
+       </div>
+       <div>
+           <label htmlFor="first_name" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Agent Charges
+           </label>
+           <input type="text" id="first_name" value={item.agent_charges} disabled className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="John" required />
+           
+       </div>
+       <div>
+           <label htmlFor="first_name" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Other  CHarges
+           </label>
+           <input type="text" id="first_name" value={item.other_charges}disabled className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="John" required />
+           
+       </div>
+       <div>
+       <label htmlFor="first_name" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Remark
+       </label>
+       <input type="text" id="first_name" value={item.remarks} disabled className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="John" required />
+       </div>
+      {/* Repeat for other charge fields */}
+    </div>
+  ))
+)}
+
         
-        </div> </>))}
 
         <div className="text-right mt-3">
-  {/* Always show these buttons */}
   <Button className="bg-blue-500 mt-3">Save as Draft</Button>
   
-  {/* Employee sees Send for Approval */}
-  {currentUserRole === 'employee' && approvalStatus === 'draft' && (
-    <Button 
-      className="bg-green-600 mt-3 mx-2"
-      onClick={handleSendForApproval}
-    >
-      Send for Approval
-    </Button>
+  {/* Employee sees Send for Approval for selected vendor */}
+  {currentUserRole === 'employee' && selectedVendorNumber && (
+    vendorApprovalStatus[`vendor${selectedVendorNumber}`] !== 'pending_approval' &&
+    vendorApprovalStatus[`vendor${selectedVendorNumber}`] !== 'approved' &&
+    vendorApprovalStatus[`vendor${selectedVendorNumber}`] !== 'rejected' && (
+      <Button 
+        className="bg-green-600 mt-3 mx-2"
+        onClick={handleSendVendorForApproval}
+      >
+        Send  for Delivery
+      </Button>
+    )
   )}
   
-  {/* Creator sees Approve/Reject after sent for approval */}
-  {isCreator && approvalStatus === 'pending_approval' && (
+  {/* Creator sees Approve/Reject for selected vendor */}
+  {isCreator && selectedVendorNumber && 
+    vendorApprovalStatus[`vendor${selectedVendorNumber}`] === 'pending_approval' && (
     <>
       <Button 
         className="bg-green-600 mt-3 mx-2"
-        onClick={() => handleApproveReject('approve')}
+        onClick={() => handleVendorApproveReject('approve')}
       >
-        Approve
+        Approve Vendor
       </Button>
       <Button 
         className="bg-red-600 mt-3 mx-2"
-        onClick={() => handleApproveReject('reject')}
+        onClick={() => handleVendorApproveReject('reject')}
       >
-        Reject
+        Reject Vendor
       </Button>
     </>
   )}
   
   {/* Status indicators */}
-  {approvalStatus === 'approved' && (
+  {selectedVendorNumber && vendorApprovalStatus[`vendor${selectedVendorNumber}`] === 'approved' && (
     <span className="text-green-600 font-bold mt-3 mx-2">
-      Approved ✓
+      Vendor Approved ✓
     </span>
   )}
   
-  {approvalStatus === 'rejected' && (
+  {selectedVendorNumber && vendorApprovalStatus[`vendor${selectedVendorNumber}`] === 'rejected' && (
     <span className="text-red-600 font-bold mt-3 mx-2">
-      Rejected ✗
+      Vendor Rejected ✗
     </span>
   )}
   
-  {/* Always show these buttons */}
   <Button className="bg-pink-500 mt-3 mx-2">Print RFQ</Button>
   <Button className="bg-red-600 mt-3 mx-2">Cancel</Button>
 </div>
