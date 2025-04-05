@@ -41,27 +41,35 @@ export default function RFQsPage() {
   async function fetchRfqs() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      const { data: memberData } = await supabase
+  
+      // Fetch member details for the logged-in user
+      const { data: memberData, error: memberError } = await supabase
         .from("member")
-        .select("*")
+        .select("branch, member_role")
         .eq("member_profile", user!.id);
-
+  
+      if (memberError || !memberData?.length) throw new Error("User is not a member.");
+  
       let allRfqs: any[] = [];
-
-      for (const member of memberData!) {
-        const { data: rfqsAll } = await supabase
+  
+      for (const member of memberData) {
+        // Fetch RFQs for the branch where user is either creator or employee
+        const { data: rfqsAll, error: rfqError } = await supabase
           .from("rfq")
           .select("*")
-          .eq("branch", member.branch);
-
-        allRfqs = [...allRfqs, ...rfqsAll!];
+          .eq("branch", member.branch);  // Fetch RFQs of the user's branch
+  
+        if (rfqError) throw rfqError;
+  
+        allRfqs = [...allRfqs, ...(rfqsAll || [])];
       }
-
+  
       setRfqs(allRfqs);
     } catch (e) {
       console.error("Unable to fetch RFQs:", e);
     }
   }
+  
 
   useEffect(() => {
     fetchRfqs();

@@ -14,7 +14,7 @@ export async function POST(request: Request) {
         // Step 1: Invite User by creating them without a password
         const { data: userData, error: userError } = await supabaseAdmin.auth.admin.createUser({
             email: email,
-            email_confirm: false, // User still needs to set a password
+            email_confirm: true, // User still needs to set a password
         });
 
         if (userError || !userData?.user) {
@@ -24,13 +24,10 @@ export async function POST(request: Request) {
 
         const userId = userData.user.id;
 
-        // Step 2: Send an invite email with a password reset link
-        const { error: resetError } = await supabaseAdmin.auth.resetPasswordForEmail(email);
+        const {data,error} = await supabaseAdmin.auth.admin.inviteUserByEmail(email)
 
-        if (resetError) {
-            console.error("Error sending invite email:", resetError);
-            return Response.json({ success: false, error: "Failed to send invite email" });
-        }
+        // Step 2: Send an invite email with a password reset link
+        
 
         // Step 3: Insert into the member table
         const { data: memberData, error: memberError } = await supabaseAdmin

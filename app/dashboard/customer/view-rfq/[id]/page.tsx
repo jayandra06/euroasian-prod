@@ -30,6 +30,7 @@ import { createClient } from "@/utils/supabase/client";
 import { Loader, Loader2, Trash2 } from "lucide-react";
 
 import { useParams } from "next/navigation";
+import { set } from "react-hook-form";
 
 const tabs = [
   { id: "Vendor 1", label: "Vendor 1", color: "bg-white", text: "text-black" },
@@ -288,11 +289,12 @@ function RFQInfoCard({
 
 // @ts-ignore
 function Item({ item }) {
+  console.log("item", item);
 
   return (
     <>
       <TableRow key={item.id}>
-        <TableCell className="font-medium">{item.id}</TableCell>
+        <TableCell className="font-medium">{(item.id).slice(0,8)}</TableCell>
         <TableCell colSpan={3}>
           
 
@@ -303,7 +305,7 @@ function Item({ item }) {
               <Input
                 type="text"
                 placeholder="Enter Part No."
-                value={item.item_part_no}
+                value={item.item.item_part_no}
                 name="part_no"
                 disabled
                 
@@ -314,7 +316,7 @@ function Item({ item }) {
               <Input
                 type="text"
                 placeholder="Enter Position No."
-                value={item.item_position_no}
+                value={item.item.item_position_no}
                 name="position_no"
                 disabled
                 
@@ -327,7 +329,7 @@ function Item({ item }) {
               <Input
                 type="text"
                 placeholder="Enter Alternate Part No."
-                value={item.alternate_part_no}
+                value={item.item.alternate_part_no}
                 name="alternative_part_no"
                 disabled
                
@@ -339,7 +341,7 @@ function Item({ item }) {
               <Input
                 type="text"
                 placeholder="Enter Alternate Position No."
-                value={item.alternative_position_no}
+                value={item.item.alternative_position_no}
                 name="alternative_position_no"
                 disabled
                 
@@ -356,7 +358,7 @@ function Item({ item }) {
         <div className="col-span-1">
               <Textarea
                 placeholder="Enter Item Description.."
-                value={item.description}
+                value={item.item.description}
                 name="description"
                 disabled
                 
@@ -369,7 +371,7 @@ function Item({ item }) {
         <Input
             type="number"
             placeholder="Width"
-            value={item.width}
+            value={item.item.width}
             name="width"
             disabled
             
@@ -381,7 +383,7 @@ function Item({ item }) {
         <Input
             type="number"
             placeholder="B"
-            value={item.beadth}
+            value={item.item.beadth}
             name="beadth"
             disabled
             
@@ -393,7 +395,7 @@ function Item({ item }) {
         <Input
             type="number"
             placeholder="H"
-            value={item.height}
+            value={item.item.height}
             name="height"
             disabled
            
@@ -404,7 +406,7 @@ function Item({ item }) {
         <Input
             type="number"
             placeholder="req_quantity"
-            value={item.req_qty}
+            value={item.item.req_qty}
             name="req_qty"
             disabled
 
@@ -417,7 +419,7 @@ function Item({ item }) {
           <Input
             type="text"
             placeholder="uom"
-            value={item.uom}
+            value={item.item.uom}
             name="uom"
             disabled
             
@@ -439,7 +441,7 @@ function Item({ item }) {
           <Input
             type="text"
             placeholder="uom_vendor"
-            value={item.uom_vendor}
+            value={item.uom}
             name="uom_vednor"
             disabled
            
@@ -450,9 +452,9 @@ function Item({ item }) {
         <TableCell className="text-right relative">
         <Input
             type="number"
-            placeholder=""
-            value={item.offer_price}
-            name="offer_price"
+            placeholder="offered_price"
+            value={item.offered_price}
+            name="offered_price"
             disabled
             
           />
@@ -472,21 +474,45 @@ export default function ViewRfq() {
 
   const supabase = createClient()
   
+  
   const [rfqData, setRfqData] = useState<any>(null);
   const [rfqItems, setRfqItems] = useState<any[]>([]);
+  console.log("RFQ Data:", rfqData);
+  console.log("RFQ Items:", rfqItems);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedVendor, setSelectedVendor] = useState(null);
   const [filteredItems, setFilteredItems] = useState([]);
+  // Add to your state
+const [currentUserRole, setCurrentUserRole] = useState<string | null>(null);
+const [isCreator, setIsCreator] = useState(false);
+const [approvalStatus, setApprovalStatus] = useState(rfqData?.status || 'draft');
+const [vendors, setVendors] = useState<any[]>([]);
+
   console.log("filtered items" , filteredItems)
 
 
-  const [rfqs, setrfqs] = useState<any[]>([])
+  
   
 
   const [isMem, setIsMem] = useState(true);
-  const [activeTab, setActiveTab] = useState("")
   
+  
+  useEffect(() => {
+    const fetchVendor = async()=>{
+      const { data: rfqSuppliers, error: rfqSupplierError } = await supabase
+    .from("rfq_supplier")
+    .select("vendor_id")
+    .eq("rfq_id", id);
+  
+  if (rfqSupplierError) throw rfqSupplierError;
+  
+  setVendors(rfqSuppliers.map((r) => r.vendor_id));
+
+    }
+    fetchVendor()
+    
+  }, [])
   
 
 
@@ -497,26 +523,41 @@ export default function ViewRfq() {
     const fetchData = async () => {
       try {
         setLoading(true);
-
-        // Fetch RFQ data
+  
         const { data: rfq, error: rfqError } = await supabase
           .from("rfq")
           .select("*")
           .eq("id", id)
           .single();
-
+  
         if (rfqError) throw rfqError;
-
-        // Fetch RFQ items
-        const { data: items, error: itemsError } = await supabase
-          .from("rfq_items")
+  
+        const { data: rfqResponses, error: rfqItemsError } = await supabase
+          .from("rfq_response")
           .select("*")
           .eq("rfq_id", id);
+  
+        if (rfqItemsError) throw rfqItemsError;
+        const itemIds = rfqResponses.map((res) => res.item_id).filter(Boolean);
 
-        if (itemsError) throw itemsError;
+        const { data: itemsData, error: itemsError } = await supabase
+        .from("rfq_items")
+        .select("*")
+        .in("id", itemIds);
+      if (itemsError) throw itemsError;
 
+      const mergedResponses = rfqResponses.map((response) => {
+        const itemDetails = itemsData.find((item) => item.id === response.item_id);
+        return {
+          ...response,
+          item: itemDetails || null, // attach full item details
+        };
+      });
+
+  
         setRfqData(rfq);
-        setRfqItems(items);
+        setRfqItems(mergedResponses);
+  
       } catch (err) {
         console.error("Error fetching data:", err);
         setError("Failed to load RFQ data");
@@ -524,51 +565,103 @@ export default function ViewRfq() {
         setLoading(false);
       }
     };
-
+  
     if (id) fetchData();
   }, [id]);
+  
 
-  const fetchVendorResponses = async (rfqId) => {
+
+  
+ const handleVendorClick = (vendorId) => {
+  setSelectedVendor(vendorId);
+
+  const vendorResponses = rfqItems.filter(
+    (item) => item.vendor_id === vendorId
+  );
+
+  setFilteredItems(vendorResponses);
+};
+
+
+  console.log("geetting rfqitems",rfqItems)
+  
+
+
+ useEffect(() => {
+  const fetchUserData = async () => {
+    if (!id) return;
+    
     try {
-      const { data: responses, error } = await supabase
-        .from("rfq_response")
-        .select("vendor_id, offered_quantity, offered_price, uom")
-        .eq("rfq_id", rfqId);
-
-      if (error) throw error;
-      return responses;
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      
+      // Fetch member role
+      const { data: member, error: memberError } = await supabase
+        .from('member')
+        .select('member_role')
+        .eq('member_profile', user.id)
+        .single();
+      if (memberError) throw memberError;
+      
+      setCurrentUserRole(member?.member_role);
+      
+      // Check if current user is the creator
+      const { data: rfq, error: rfqError } = await supabase
+        .from('rfq')
+        .select('requested_by, status')
+        .eq('id', id)
+        .single();
+      if (rfqError) throw rfqError;
+      
+      setIsCreator(rfq?.requested_by === user.id);
+      setApprovalStatus(rfq?.status || 'draft');
     } catch (err) {
-      console.error("Error fetching responses:", err.message);
-      return [];
+      console.error("Error fetching user data:", err);
+    }
+  };
+  
+  fetchUserData();
+}, [id]);
+
+
+  const handleSendForApproval = async () => {
+    try {
+      const { error } = await supabase
+        .from('rfq')
+        .update({ status: 'pending_approval' })
+        .eq('id', id);
+        
+      if (error) throw error;
+      
+      setApprovalStatus('pending_approval');
+      alert("Sent for approval successfully!");
+    } catch (err) {
+      console.error("Error sending for approval:", err);
+      alert("Failed to send for approval");
     }
   };
 
-  const handleVendorClick = async (vendor) => {
-    setSelectedVendor(vendor); // Update selected vendor
+  const handleApproveReject = async (action: 'approve' | 'reject') => {
     try {
-      // Fetch vendor responses
-      const responses = await fetchVendorResponses(id);
-  
-      // Filter RFQ items that match the selected vendor
-      const filtered = rfqItems
-        .map((item) => {
-          const vendorResponse = responses.find((res) => res.vendor_id === vendor);
-          return vendorResponse
-            ? {
-                ...item,
-                offered_quantity: vendorResponse.offered_quantity,
-                offered_price: vendorResponse.offered_price,
-                uom: vendorResponse.uom,
-              }
-            : null; // Exclude items that don't match the vendor
-        })
-        .filter(Boolean); // Remove null values
-  
-      setFilteredItems(filtered);
-    } catch (error) {
-      console.error("Error fetching vendor responses:", error);
+      const newStatus = action === 'approve' ? 'approved' : 'rejected';
+      
+      const { error } = await supabase
+        .from('rfq')
+        .update({ status: newStatus })
+        .eq('id', id);
+        
+      if (error) throw error;
+      
+      setApprovalStatus(newStatus);
+      alert(`RFQ ${newStatus} successfully!`);
+    } catch (err) {
+      console.error(`Error ${action}ing RFQ:`, err);
+      alert(`Failed to ${action} RFQ`);
     }
   };
+  
+  
   
 
   if (loading) {
@@ -612,24 +705,26 @@ export default function ViewRfq() {
         </div>
         <div className="relative flex justify-center max-w-5xl mx-auto mt-4  bg-gray-100 rounded-full p-2 shadow-xl mb-4">
         <div className="relative flex gap-4">
-  {["vendor1", "vendor2", "vendor3"].map((vendor) => (
-    <button
-      key={vendor}
-      onClick={() => handleVendorClick(vendor)}
-      className={`relative z-10 px-4 py-2 text-sm font-medium transition ${
-        selectedVendor === vendor ? "text-black font-bold bg-gray-200" : "text-gray-700"
-      }`}
-    >
-      {vendor.toUpperCase()}
-      {selectedVendor === vendor && (
-        <motion.div
-          layoutId="tab-indicator"
-          className="absolute inset-0 shadow-2xl rounded-full z-[-1]"
-          transition={{ type: "spring", stiffness: 300, damping: 20 }}
-        />
-      )}
-    </button>
-  ))}
+        {vendors.map((vendorId, index) => (
+  <button
+    key={vendorId}
+    onClick={() => rfqItems.length > 0 && handleVendorClick(vendorId)}
+    disabled={rfqItems.length === 0}
+    className={`relative z-10 px-4 py-2 text-sm font-medium transition ${
+      selectedVendor === vendorId ? "text-black font-bold bg-gray-200" : "text-gray-700"
+    } ${rfqItems.length === 0 ? "opacity-50 cursor-not-allowed" : ""}`}
+  >
+    Vendor {index + 1}
+    {selectedVendor === vendorId && (
+      <motion.div
+        layoutId="tab-indicator"
+        className="absolute inset-0 shadow-2xl rounded-full z-[-1]"
+        transition={{ type: "spring", stiffness: 300, damping: 20 }}
+      />
+    )}
+  </button>
+))}
+
 </div>
 
       </div>
@@ -732,17 +827,62 @@ export default function ViewRfq() {
         <div>
         <label htmlFor="first_name" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Remark
         </label>
-        <input type="text" id="first_name" value={item.remark_charges} disabled className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="John" required />
+        <input type="text" id="first_name" value={item.remarks} disabled className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="John" required />
         </div>
         
         </div> </>))}
 
         <div className="text-right mt-3">
-        <Button className="bg-blue-500 mt-3">Save as Draft</Button>
-        <Button className="bg-green-600 mt-3 mx-2">Send for Approval</Button>
-        <Button className="bg-pink-500 mt-3 mx-2">Print RFQ</Button>
-        <Button className="bg-red-600 mt-3 mx-2">Cancel</Button>
-        </div>
+  {/* Always show these buttons */}
+  <Button className="bg-blue-500 mt-3">Save as Draft</Button>
+  
+  {/* Employee sees Send for Approval */}
+  {currentUserRole === 'employee' && approvalStatus === 'draft' && (
+    <Button 
+      className="bg-green-600 mt-3 mx-2"
+      onClick={handleSendForApproval}
+    >
+      Send for Approval
+    </Button>
+  )}
+  
+  {/* Creator sees Approve/Reject after sent for approval */}
+  {isCreator && approvalStatus === 'pending_approval' && (
+    <>
+      <Button 
+        className="bg-green-600 mt-3 mx-2"
+        onClick={() => handleApproveReject('approve')}
+      >
+        Approve
+      </Button>
+      <Button 
+        className="bg-red-600 mt-3 mx-2"
+        onClick={() => handleApproveReject('reject')}
+      >
+        Reject
+      </Button>
+    </>
+  )}
+  
+  {/* Status indicators */}
+  {approvalStatus === 'approved' && (
+    <span className="text-green-600 font-bold mt-3 mx-2">
+      Approved ✓
+    </span>
+  )}
+  
+  {approvalStatus === 'rejected' && (
+    <span className="text-red-600 font-bold mt-3 mx-2">
+      Rejected ✗
+    </span>
+  )}
+  
+  {/* Always show these buttons */}
+  <Button className="bg-pink-500 mt-3 mx-2">Print RFQ</Button>
+  <Button className="bg-red-600 mt-3 mx-2">Cancel</Button>
+</div>
+
+       
         </div>
 
        

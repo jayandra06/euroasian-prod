@@ -480,7 +480,7 @@ function Item({ item, handleUpdateItem, errors }) {
         <TableCell className="text-right relative">
           <Input
             placeholder=""
-            value={item.offer_price}
+            value={item.offered_price}
             name="offer_price"
             // onChange={(e) => {
             //     handleChange(e);
@@ -667,9 +667,8 @@ const submitVendorResponse = async () => {
             rfq_id: item.rfq_id,
             item_id: item.id,
             vendor_id: vendorId, // ✅ Corrected vendor_id
-            offered_quantity: item.offer_quality,
             offered_price: item.offer_price,
-            offered_quality: item.offer_quality,
+            offer_quality: item.offer_quality,
             uom: item.uom_vendor,
             shipment_charges: item.shipment_charges || 0,
             custom_charges: item.custom_charges || 0,

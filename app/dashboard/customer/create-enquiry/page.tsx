@@ -92,70 +92,67 @@ function RFQInfoCard({
 
   async function fetchVessels() {
     const supabase = createClient();
-
+  
     try {
       // Get the current authenticated user
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("User not authenticated");
-
+  
       // Fetch all member records for the current user
       const { data: members, error: memberError } = await supabase
         .from("member")
         .select("member_profile, branch")
-        .eq("member_profile", user.id); // Remove .single() to handle multiple rows
-
+        .eq("member_profile", user.id);
+  
       if (memberError) throw memberError;
-
-      // If no members are found, throw an error
+  
       if (!members || members.length === 0) {
         throw new Error("No member records found for the current user");
       }
-
-      // Fetch vessels from all member profiles and branches
+  
       let allVessels: string[] = [];
-
+  
       for (const member of members) {
         // Fetch vessels from the profiles table
         const { data: memberProfile, error: profileError } = await supabase
-          .from("profiles") // Use the correct table name
+          .from("profiles")
           .select("vessels")
           .eq("id", member.member_profile)
-          .single(); // Use .single() here because profiles.id should be unique
-
+          .single();
+  
         if (profileError) {
           console.error("Error fetching profiles:", profileError);
           throw profileError;
         }
-
-        // Fetch vessels from the branch
-        const { data: branch, error: branchError } = await supabase
-          .from("branch")
-          .select("vessels")
-          .eq("id", member.branch)
-          .single(); // Use .single() here because branch.id should be unique
-
-        if (branchError) {
-          console.error("Error fetching branch:", branchError);
-          throw branchError;
+  
+        // Fetch vessels from the manager table based on branch_id
+        const { data: managers, error: managerError } = await supabase
+          .from("manager")
+          .select("vessel")
+          .eq("branch_id", member.branch); // Use member.branch
+  
+        if (managerError) {
+          console.error("Error fetching manager vessels:", managerError);
+          throw managerError;
         }
-
-        // Combine vessels from profiles and branch
+  
+        // Combine vessels from profiles and managers
         if (memberProfile?.vessels) {
           allVessels = [...allVessels, ...memberProfile.vessels];
         }
-        if (branch?.vessels) {
-          allVessels = [...allVessels, ...branch.vessels];
+  
+        if (managers?.length) {
+          allVessels = [...allVessels, ...managers.map(m => m.vessel)];
         }
       }
-
+  
       // Remove duplicates and set the vessels state
       setVessels([...new Set(allVessels)]);
     } catch (error) {
       console.error("Error fetching vessels:", error);
     }
   }
+  
 
   useEffect(() => {
     fetchVessels();
@@ -695,9 +692,9 @@ function Item({ item, handleUpdateItem, handleRemove, setErrors, errors }) {
             <div className="col-span-1 ">
               <Input
                 type="text"
-                placeholder="Offered Quantity"
-                value={item.offered_qty}
-                name="offered_qty"
+                placeholder="Position No"
+                value={item.position_no}
+                name="position_no"
                 //    onChange={(e) => {
                 //     handleChange(e);
                 //     setErrors({ ...errors, position_no: "" });
