@@ -1,6 +1,7 @@
 import { Mail, Phone, MapPin } from "lucide-react"
 import Link from "next/link"
-import logo from "./Screenshot 2025-02-14 220946.png"
+
+import Image from "next/image"
 
 const Footer = () => {
   return (
@@ -14,7 +15,7 @@ const Footer = () => {
                 alt="EuroAsian Logo"
                 className="h-12 w-auto"
               /> */}
-              <img src={logo.src} alt="EuroAsian Logo" className="h-16 w-auto" />
+              <Image src='/Screenshot 2025-02-14 220946.png' alt="EuroAsian Logo" className="h-16 w-auto" />
 
             </div>
             {/* <p className="mt-4 text-sm">Your trusted source for quality ship parts and marine equipment.</p> */}
