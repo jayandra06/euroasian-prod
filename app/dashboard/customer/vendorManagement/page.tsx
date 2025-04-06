@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import TagsInput from 'react-tagsinput';
+
 import 'react-tagsinput/react-tagsinput.css';
 import { set } from "react-hook-form";
 import { loadComponents } from "next/dist/server/load-components";
@@ -35,7 +35,7 @@ export default function vendorManagement() {
   const [expandedRow, setExpandedRow] = useState<number | null>(null);
   const [rfqItems, setRfqItems] = useState<{ [key: number]: any[] }>({}); // Store items for each RFQ
 
-  const [tags, setTags] = useState([]);
+  const [tags, setTags] = useState<string[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [loading, setLoading] = useState(false)
   const [email, setemail] = useState("")
@@ -120,7 +120,7 @@ export default function vendorManagement() {
 
 
 
-  const handleVendorEmail = async(e)=>{
+  const handleVendorEmail = async(e:any)=>{
     e.preventDefault();
       setLoading(true);
   
@@ -145,17 +145,20 @@ export default function vendorManagement() {
 
 
 
-  const addTag = (event) => {
-    if (event.key === 'Enter' && event.target.value.trim() !== '') {
-      setTags([...tags, event.target.value.trim()]);
-      event.target.value = ''; // Clear input after adding a tag
+  const addTag = (event:React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter') {
+      const value = event.currentTarget.value.trim();
+      if (value !== '') {
+        setTags([...tags, value]);
+        event.currentTarget.value = ''; // Clear input after adding a tag
+      }
     }
   };
 
-  const removeTag = (index) => {
+  const removeTag = (index:any) => {
     setTags(tags.filter((_, i) => i !== index));
   };
-  const handleBackspace = (event) => {
+  const handleBackspace = (event:any) => {
     if (event.key === 'Backspace' && inputValue === '' && tags.length > 0) {
       removeTag(tags.length - 1); // Remove last tag
     }

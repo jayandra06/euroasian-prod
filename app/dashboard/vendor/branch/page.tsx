@@ -331,7 +331,7 @@ function BranchCard({ branch, vessels }: { branch: Branch; vessels: string[] }) 
   );
 }
 
-export  function BranchPage() {
+function BranchPage() {
   const [vesselName, setVesselName] = useState("");
   const [vessels, setVessels] = useState<string[]>([]);
   const [branches, setBranches] = useState<Branch[]>([]);
@@ -548,6 +548,7 @@ export  function BranchPage() {
 
 
 
+
 function BranchCard1({ branch }: { branch: any }) { 
     const [admin, setAdmin] = useState<any>(null);
     const [memberCount, setMemberCount] = useState(0);
@@ -684,7 +685,7 @@ function BranchCard1({ branch }: { branch: any }) {
 }
 
 
-export  function BranchMerchantPage() {
+export default  function BranchMerchantPage() {
     const [vesselName, setVesselName] = useState("");
     const [vessels, setVessels] = useState<string[]>([]);
     const [branches, setBranches] = useState<any[]>([]);
@@ -838,9 +839,14 @@ export  function BranchMerchantPage() {
 
             <div className="mt-4 grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
                 {branches.map((branch, i) =>
-                    <BranchAdminCard key={i} branch={branch} />
+                    <BranchCard key={i} branch={branch} />
                 )}
             </div>
         </main>
     )
 }
+
+
+
+
+

@@ -39,12 +39,32 @@ const tabs = [
   
 ];
 
+interface RfqData {
+  supply_port: string;
+  lead_date: string;
+  valid_date: string;
+  imo_no: string;
+  vessel_name: string;
+  hull_no: string;
+  equipement_tag: string;
+  brand: string;
+  model: string;
+  category: string;
+  drawing_number: string;
+  serial_no: string;
+  currentTag: string;
+  offer_quality: string;
+  remarks: string;
+  
+  // Add all other properties you expect to use
+  [key: string]: any; // This allows for additional properties if needed
+}
 
 // @ts-ignore
 function RFQInfoCard({
  rfqData
 }: {
-  rfqData:any[]
+  rfqData:RfqData
 }) {
   
   return (
@@ -77,7 +97,7 @@ function RFQInfoCard({
                         })
                       : ""
                   }
-                  disabled
+                 
                 />
               </div>
               <div className="flex flex-col">
@@ -87,7 +107,7 @@ function RFQInfoCard({
                 <Input
               type="text"
               id="supplyport"
-              value={rfqData.supply_port || ""}
+              value={rfqData?.supply_port || ""}
               disabled
               
               
@@ -467,6 +487,11 @@ function Item({ item }) {
 
 
 
+interface Approval {
+  vendor_key: string;
+  status: 'approved' | 'pending' | 'rejected'; // More specific if possible
+  
+}
 export default function ViewRfq() {
 
   const params = useParams()
@@ -481,14 +506,14 @@ export default function ViewRfq() {
   console.log("RFQ Items:", rfqItems);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedVendor, setSelectedVendor] = useState(null);
-  const [filteredItems, setFilteredItems] = useState([]);
+  const [selectedVendor, setSelectedVendor] = useState<string | null>(null);
+  const [filteredItems, setFilteredItems] = useState<any[]>([]);
   // Add to your state
 const [currentUserRole, setCurrentUserRole] = useState<string | null>(null);
 const [isCreator, setIsCreator] = useState(false);
 const [approvalStatus, setApprovalStatus] = useState(rfqData?.status || 'draft');
 const [vendors, setVendors] = useState<any[]>([]);
-const [vendorApprovalStatus, setVendorApprovalStatus] = useState<Record<string, string>>({});
+const [vendorApprovalStatus, setVendorApprovalStatus] = useState<Approval[]>([]);
 const [selectedVendorNumber, setSelectedVendorNumber] = useState<number | null>(null)
 
   console.log("filtered items" , filteredItems)
@@ -584,7 +609,7 @@ useEffect(() => {
 
 
   
-  const handleVendorClick = (vendorId, vendorNumber) => {
+  const handleVendorClick = (vendorId:string, vendorNumber:number) => {
     setSelectedVendor(vendorId);
     setSelectedVendorNumber(vendorNumber);
     

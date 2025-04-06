@@ -4,9 +4,16 @@ import { createClient } from "@/utils/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
-
+interface CrewMember {
+  id: string;
+  email: string;
+  username: string;
+  phonenumber: string;
+  saved: boolean;
+  editable: boolean;  // Added this missing property
+}
 export default function CrewManagement() {
-  const [members, setMembers] = useState<{ [key: string]: string; saved: boolean }[]>([
+  const [members, setMembers] = useState<CrewMember[]>([
     { id: "", email: "", username: "", phonenumber: "", saved: false , editable: true },
   ]);
 
