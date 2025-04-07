@@ -585,182 +585,237 @@ function Item({ item, handleUpdateItem, handleRemove, setErrors, errors }) {
   };
   return (
     <>
-   <TableRow>
-  <TableCell className="font-medium">{item.id}</TableCell>
+      <TableRow>
+        <TableCell className="font-medium">{item.id}</TableCell>
+        <TableCell colSpan={3}>
+          <div className="grid gap-2 grid-cols-4 items-center">
+            <div className="col-span-1">
+              <Textarea
+                placeholder="Item Description.."
+                value={item.description}
+                name="description"
+                //   onChange={(e) => {
+                //     const {name, value} = e.target;
+                //     handleUpdateItem(item.id, name, value);
+                //     // setErrors({ ...errors, description: "" });
+                //   }}
+                onChange={handleChange}
+              />
+              {errors.description && (
+                <p className="text-red-500 text-sm">{errors.description}</p>
+              )}
+            </div>
+            <div className="col-span-1 ">
+              <Input
+                type="text"
+                placeholder="Part No."
+                value={item.part_no}
+                name="part_no"
+                //    onChange={(e) => {
+                //     handleChange(e);
+                //     setErrors({ ...errors, part_no: "" });
+                //   }}
+                onChange={handleChange}
+              />
+              {errors.part_no && (
+                <p className="text-red-500 text-sm">{errors.part_no}</p>
+              )}
+            </div>
+            <div className="col-span-1 ">
+              <Input
+                type="text"
+                placeholder="alter native Part No."
+                value={item.alternate_part_no}
+                name="alternative_part_no"
+                //    onChange={(e) => {
+                //     handleChange(e);
+                //     setErrors({ ...errors, part_no: "" });
+                //   }}
+                onChange={handleChange}
+              />
+              {errors.alternate_part_no && (
+                <p className="text-red-500 text-sm">
+                  {errors.alternate_part_no}
+                </p>
+              )}
+            </div>
+            <div className="col-span-1 ">
+              <Input
+                type="text"
+                placeholder="position no"
+                value={item.position_no}
+                name="position_no"
+                //    onChange={(e) => {
+                //     handleChange(e);
+                //     setErrors({ ...errors, part_no: "" });
+                //   }}
+                onChange={handleChange}
+              />
+              {errors.position_no && (
+                <p className="text-red-500 text-sm">{errors.position_no}</p>
+              )}
+            </div>
+            <div className="col-span-1 ">
+              <Input
+                type="text"
+                placeholder="alternative position no"
+                value={item.alternative_position_no}
+                name="alternative_position_no"
+                //    onChange={(e) => {
+                //     handleChange(e);
+                //     setErrors({ ...errors, part_no: "" });
+                //   }}
+                onChange={handleChange}
+              />
+              {errors.alternative_position_no && (
+                <p className="text-red-500 text-sm">
+                  {errors.alternative_position_no}
+                </p>
+              )}
+            </div>
+            <div className="col-span-1 ">
+              <Input
+                type="text"
+                placeholder="Impa No"
+                value={item.impa_no}
+                name="impa_no"
+                //    onChange={(e) => {
+                //     handleChange(e);
+                //     setErrors({ ...errors, part_no: "" });
+                //   }}
+                onChange={handleChange}
+              />
+              {errors.impa_no && (
+                <p className="text-red-500 text-sm">{errors.impa_no}</p>
+              )}
+            </div>
+            <div className="col-span-1 ">
+              <Input
+                type="text"
+                placeholder="Position No"
+                value={item.position_no}
+                name="position_no"
+                //    onChange={(e) => {
+                //     handleChange(e);
+                //     setErrors({ ...errors, position_no: "" });
+                //   }}
 
-  <TableCell colSpan={3}>
-    <div className="grid grid-cols-2 gap-4">
-      {/* Group 1: Description */}
-      <div className="flex flex-col">
-        <Textarea
-          placeholder="Item Description.."
-          value={item.description}
-          name="description"
-          onChange={handleChange}
-        />
-        {errors.description && (
-          <p className="text-red-500 text-sm">{errors.description}</p>
-        )}
-      </div>
+                onChange={handleChange}
+              />
+              {errors.offered_qty && (
+                <p className="text-red-500 text-sm">{errors.offered_qty}</p>
+              )}
+            </div>
+            <div className="col-span-1 ">
+              <Input
+                type="text"
+                placeholder="required quanitity"
+                value={item.req_qty}
+                name="req_qty"
+                //    onChange={(e) => {
+                //     handleChange(e);
+                //     setErrors({ ...errors, alternative_part_no: "" });
+                //   }}
+                onChange={handleChange}
+              />
+              {errors.req_qty && (
+                <p className="text-red-500 text-sm">{errors.req_qty}</p>
+              )}
+            </div>
+            <div className="col-span-1 ">
+              <Input
+                type="text"
+                placeholder="Beadth"
+                value={item.beadth}
+                name="beadth"
+                //    onChange={(e) => {
+                //     handleChange(e);
+                //     setErrors({ ...errors, alternative_part_no: "" });
+                //   }}
+                onChange={handleChange}
+              />
+              {errors.beadth && (
+                <p className="text-red-500 text-sm">{errors.beadth}</p>
+              )}
+            </div>
 
-      {/* Group 2: Part Numbers */}
-      <div className="grid grid-cols-1 gap-2">
-        <div>
-          <Input
-            type="text"
-            placeholder="Part No."
-            value={item.part_no}
-            name="part_no"
-            onChange={handleChange}
-          />
-          {errors.part_no && (
-            <p className="text-red-500 text-sm">{errors.part_no}</p>
-          )}
-        </div>
-        <div>
-          <Input
-            type="text"
-            placeholder="Alternate Part No."
-            value={item.alternate_part_no}
-            name="alternative_part_no"
-            onChange={handleChange}
-          />
-          {errors.alternate_part_no && (
-            <p className="text-red-500 text-sm">{errors.alternate_part_no}</p>
-          )}
-        </div>
-      </div>
 
-      {/* Group 3: Position Numbers */}
-      <div className="grid grid-cols-1 gap-2">
-        <div>
-          <Input
-            type="text"
-            placeholder="Position No."
-            value={item.position_no}
-            name="position_no"
-            onChange={handleChange}
-          />
-          {errors.position_no && (
-            <p className="text-red-500 text-sm">{errors.position_no}</p>
-          )}
-        </div>
-        <div>
-          <Input
-            type="text"
-            placeholder="Alternative Position No."
-            value={item.alternative_position_no}
-            name="alternative_position_no"
-            onChange={handleChange}
-          />
-          {errors.alternative_position_no && (
-            <p className="text-red-500 text-sm">
-              {errors.alternative_position_no}
-            </p>
-          )}
-        </div>
-      </div>
+            
+{/*             <div className="col-span-1 ">
+              <Input
+                type="text"
+                placeholder="Height"
+                value={item.height}
+                name="height"
+                //    onChange={(e) => {
+                //     handleChange(e);
+                //     setErrors({ ...errors, alternative_part_no: "" });
+                //   }}
+                onChange={handleChange}
+              />
+              {errors.height && (
+                <p className="text-red-500 text-sm">{errors.height}</p>
+              )}
+            </div> */}
 
-      {/* Group 4: Quantity & Impa */}
-      <div className="grid grid-cols-1 gap-2">
-        <div>
-          <Input
-            type="text"
-            placeholder="Impa No"
-            value={item.impa_no}
-            name="impa_no"
-            onChange={handleChange}
-          />
-          {errors.impa_no && (
-            <p className="text-red-500 text-sm">{errors.impa_no}</p>
-          )}
-        </div>
-        <div>
-          <Input
-            type="text"
-            placeholder="Required Quantity"
-            value={item.req_qty}
-            name="req_qty"
-            onChange={handleChange}
-          />
-          {errors.req_qty && (
-            <p className="text-red-500 text-sm">{errors.req_qty}</p>
-          )}
-        </div>
-      </div>
 
-      {/* Group 5: Dimensions */}
-      <div className="grid grid-cols-2 gap-2">
-        <div>
+            
+          </div>
+        </TableCell>
+        
+{/*         <TableCell>
           <Input
-            type="text"
-            placeholder="Beadth"
-            value={item.beadth}
-            name="beadth"
-            onChange={handleChange}
-          />
-          {errors.beadth && (
-            <p className="text-red-500 text-sm">{errors.beadth}</p>
-          )}
-        </div>
-        <div>
-          <Input
-            type="text"
-            placeholder="Height"
-            value={item.height}
-            name="height"
-            onChange={handleChange}
-          />
-          {errors.height && (
-            <p className="text-red-500 text-sm">{errors.height}</p>
-          )}
-        </div>
-        <div className="col-span-2">
-          <Input
-            type="text"
-            placeholder="Width"
+            type="number"
+            placeholder="width"
             value={item.width}
             name="width"
+            // onChange={(e) => {
+            //     handleChange(e);
+            //     setErrors({ ...errors, req_qty: "" });
+            //   }}
             onChange={handleChange}
           />
           {errors.width && (
             <p className="text-red-500 text-sm">{errors.width}</p>
           )}
-        </div>
-      </div>
-    </div>
-  </TableCell>
+        </TableCell> */}
 
-  {/* UOM */}
-  <TableCell>
-    <Select
-      name="uom"
-      onValueChange={(v) => handleUpdateItem(item.id, "uom", v)}
-    >
-      <SelectTrigger>
-        <SelectValue placeholder="Select UOM" />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem value="Pieces">Pieces</SelectItem>
-        <SelectItem value="KiloGrams">KiloGrams</SelectItem>
-        <SelectItem value="Litres">Litres</SelectItem>
-      </SelectContent>
-    </Select>
-    {errors.uom && <p className="text-red-500 text-sm">{errors.uom}</p>}
-  </TableCell>
 
-  {/* Remove Button */}
-  <TableCell className="text-right relative">
-    <Button
-      onClick={() => handleRemove(item.id)}
-      className="absolute top-4 right-4"
-      variant={"outline"}
-    >
-      <Trash2 />
-    </Button>
-  </TableCell>
-</TableRow>
-
+        
+        <TableCell>
+          {/* <Input type="text" placeholder="Enter UOM..." value={item.uom} name="uom" onChange={} /> */}
+          <Select
+            name="uom"
+            onValueChange={
+              (v) =>
+                // {
+                handleUpdateItem(item.id, "uom", v)
+              //  setErrors({ ...errors, uom: "" });
+              // }
+            }
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select UOM" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Pieces">Pieces</SelectItem>
+              <SelectItem value="KiloGrams">KiloGrams</SelectItem>
+              <SelectItem value="Litres">Litres</SelectItem>
+            </SelectContent>
+          </Select>
+          {errors.uom && <p className="text-red-500 text-sm">{errors.uom}</p>}
+        </TableCell>
+        <TableCell className="text-right relative">
+          <Button
+            onClick={() => handleRemove(item.id)}
+            className="absolute top-4 right-4"
+            variant={"outline"}
+          >
+            <Trash2 />
+          </Button>
+        </TableCell>
+      </TableRow>
+    </>
   );
 }
 
