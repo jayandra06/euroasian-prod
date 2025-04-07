@@ -738,7 +738,10 @@ function Item({ item, handleUpdateItem, handleRemove, setErrors, errors }) {
                 <p className="text-red-500 text-sm">{errors.beadth}</p>
               )}
             </div>
-            <div className="col-span-1 ">
+
+
+            
+{/*             <div className="col-span-1 ">
               <Input
                 type="text"
                 placeholder="Height"
@@ -753,10 +756,14 @@ function Item({ item, handleUpdateItem, handleRemove, setErrors, errors }) {
               {errors.height && (
                 <p className="text-red-500 text-sm">{errors.height}</p>
               )}
-            </div>
+            </div> */}
+
+
+            
           </div>
         </TableCell>
-        <TableCell>
+        
+{/*         <TableCell>
           <Input
             type="number"
             placeholder="width"
@@ -771,7 +778,10 @@ function Item({ item, handleUpdateItem, handleRemove, setErrors, errors }) {
           {errors.width && (
             <p className="text-red-500 text-sm">{errors.width}</p>
           )}
-        </TableCell>
+        </TableCell> */}
+
+
+        
         <TableCell>
           {/* <Input type="text" placeholder="Enter UOM..." value={item.uom} name="uom" onChange={} /> */}
           <Select
