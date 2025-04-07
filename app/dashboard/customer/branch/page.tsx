@@ -462,7 +462,7 @@ export default function BranchPage() {
         <div className="flex gap-2">
           <Dialog>
             <DialogTrigger>
-              <Button>Add Branch</Button>
+              <Button>Add BU</Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
