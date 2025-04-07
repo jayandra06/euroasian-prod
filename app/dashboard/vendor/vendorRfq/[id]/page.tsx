@@ -270,7 +270,7 @@ function RFQInfoCard({
 
 // @ts-ignore
 function Item({ item, handleUpdateItem, errors }) {
-  const handleChange = (e) => {
+  const handleChange = (e:any) => {
     const { name, value } = e.target;
     handleUpdateItem(item.id, name, value);
   };
@@ -584,7 +584,7 @@ export default function ViewRfq() {
         console.log("✅ RFQ Items for Vendor:", items);
         setItems(items);
       } catch (err) {
-        console.error("❌ Error fetching RFQs:", err.message);
+        console.error("❌ Error fetching RFQs:", (err as Error).message);
       }
     }
 
@@ -703,7 +703,7 @@ const handleSubmit = async () => {
 
   console.log("RFQ ID:", id);
 
-  const handleChange = (e, itemId) => {
+  const handleChange = (e:any, itemId:any) => {
     const { name, value } = e.target;
     setItems((prevItems) =>
       prevItems.map((item) =>

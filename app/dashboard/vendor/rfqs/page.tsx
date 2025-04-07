@@ -68,12 +68,12 @@ export default function RFQsPage() {
     // Get the logged-in user's email
     const { data: user, error: userError } = await supabase.auth.getUser();
     console.log("Logged-in User:", user);
-    console.log("🔍 Checking Merchant for Email:", user.user.email);
+    console.log("🔍 Checking Merchant for Email:", user.user?.email || "No email found");
 
     const { data: merchant, error: merchantError } = await supabase
       .from("merchant")
       .select("*")
-      .ilike("business_email", user.user.email) // Case-insensitive match
+      .ilike("business_email", user.user?.email || "") // Case-insensitive match
       .maybeSingle();
 
     console.log("Merchant Data:", merchant);

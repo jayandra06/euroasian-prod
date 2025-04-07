@@ -25,18 +25,18 @@ const VendorItem = () => {
     ]);
 
     // Handle input change
-    const handleUpdateItem = (id, name, value) => {
+    const handleUpdateItem = (id: number, name: string, value: string) => {
         setItems(prevItems =>
             prevItems.map(item => (item.id === id ? { ...item, [name]: value } : item))
         );
     };
 
     // Remove a row
-    const handleRemove = (id) => {
+    const handleRemove = (id:number) => {
         setItems(prevItems => prevItems.filter(item => item.id !== id));
     };
 
-    const handleEdit = (id) =>{
+    const handleEdit = (id:number) =>{
         setItems(prevItems => 
             prevItems.map(item =>
                 item.id === id ? {...item , isEditing: !item.isEditing}:item

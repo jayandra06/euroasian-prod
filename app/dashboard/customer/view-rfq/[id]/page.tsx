@@ -489,7 +489,7 @@ function Item({ item }) {
 
 interface Approval {
   vendor_key: string;
-  status: 'approved' | 'pending' | 'rejected'; // More specific if possible
+  status: 'approved' | 'pending' | 'rejected' | 'pending_approval'; // More specific if possible
   
 }
 export default function ViewRfq() {
@@ -513,7 +513,8 @@ const [currentUserRole, setCurrentUserRole] = useState<string | null>(null);
 const [isCreator, setIsCreator] = useState(false);
 const [approvalStatus, setApprovalStatus] = useState(rfqData?.status || 'draft');
 const [vendors, setVendors] = useState<any[]>([]);
-const [vendorApprovalStatus, setVendorApprovalStatus] = useState<Approval[]>([]);
+const [vendorApprovalStatus, setVendorApprovalStatus] = useState<Record<string, Approval>>({});
+
 const [selectedVendorNumber, setSelectedVendorNumber] = useState<number | null>(null)
 
   console.log("filtered items" , filteredItems)
@@ -669,11 +670,14 @@ useEffect(() => {
       .eq('rfq_id', id);
 
     if (!error && approvals) {
-      const statusMap: Record<string, string> = {};
-      approvals.forEach(approval => {
-        statusMap[approval.vendor_key] = approval.status;
-      });
-      setVendorApprovalStatus(statusMap);
+      const approvalMap: Record<string, Approval> = approvals.reduce((acc,approval) => {
+        acc[approval.vendor_key] = {
+          vendor_key: approval.vendor_key,
+          status: approval.status as 'approved' | 'pending' | 'rejected',
+        }
+        return acc
+      },{} as Record<string, Approval>);
+      setVendorApprovalStatus(approvalMap);
     }
   };
 
@@ -704,7 +708,10 @@ const handleSendVendorForApproval = async () => {
     // Update local state
     setVendorApprovalStatus(prev => ({
       ...prev,
-      [vendorKey]: 'pending_approval'
+      [vendorKey]:{
+        vendor_key : vendorKey,
+        status: 'pending'
+      }
     }));
 
     alert(`Vendor  sent for approval successfully!`);
@@ -742,7 +749,7 @@ const handleVendorApproveReject = async (action: 'approve' | 'reject') => {
       // Check if all vendors are approved
       const { data: approvals, error: fetchError } = await supabase
         .from('rfq_approvals')
-        .select('status')
+        .select('status , vendor_key')
         .eq('rfq_id', id);
 
       if (fetchError) throw fetchError;
@@ -769,7 +776,10 @@ const handleVendorApproveReject = async (action: 'approve' | 'reject') => {
     // Update local state
     setVendorApprovalStatus(prev => ({
       ...prev,
-      [vendorKey]: newStatus
+      [vendorKey]:{
+        vendor_key : vendorKey,
+        status: newStatus
+      }
     }));
 
     alert(`Vendor ${selectedVendorNumber} ${newStatus} successfully!`);
@@ -826,7 +836,7 @@ const handleVendorApproveReject = async (action: 'approve' | 'reject') => {
         {vendors.map((vendorId, index) => {
   const vendorNumber = index + 1;
   const vendorKey = `vendor${vendorNumber}`;
-  const status = vendorApprovalStatus[vendorKey] || 'draft';
+  const status = vendorApprovalStatus[vendorKey]?.status || 'draft';
 
   return (
     <button
@@ -1039,9 +1049,9 @@ const handleVendorApproveReject = async (action: 'approve' | 'reject') => {
   
   {/* Employee sees Send for Approval for selected vendor */}
   {currentUserRole === 'employee' && selectedVendorNumber && (
-    vendorApprovalStatus[`vendor${selectedVendorNumber}`] !== 'pending_approval' &&
-    vendorApprovalStatus[`vendor${selectedVendorNumber}`] !== 'approved' &&
-    vendorApprovalStatus[`vendor${selectedVendorNumber}`] !== 'rejected' && (
+    vendorApprovalStatus[`vendor${selectedVendorNumber}`]?.status !== 'pending_approval' &&
+    vendorApprovalStatus[`vendor${selectedVendorNumber}`]?.status !== 'approved' &&
+    vendorApprovalStatus[`vendor${selectedVendorNumber}`]?.status !== 'rejected' && (
       <Button 
         className="bg-green-600 mt-3 mx-2"
         onClick={handleSendVendorForApproval}
@@ -1053,7 +1063,7 @@ const handleVendorApproveReject = async (action: 'approve' | 'reject') => {
   
   {/* Creator sees Approve/Reject for selected vendor */}
   {isCreator && selectedVendorNumber && 
-    vendorApprovalStatus[`vendor${selectedVendorNumber}`] === 'pending_approval' && (
+    vendorApprovalStatus[`vendor${selectedVendorNumber}`]?.status === 'pending_approval' && (
     <>
       <Button 
         className="bg-green-600 mt-3 mx-2"
@@ -1071,13 +1081,13 @@ const handleVendorApproveReject = async (action: 'approve' | 'reject') => {
   )}
   
   {/* Status indicators */}
-  {selectedVendorNumber && vendorApprovalStatus[`vendor${selectedVendorNumber}`] === 'approved' && (
+  {selectedVendorNumber && vendorApprovalStatus[`vendor${selectedVendorNumber}`]?.status === 'approved' && (
     <span className="text-green-600 font-bold mt-3 mx-2">
       Vendor Approved ✓
     </span>
   )}
   
-  {selectedVendorNumber && vendorApprovalStatus[`vendor${selectedVendorNumber}`] === 'rejected' && (
+  {selectedVendorNumber && vendorApprovalStatus[`vendor${selectedVendorNumber}`]?.status === 'rejected' && (
     <span className="text-red-600 font-bold mt-3 mx-2">
       Vendor Rejected ✗
     </span>

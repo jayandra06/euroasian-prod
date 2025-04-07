@@ -15,7 +15,7 @@ const Footer = () => {
                 alt="EuroAsian Logo"
                 className="h-12 w-auto"
               /> */}
-              <Image src='/Screenshot 2025-02-14 220946.png' alt="EuroAsian Logo" className="h-16 w-auto" />
+              <Image src='/Screenshot 2025-02-14 220946.png' width={100} height={100} alt="EuroAsian Logo" className="h-16 w-auto" />
 
             </div>
             {/* <p className="mt-4 text-sm">Your trusted source for quality ship parts and marine equipment.</p> */}

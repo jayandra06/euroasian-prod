@@ -138,32 +138,7 @@ function BranchCard({ branch, vessels }: { branch: Branch; vessels: string[] }) 
     fetchBranch();
   }, []);
 
-  const handleInvite = async()=>{
-    if(!email){
-      console.log("enter the email")
-    }
-    const supabase = createClient()
-
-    const {data , error} = await supabase.auth.admin.inviteUserByEmail(email)
-
-    if (error) {
-      console.log("Error: " + error.message);
-      return;
-    }
-
-    // Update profile with vendor role
-    await supabase
-      .from("profiles")
-      .update({ user_role: "vendor" })
-      .eq("id", data.user?.id);
-
-    // Send sign-in OTP link to email
-    await supabase.auth.signInWithOtp({ email: email });
-
-    setMessage("Vendor invited successfully! Check your email.");
-    setEmail(""); // Reset input
-
-  }
+ 
 
   return (
     <Card>
@@ -839,7 +814,7 @@ export default  function BranchMerchantPage() {
 
             <div className="mt-4 grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
                 {branches.map((branch, i) =>
-                    <BranchCard key={i} branch={branch} />
+                    <BranchCard key={i} branch={branch} vessels={vessels} />
                 )}
             </div>
         </main>
