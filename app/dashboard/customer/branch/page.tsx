@@ -2,14 +2,6 @@
 
 import { Button } from "@/components/ui/button";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  CardFooter,
-} from "@/components/ui/card";
-import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -20,18 +12,10 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react"; // Import useCallback
 import { createClient } from "@/utils/supabase/client";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import Link from "next/link";
-import { Router } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { UserPlus, Pencil, Trash2, Users } from "lucide-react"; // Import icons
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,6 +23,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { DotsVerticalIcon } from "@radix-ui/react-icons";
+import { Loader2 } from "lucide-react";
+import { useToast } from "@/components/front/ui/use-toast";
 
 interface Branch {
   id: string;
@@ -70,6 +56,7 @@ function BranchCard({
 }) {
   const [admin, setAdmin] = useState<Member | null>(null);
   const [memberCount, setMemberCount] = useState(0);
+  const [adminCount, setAdminCount] = useState(0);
   const [rfqCount, setRfqCount] = useState(0);
   const [adminProfile, setAdminProfile] = useState<Profile | null>(null);
   const [newBranch, setNewBranch] = useState<{
@@ -79,51 +66,15 @@ function BranchCard({
     name: "",
     vessels: [],
   });
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editBranchName, setEditBranchName] = useState(branch.name);
+  const [isAssignAdminDialogOpen, setIsAssignAdminDialogOpen] = useState(false);
+  const [updating, setUpdating] = useState(false); // State for update loading
+  const [deleting, setDeleting] = useState(false); // State for delete loading
+  const { toast } = useToast();
 
-  async function addAdmin(e: React.FormEvent) {
-    e.preventDefault();
-
-    const formData = new FormData(e.target as HTMLFormElement);
-
-    const res = await fetch("/api/add-admin-to-branch/", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: formData.get("email"), branch: branch.id }),
-    });
-
-    const data = await res.json();
-    console.log("admin", data);
-    console.log("admin", data.email);
-    alert("Successfully Added Admin");
-    fetchDetails(); // Refetch to update the admin status
-  }
-
-  async function addEmployee(e: React.FormEvent) {
-    e.preventDefault();
-
-    const formData = new FormData(e.target as HTMLFormElement);
-
-    const res = await fetch("/api/add-manager-to-branch/", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        email: formData.get("email"),
-        branch: branch.id,
-        vessels: newBranch.vessels, // Send selected vessels
-      }),
-    });
-
-    const data = await res.json();
-    console.log("Manager Added:", data);
-
-    if (data.success) {
-      alert("Successfully Added Manager");
-      fetchDetails(); // Refetch to update manager count
-    } else {
-      alert("Error: " + data.error);
-    }
-  }
-
+  // Fetching Branch Details
   async function fetchBranchDetails() {
     const supabase = createClient();
 
@@ -132,6 +83,22 @@ function BranchCard({
       .select("*")
       .eq("branch_id", branch.id);
     setMemberCount(member.data?.length || 0);
+
+
+
+    const { count, error } = await supabase
+    .from("branch_admin")
+    .select("*", { count: "exact", head: true }) 
+    .eq("branch", branch.id);
+  
+  if (error) {
+    console.error("Error fetching admin count:", error);
+  } else {
+    setAdminCount(count || 0);
+  }
+  
+
+
 
     const rfq = await supabase.from("rfq").select("*").eq("branch", branch.id);
     setRfqCount(rfq.data?.length || 0);
@@ -156,143 +123,233 @@ function BranchCard({
     }
   }
 
+  //to delete the branch
+  async function handleDeleteBranch() {
+    const supabase = createClient();
+    setDeleting(true);
+
+    // Step 1: Confirm the record exists
+    const { data: checkData, error: checkError } = await supabase
+      .from("branch")
+      .select("*")
+      .eq("id", branch.id);
+
+    if (checkError) {
+      console.error("Error checking record:", checkError.message);
+      toast({
+        title: "Error checking branch",
+        description: checkError.message,
+        variant: "destructive",
+      });
+      setDeleting(false);
+      return;
+    }
+
+    if (!checkData || checkData.length === 0) {
+      toast({
+        title: "Branch not found",
+        description: "No branch found with that ID.",
+        variant: "destructive",
+      });
+      setDeleting(false);
+      return;
+    }
+
+    // Step 2: Attempt to delete
+    const { error } = await supabase
+      .from("branch")
+      .delete()
+      .eq("id", branch.id);
+
+    if (error) {
+      console.error("Delete error:", error.message);
+      toast({
+        title: "Failed to delete",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Branch deleted",
+        description: `"${branch.name}" was successfully deleted.`,
+      });
+      fetchDetails();
+    }
+
+    setIsDeleteDialogOpen(false);
+    setDeleting(false);
+  }
+
+  async function handleUpdateBranch() {
+    const supabase = createClient();
+    setUpdating(true);
+
+    try {
+      const { error } = await supabase
+        .from("branch")
+        .update({ name: editBranchName.trim() })
+        .eq("id", branch.id);
+
+      if (error) {
+        console.error("Error updating branch:", error);
+        toast({
+          title: "Failed to update",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Branch updated",
+          description: `Branch name changed to "${editBranchName}" successfully.`,
+        });
+        fetchDetails();
+      }
+    } catch (err) {
+      console.error("Unexpected error:", err);
+      toast({
+        title: "Unexpected error",
+        description: "Something went wrong while updating the branch.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsEditDialogOpen(false);
+      setUpdating(false);
+    }
+  }
+
   useEffect(() => {
     fetchBranchDetails();
-  }, [branch.id]); // Fetch details when the branch changes
+    setEditBranchName(branch.name); // Update edit name when branch changes
+  }, [branch.id, fetchDetails]); // Fetch details when the branch changes
 
   return (
     <>
-      <td className="text-center">{branch.name}</td>
-      <td className="text-center">{`${branch.id}`.slice(0, 8)}</td>
-      <td className="text-center">{adminProfile?.email || "Not Assigned"}</td>
-      <td className="text-center">{memberCount}</td>
-      <td className="text-center">{rfqCount}</td>
-      <td className="text-center">
-        {admin && adminProfile ? (
-          <div className="text-xs">
-            <p className="mb-1">{adminProfile.email}</p>
-          </div>
-        ) : (
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button variant={"outline"} size={"sm"}>
-               Add Admin
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Assign Admin</DialogTitle>
-                <DialogDescription>Enter Admin Details</DialogDescription>
-              </DialogHeader>
-              <form onSubmit={addAdmin}>
-                <div className="grid gap-4 py-4">
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="email" className="text-right">
-                      Admin Email
-                    </Label>
-                    <Input
-                      type="email"
-                      name="email"
-                      placeholder="Enter Admin Email..."
-                      id="email"
-                      className="col-span-3"
-                    />
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="branch" className="text-right">
-                      Branch Id
-                    </Label>
-                    <Input
-                      type="text"
-                      name="branch"
-                      id="branch"
-                      value={branch.id}
-                      disabled
-                      className="col-span-3"
-                    />
-                  </div>
-                  {/* <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="vessels" className="text-right">
-                      Select Vessels
-                    </Label> */}
-                  {/* <Select
-                      onValueChange={(value) =>
-                        setNewBranch({
-                          ...newBranch,
-                          vessels: [...newBranch.vessels, value],
-                        })
-                      }
-                    >
-                      <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder="Select Vessels..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {vessels.map((vessel, i) => (
-                          <SelectItem value={vessel} key={i}>
-                            {vessel}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select> */}
-                  {/* </div> */}
-                </div>
-                <DialogFooter>
-                  <Button type="submit" className="flex justify-center">
-                    Assign
-                  </Button>
-                </DialogFooter>
-              </form>
-            </DialogContent>
-          </Dialog>
-        )}
+      <td className="text-center px-4 py-3 text-md">
+        {`${branch.id}`.slice(0, 8)}
       </td>
-      <td className="text-center">
+      <td className="text-center px-4 py-3 text-md">{branch.name}</td>
+
+      <td className="text-center px-4 py-3 text-md">{adminCount}</td>
+      <td className="text-center px-4 py-3 text-md">{memberCount}</td>
+      <td className="text-center px-4 py-3 text-md">{rfqCount}</td>
+      <td className="text-center px-4 py-3 text-md">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="sm">
-              <DotsVerticalIcon className="h-5 w-5" />{" "}
-              {/* Adjust size as needed */}
+              <DotsVerticalIcon className="h-5 w-5" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-56">
+          <DropdownMenuContent className="w-56 bg-white border border-gray-200 shadow-md">
             <DropdownMenuItem asChild>
-              <Link href={`/dashboard/customer/branch/${branch.id}`}>
-                View Details
+              <Link
+                href={`/dashboard/customer/branch/branchmanagment/${branch.id}`}
+                className="flex items-center"
+              >
+                <Users className="mr-2 h-4 w-4" />
+                Mangae Branch
               </Link>
             </DropdownMenuItem>
+
             <DropdownMenuItem
-              onClick={() => console.log("Edit Branch triggered")}
+              onClick={() => setIsEditDialogOpen(true)}
+              className="flex items-center"
             >
-              Assign
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link href={`/dashboard/customer/branch/manager/${branch.id}`}>
-                View Managers
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => console.log("Delete Branch triggered")}
-            >
-              Delete Branch
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => console.log("Edit Branch triggered")}
-            >
+              <Pencil className="mr-2 h-4 w-4" />
               Edit Branch
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => setIsDeleteDialogOpen(true)}
+              className="flex items-center text-red-600"
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete Branch
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+
+        <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Confirm Delete</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete branch "{branch.name}"? This
+                action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => setIsDeleteDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={handleDeleteBranch}
+                disabled={deleting}
+              >
+                {deleting ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : null}
+                Delete
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit Branch</DialogTitle>
+              <DialogDescription>
+                Update the name of the branch.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="editBranchName" className="text-right">
+                  Branch Name
+                </Label>
+                <Input
+                  id="editBranchName"
+                  value={editBranchName}
+                  onChange={(e) => setEditBranchName(e.target.value)}
+                  className="col-span-3"
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => setIsEditDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                onClick={handleUpdateBranch}
+                disabled={updating}
+              >
+                {updating ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : null}
+                Update
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </td>
     </>
   );
 }
 
 export default function BranchPage() {
-  // REMOVED: const [vesselName, setVesselName] = useState("");
-  // REMOVED: const [vessels, setVessels] = useState<string[]>([]);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [isClient, setIsClient] = useState(true);
-  const [loading, setloading] = useState(false);
+  const [loading, setloading] = useState(true); // Initialize loading as true
   const [newBranch, setNewBranch] = useState<{
     name: string;
     vessels: string[];
@@ -303,7 +360,7 @@ export default function BranchPage() {
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(5); // You can adjust this value
+  const [itemsPerPage, setItemsPerPage] = useState(7); // You can adjust this value
 
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -321,8 +378,6 @@ export default function BranchPage() {
 
   console.log("vessels", []); // Keeping the console log for now, but 'vessels' is now an empty array
 
-  // REMOVED: async function addVessel() { ... }
-
   async function addBranch() {
     const supabase = createClient();
     setloading(true);
@@ -334,7 +389,6 @@ export default function BranchPage() {
 
       if (!user) {
         console.error("User not logged in.");
-        alert("Please log in first!");
         setloading(false);
         return;
       }
@@ -356,7 +410,6 @@ export default function BranchPage() {
 
       if (branchError) {
         console.error("Branch Insert Error:", branchError.message);
-        alert("Branch creation failed!");
         setloading(false);
         return;
       }
@@ -374,25 +427,23 @@ export default function BranchPage() {
 
       if (memberError) {
         console.error("Member Insert Error:", memberError.message);
-        alert("Failed to add creator to members.");
         setloading(false);
         return;
       }
 
       console.log("Member Data:", memberData);
       setloading(false);
-
-      alert("Branch Created Successfully!");
-      window.location.reload();
+      fetchDetails(); // Call fetchDetails to reload the table
     } catch (e) {
       console.error("Unable to Create Branch:", e);
-      alert("Unable to Create Branch!!");
       setloading(false);
     }
   }
 
-  async function fetchDetails() {
+  // Use useCallback to prevent infinite loop in useEffect
+  const fetchDetails = useCallback(async () => {
     const supabase = createClient();
+    setloading(true); // Set loading to true before fetching
 
     try {
       const {
@@ -435,22 +486,23 @@ export default function BranchPage() {
       setCurrentPage(1); // Reset to first page after fetching new data
     } catch (e) {
       console.log("Unable to Fetch Details, ", e);
+    } finally {
+      setloading(false); // Set loading to false after fetching (success or error)
     }
-  }
+  }, []); // The dependency array is now empty as useCallback memoizes the function
 
   useEffect(() => {
     fetchDetails();
-  }, []);
+  }, [fetchDetails]); // Now the dependency is the memoized fetchDetails function
 
   return (
     <main className="grid max-w-6xl w-full justify-self-center">
       <div className="py-4 sm:flex justify-between">
         <div>Your Branches</div>
         <div className="flex gap-2">
-        <div className="flex gap-2">
           <Dialog>
             <DialogTrigger>
-              <Button>Add BU</Button>
+              <Button disabled={loading}>Add BU</Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
@@ -476,42 +528,45 @@ export default function BranchPage() {
 
               <DialogFooter>
                 <Button type="submit" disabled={loading} onClick={addBranch}>
-                  {loading ? "Adding branch" : "Add Branch"}
+                  {loading ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : null}
+                  Add Branch
                 </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
-          
-                <Button onClick={() => window.location.href = "/dashboard/customer/branch/vessel"}>
-                Add Vessel
-                </Button>
-           
-        </div>
-      
-          {/* REMOVED: Add Vessel Dialog and Button */}
         </div>
       </div>
       <div className="mt-4 overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-100">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider text-center">
-                Name
+              <th
+                colSpan={6}
+                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider text-center"
+              >
+                <div className="flex justify-end">
+                  {/* Add BU Button remains here */}
+                </div>
               </th>
+            </tr>
+            <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider text-center">
                 ID
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider text-center">
-                Admin
+                Name
+              </th>
+
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider text-center">
+                No. of Admin
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider text-center">
-                Managers
+                No. of Managers
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider text-center">
                 RFQs
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider text-center">
-                Assign Admin
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider text-center">
                 Actions
@@ -519,20 +574,28 @@ export default function BranchPage() {
             </tr>
           </thead>
           <tbody className="bg-gray-50 divide-y divide-gray-100">
-            {currentBranches.map((branch, i) => (
-              <tr key={branch.id} className="hover:bg-gray-50">
-                <BranchCard
-                  branch={branch}
-                  vessels={[]} // Removed dependency on the 'vessels' state here
-                  fetchDetails={fetchDetails}
-                />
+            {loading ? (
+              <tr>
+                <td colSpan={5} className="py-10 text-center">
+                  <Loader2 className="h-8 w-8 animate-spin mx-auto" />
+                </td>
               </tr>
-            ))}
+            ) : (
+              currentBranches.map((branch, i) => (
+                <tr key={branch.id} className="hover:bg-gray-50">
+                  <BranchCard
+                    branch={branch}
+                    vessels={[]} // Removed dependency on the 'vessels' state here
+                    fetchDetails={fetchDetails}
+                  />
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
 
-      {branches.length > itemsPerPage && (
+      {branches.length > itemsPerPage && !loading && (
         <div className="flex justify-between items-center mt-4">
           <Button onClick={handlePrevPage} disabled={currentPage === 1}>
             Previous

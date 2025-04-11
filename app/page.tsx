@@ -230,6 +230,7 @@ import { ShortCarousel } from "@/components/front/ShortCarousel";
 import { BuyersCTA } from "@/components/front/BuyersCTA";
 import { CoreFunctionality } from "@/components/front/CoreFunctionality";
 import { LoggingProvider } from "@/components/front/LoggingProvider";
+import { Toaster } from "@/components/ui/toaster";
 
 export default function Home() {
   return (
@@ -255,6 +256,7 @@ export default function Home() {
           </AOSWrapper>
         </NavigationProvider>
       </LoggingProvider>
+      <Toaster />
     </>
   );
 }

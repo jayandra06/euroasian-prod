@@ -1,88 +1,113 @@
 import { createClient } from "@supabase/supabase-js";
 
 export async function POST(request: Request) {
-    try {
-        const formdata = await request.json();
-        const { email, branch, vessels } = formdata;
+  try {
+    const formdata = await request.json();
+    const { email, branch } = formdata;
 
-        const supabaseAdmin = createClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.SUPABASE_SERVICE_ROLE_KEY!,
-            { auth: { autoRefreshToken: false, persistSession: false } }
-        );
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
-        // Step 1: Invite User by creating them without a password
-        const { data: userData, error: userError } = await supabaseAdmin.auth.admin.createUser({
-            email: email,
-            email_confirm: true, // User still needs to set a password
-        });
-
-        if (userError || !userData?.user) {
-            console.error("Error inviting user:", userError);
-            return Response.json({ success: false, error: "User not invited" });
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error("Supabase credentials missing");
+      return new Response(
+        JSON.stringify({ success: false, error: "Server misconfiguration" }),
+        {
+          status: 500,
         }
-
-        const userId = userData.user.id;
-
-        const {data,error} = await supabaseAdmin.auth.admin.inviteUserByEmail(email)
-
-        // Step 2: Send an invite email with a password reset link
-        
-
-        // Step 3: Insert into the member table
-        const { data: memberData, error: memberError } = await supabaseAdmin
-            .from("member")
-            .insert({
-                member_profile: userId,
-                branch: branch,
-                member_role: "employee"
-            })
-            .select()
-            .single();
-
-        if (memberError || !memberData) {
-            console.error("Error inserting member:", memberError);
-            return Response.json({ success: false, error: "Failed to add member" });
-        }
-
-        // Step 4: Insert into the manager table
-        const { data: managerData, error: managerError } = await supabaseAdmin
-            .from("manager")
-            .insert({
-               // Link the manager to the member table
-                branch_id: branch,
-                email: email,
-                vessel: JSON.stringify(vessels)
-            })
-            .select()
-            .single();
-
-        if (managerError || !managerData) {
-            console.error("Error inserting manager:", managerError);
-            return Response.json({ success: false, error: "Failed to add manager" });
-        }
-
-        // Step 5: Update member table with the manager_id
-        const { error: updateError } = await supabaseAdmin
-            .from("member")
-            .update({ manager_id: managerData.id })
-            .eq("id", memberData.id);
-
-        if (updateError) {
-            console.error("Error updating member with manager_id:", updateError);
-            return Response.json({ success: false, error: "Failed to link manager" });
-        }
-
-        return Response.json({
-            success: true,
-            email: email,
-            message: "User invited successfully, password reset email sent!",
-            member: memberData,
-            manager: managerData
-        });
-
-    } catch (error) {
-        console.error("Unexpected error:", error);
-        return Response.json({ success: false, error: "Something went wrong" });
+      );
     }
+
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: { autoRefreshToken: false, persistSession: false },
+    });
+
+    // Step 1: Invite User by Email
+    // Step 1: Invite User by Email
+    const { data: userData, error: inviteError } =
+      await supabaseAdmin.auth.admin.inviteUserByEmail(email);
+
+    if (inviteError || !userData?.user) {
+      console.error("Invite failed:", JSON.stringify(inviteError, null, 2)); // <--- more detailed
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: inviteError?.message || "Invitation failed",
+        }),
+        {
+          status: 400,
+        }
+      );
+    }
+
+    const userId = userData.user.id;
+
+    // Step 2: Insert into member table
+    const { data: memberData, error: memberError } = await supabaseAdmin
+      .from("member")
+      .insert({
+        member_profile: userId,
+        branch: branch,
+        member_role: "employee",
+      })
+      .select()
+      .single();
+
+    if (memberError || !memberData) {
+      console.error("Error inserting member:", memberError);
+      return new Response(
+        JSON.stringify({ success: false, error: "Failed to add member" }),
+        {
+          status: 500,
+        }
+      );
+    }
+
+    // Step 3: Insert into manager table (no vessels)
+    const { data: managerData, error: managerError } = await supabaseAdmin
+      .from("manager")
+      .insert({
+        branch_id: branch,
+        email: email,
+      })
+      .select()
+      .single();
+
+    if (managerError || !managerData) {
+      console.error("Error inserting manager:", managerError);
+      return new Response(
+        JSON.stringify({ success: false, error: "Failed to add manager" }),
+        {
+          status: 500,
+        }
+      );
+    }
+
+   
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        email: email,
+        message: "User invited successfully. Invitation email sent!",
+        member: memberData,
+        manager: managerData,
+      }),
+      {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+  } catch (error: any) {
+    console.error("Unexpected error:", error);
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: error.message || "Something went wrong",
+      }),
+      {
+        status: 500,
+      }
+    );
+  }
 }
