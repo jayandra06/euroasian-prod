@@ -3,7 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 export async function POST(request: Request) {
     try {
         const formdata = await request.json();
-        const { email, branch } = formdata;
+        const { email, branch} = formdata;
 
         const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
         const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -31,13 +31,19 @@ export async function POST(request: Request) {
 
         const userId = userData.user.id;
 
+        //Update the role in profile table
+        const { error: updateProfileError } = await supabaseAdmin
+            .from("profiles")
+            .update({ user_role: "admin" })
+            .eq("id", userId);
+
         // Step 2: Insert into member table
         const { data: memberData, error: memberError } = await supabaseAdmin
             .from("member")
             .insert({
                 member_profile: userId,
                 branch: branch,
-                member_role: "employee",
+                member_role: "admin",
             })
             .select()
             .single();
@@ -69,7 +75,7 @@ export async function POST(request: Request) {
         // Step 4: Link branch_admin to member
         const { error: updateError } = await supabaseAdmin
             .from("member")
-            .update({ manager_id: adminData.id }) // assuming you still want to keep this linkage
+            .update({ member_profile: adminData.id }) // assuming you still want to keep this linkage
             .eq("id", memberData.id);
 
         if (updateError) {

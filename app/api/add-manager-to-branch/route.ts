@@ -42,6 +42,11 @@ export async function POST(request: Request) {
 
     const userId = userData.user.id;
 
+    const { error: updateProfileError } = await supabaseAdmin
+    .from("profiles")
+    .update({ user_role: "manager" })
+    .eq("id", userId);
+
     // Step 2: Insert into member table
     const { data: memberData, error: memberError } = await supabaseAdmin
       .from("member")

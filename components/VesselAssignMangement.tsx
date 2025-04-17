@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 
 interface Vessel {
   id: string;
-  name: string;
+  vessel_name: string;
 }
 
 interface Manager {
@@ -32,7 +32,18 @@ export default function VesselAssignUX({ branchId }: { branchId: string }) {
 
   useEffect(() => {
     const fetchVessels = async () => {
-      const { data, error } = await supabase.from("vessels").select("*");
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        console.error("User not logged in.");
+        setLoading(false);
+        return;
+      }
+
+      const res = await fetch(`/api/fetch-all-vessel?login_id=${user.id}`);
+      const { data, error } = await res.json();
       if (error) console.error("Error fetching vessels:", error);
       else setVessels(data || []);
     };
@@ -142,7 +153,7 @@ export default function VesselAssignUX({ branchId }: { branchId: string }) {
                   setSelectedManagers(assigned[vessel.id] || []);
                 }}
               >
-                {vessel.name}
+                {vessel.vessel_name}
               </Button>
             ))
           )}

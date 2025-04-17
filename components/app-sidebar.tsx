@@ -18,6 +18,7 @@ import {
   Bot,
   SquareTerminal,
 } from "lucide-react"
+import { title } from "process"
 
 
 // This is sample data.
@@ -132,6 +133,21 @@ const vendorData = {
         
       ],
     },
+  {
+    title:"Vessel Management",
+    url:"#",
+    icon: SquareTerminal,
+    items:[
+      {
+        title: "Vessel Management",
+        url: "/dashboard/vendor/vessel-management",
+      },
+      {
+        title: "Vessel Details",
+        url: "/dashboard/vendor/vessel-details",
+      },
+    ]
+  },
     {
       title: "Catalog",
       url: "#",
@@ -236,6 +252,11 @@ const customerData = {
       
       
     },
+{
+title:"Vessel Management",
+url:"/dashboard/customer/vessel_management",
+},
+    
     {
       title: "Branch",
       url: "/dashboard/customer/branch",

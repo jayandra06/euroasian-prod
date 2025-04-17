@@ -65,7 +65,7 @@ function AdminManagementTable({
               className="flex items-center text-red-600"
             >
               <Trash2 className="mr-2 h-4 w-4" />
-              Remove Manager
+              Remove Admin
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -75,7 +75,7 @@ function AdminManagementTable({
             <DialogHeader>
               <DialogTitle>Confirm Removal</DialogTitle>
               <DialogDescription>
-                Are you sure you want to remove the manager with email "
+                Are you sure you want to remove the admin with email "
                 {manager.email}" from this branch?
               </DialogDescription>
             </DialogHeader>
@@ -88,8 +88,8 @@ function AdminManagementTable({
                 Cancel
               </Button>
               <Button variant="destructive" onClick={handleConfirmRemove}>
-              Remove
-            </Button>
+                Remove
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -175,18 +175,23 @@ export default function BranchMangerManagement({
           admin_id: adminToRemove.id,
         }),
       });
-  
+
       const result = await response.json();
-  
+
       if (result.success) {
         console.log("Admin removed successfully");
         toast({ title: "Success", description: "Admin removed successfully." }); // Add success toast
         // Refresh manager list after removal
-        const updatedManagers = managers.filter((m) => m.id !== adminToRemove.id);
+        const updatedManagers = managers.filter(
+          (m) => m.id !== adminToRemove.id
+        );
         setManagers(updatedManagers);
       } else {
         console.error("Failed to remove admin:", result.error);
-        toast({ title: "Error", description: `Failed to remove admin: ${result.error}` }); // Add error toast
+        toast({
+          title: "Error",
+          description: `Failed to remove admin: ${result.error}`,
+        }); // Add error toast
       }
     } catch (err: any) {
       console.error("Unexpected error:", err);
@@ -212,6 +217,7 @@ export default function BranchMangerManagement({
         </Button>
       </div>
       <div className="mt-4 overflow-x-auto">
+        ``
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-100">
             <tr>
@@ -225,11 +231,11 @@ export default function BranchMangerManagement({
           </thead>
           <tbody className="bg-white divide-y divide-gray-100">
             {managers.map((manager) => (
-             <AdminManagementTable
-             key={manager.id}
-             manager={manager}
-             onManagerRemoved={handleAdminRemove} // Make sure this prop name matches the one in AdminManagementTable
-           />
+              <AdminManagementTable
+                key={manager.id}
+                manager={manager}
+                onManagerRemoved={handleAdminRemove} // Make sure this prop name matches the one in AdminManagementTable
+              />
             ))}
             {managers.length === 0 && !loading && !error && (
               <tr>

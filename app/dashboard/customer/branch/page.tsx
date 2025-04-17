@@ -88,15 +88,15 @@ function BranchCard({
 
     const { count, error } = await supabase
     .from("branch_admin")
-    .select("*", { count: "exact", head: true }) 
+    .select("*", { count: "exact", head: true })
     .eq("branch", branch.id);
-  
-  if (error) {
-    console.error("Error fetching admin count:", error);
-  } else {
-    setAdminCount(count || 0);
-  }
-  
+
+    if (error) {
+      console.error("Error fetching admin count:", error);
+    } else {
+      setAdminCount(count || 0);
+    }
+
 
 
 
@@ -224,9 +224,9 @@ function BranchCard({
 
   return (
     <>
-      <td className="text-center px-4 py-3 text-md">
+      {/* <td className="text-center px-4 py-3 text-md">
         {`${branch.id}`.slice(0, 8)}
-      </td>
+      </td> */}
       <td className="text-center px-4 py-3 text-md">{branch.name}</td>
 
       <td className="text-center px-4 py-3 text-md">{adminCount}</td>
@@ -357,6 +357,7 @@ export default function BranchPage() {
     name: "",
     vessels: [],
   });
+  const [isAddBranchDialogOpen, setIsAddBranchDialogOpen] = useState(false); // State for controlling the add branch dialog
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -433,6 +434,8 @@ export default function BranchPage() {
 
       console.log("Member Data:", memberData);
       setloading(false);
+      setIsAddBranchDialogOpen(false); // Close the dialog after successful addition
+      setNewBranch({ name: "", vessels: [] }); // Reset the form
       fetchDetails(); // Call fetchDetails to reload the table
     } catch (e) {
       console.error("Unable to Create Branch:", e);
@@ -500,9 +503,9 @@ export default function BranchPage() {
       <div className="py-4 sm:flex justify-between">
         <div>Your Branches</div>
         <div className="flex gap-2">
-          <Dialog>
-            <DialogTrigger>
-              <Button disabled={loading}>Add BU</Button>
+          <Dialog open={isAddBranchDialogOpen} onOpenChange={setIsAddBranchDialogOpen}>
+            <DialogTrigger asChild>
+              <Button disabled={loading} onClick={() => setIsAddBranchDialogOpen(true)}>Add BU</Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
@@ -527,6 +530,9 @@ export default function BranchPage() {
               </div>
 
               <DialogFooter>
+                <Button type="button" variant="secondary" onClick={() => setIsAddBranchDialogOpen(false)}>
+                  Cancel
+                </Button>
                 <Button type="submit" disabled={loading} onClick={addBranch}>
                   {loading ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -552,9 +558,9 @@ export default function BranchPage() {
               </th>
             </tr>
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider text-center">
+              {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider text-center">
                 ID
-              </th>
+              </th> */}
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider text-center">
                 Name
               </th>
@@ -578,6 +584,12 @@ export default function BranchPage() {
               <tr>
                 <td colSpan={5} className="py-10 text-center">
                   <Loader2 className="h-8 w-8 animate-spin mx-auto" />
+                </td>
+              </tr>
+            ) : branches.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="py-10 text-center">
+                  No branches have been added yet.
                 </td>
               </tr>
             ) : (
