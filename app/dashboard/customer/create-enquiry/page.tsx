@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import axios from "axios";
 // import { useRouter } from "next/router";
 
 import {
@@ -34,32 +35,7 @@ import { Loader, Trash2 } from "lucide-react";
 import ErrorToast from "@/components/ui/errorToast";
 import SuccessToast from "@/components/ui/successToast";
 
-// function InfoCard() {
-//     return (
-//         <Card>
-//             <CardHeader>
-//                 <CardTitle>Requisition Info</CardTitle>
-//                 <CardDescription></CardDescription>
-//             </CardHeader>
-//             <CardContent>
-//                 <div className="grid w-full max-w-sm items-center gap-1.5">
-//                     <Label htmlFor="clientName">Client Name</Label>
-//                     <Input type="text" id="clientName" placeholder="Client Name" />
-//                 </div>
-//                 <div className="grid w-full max-w-sm items-center gap-1.5 mt-4">
-//                     <Label htmlFor="clientName">Client Email</Label>
-//                     <Input type="email" id="clientName" placeholder="Client Email" />
-//                 </div>
-//                 <div className="grid w-full max-w-sm items-center gap-1.5 mt-4">
-//                     <Label htmlFor="clientName">Created At</Label>
-//                     <Input type="text" id="clientName" placeholder="10/02/2025" />
-//                 </div>
-//             </CardContent>
-//         </Card>
-//     )
-// }
 
-// @ts-ignore
 function RFQInfoCard({
   createRfq,
   setcreateRfq,
@@ -90,68 +66,25 @@ function RFQInfoCard({
 
   const [vessels, setVessels] = useState<any[]>([]);
 
-  async function fetchVessels() {
-    const supabase = createClient();
-  
+  const fetchVessels = async () => {
     try {
-      // Get the current authenticated user
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("User not authenticated");
-  
-      // Fetch all member records for the current user
-      const { data: members, error: memberError } = await supabase
-        .from("member")
-        .select("member_profile, branch")
-        .eq("member_profile", user.id);
-  
-      if (memberError) throw memberError;
-  
-      if (!members || members.length === 0) {
-        throw new Error("No member records found for the current user");
+      const res = await axios.get('/api/fetch-vessel-role-wise');
+      console.log('Fetched vessels (object):', res.data);
+      console.log('Type of res.data:', typeof res.data);
+      console.log('Is res.data an array?', Array.isArray(res.data));
+
+      if (res.data && res.data.data && Array.isArray(res.data.data)) {
+        // The array of vessels is in res.data.data
+        setVessels(res.data.data);
+      } else {
+        console.error('Error: API response does not contain an array in the "data" property.');
+        setVessels([]);
       }
-  
-      let allVessels: string[] = [];
-  
-      for (const member of members) {
-        // Fetch vessels from the profiles table
-        const { data: memberProfile, error: profileError } = await supabase
-          .from("profiles")
-          .select("vessels")
-          .eq("id", member.member_profile)
-          .single();
-  
-        if (profileError) {
-          console.error("Error fetching profiles:", profileError);
-          throw profileError;
-        }
-  
-        // Fetch vessels from the manager table based on branch_id
-        const { data: managers, error: managerError } = await supabase
-          .from("manager")
-          .select("vessel")
-          .eq("branch_id", member.branch); // Use member.branch
-  
-        if (managerError) {
-          console.error("Error fetching manager vessels:", managerError);
-          throw managerError;
-        }
-  
-        // Combine vessels from profiles and managers
-        if (memberProfile?.vessels) {
-          allVessels = [...allVessels, ...memberProfile.vessels];
-        }
-  
-        if (managers?.length) {
-          allVessels = [...allVessels, ...managers.map(m => m.vessel)];
-        }
-      }
-  
-      // Remove duplicates and set the vessels state
-      setVessels([...new Set(allVessels)]);
     } catch (error) {
-      console.error("Error fetching vessels:", error);
+      console.error('Error fetching vessels:', error);
+      setVessels([]);
     }
-  }
+  };
   
 
   useEffect(() => {
@@ -189,11 +122,12 @@ function RFQInfoCard({
                     <SelectValue placeholder="Select Vessel" />
                   </SelectTrigger>
                   <SelectContent>
-                    {vessels.map((vessel, i) => (
-                      <SelectItem value={vessel} key={i}>
-                        {vessel}
-                      </SelectItem>
-                    ))}
+                    {Array.isArray(vessels) &&
+                      vessels.map((vessel, i) => (
+                        <SelectItem value={vessel.vessel_name} key={vessel.id}>
+                          {vessel.vessel_name}
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
                 {errors.vessel_name && (
@@ -487,22 +421,22 @@ function RFQInfoCard({
                 )}
               </div>
               <div className="flex flex-col">
-                <Label htmlFor="remark">General Remarks</Label>
+                <Label htmlFor="general_remarks">General Remarks</Label>
                 <Input
                   type="text"
-                  id="remark"
-                  placeholder="Remark"
-                  name="remark"
-                  value={createRfq.remark}
+                  id="general_remarks"
+                  placeholder="general_remarks"
+                  name="general_remarks"
+                  value={createRfq.general_remarks}
                   onChange={(e) =>
-                    setcreateRfq({ ...createRfq, remark: e.target.value })
+                    setcreateRfq({ ...createRfq, general_remarks: e.target.value })
                   }
                   className={`border mt-2 ${
-                    errors.remark ? "border-red-500" : "border-gray-300"
+                    errors.general_remarks ? "border-red-500" : "border-gray-300"
                   }`}
                 />
-                {errors.remark && (
-                  <p className="text-red-500 text-sm">{errors.remark}</p>
+                {errors.general_remarks && (
+                  <p className="text-red-500 text-sm">{errors.general_remarks}</p>
                 )}
               </div>
               <div className="flex flex-col">
@@ -587,212 +521,118 @@ function Item({ item, handleUpdateItem, handleRemove, setErrors, errors }) {
     <>
       <TableRow>
         <TableCell className="font-medium">{item.id}</TableCell>
-        <TableCell colSpan={3}>
-          <div className="grid gap-2 grid-cols-4 items-center">
-            <div className="col-span-1">
-              <Textarea
-                placeholder="Item Description.."
-                value={item.description}
-                name="description"
-                //   onChange={(e) => {
-                //     const {name, value} = e.target;
-                //     handleUpdateItem(item.id, name, value);
-                //     // setErrors({ ...errors, description: "" });
-                //   }}
-                onChange={handleChange}
-              />
-              {errors.description && (
-                <p className="text-red-500 text-sm">{errors.description}</p>
-              )}
-            </div>
-            <div className="col-span-1 ">
-              <Input
-                type="text"
-                placeholder="Part No."
-                value={item.part_no}
-                name="part_no"
-                //    onChange={(e) => {
-                //     handleChange(e);
-                //     setErrors({ ...errors, part_no: "" });
-                //   }}
-                onChange={handleChange}
-              />
-              {errors.part_no && (
-                <p className="text-red-500 text-sm">{errors.part_no}</p>
-              )}
-            </div>
-            <div className="col-span-1 ">
-              <Input
-                type="text"
-                placeholder="alter native Part No."
-                value={item.alternate_part_no}
-                name="alternative_part_no"
-                //    onChange={(e) => {
-                //     handleChange(e);
-                //     setErrors({ ...errors, part_no: "" });
-                //   }}
-                onChange={handleChange}
-              />
-              {errors.alternate_part_no && (
-                <p className="text-red-500 text-sm">
-                  {errors.alternate_part_no}
-                </p>
-              )}
-            </div>
-            <div className="col-span-1 ">
-              <Input
-                type="text"
-                placeholder="position no"
-                value={item.position_no}
-                name="position_no"
-                //    onChange={(e) => {
-                //     handleChange(e);
-                //     setErrors({ ...errors, part_no: "" });
-                //   }}
-                onChange={handleChange}
-              />
-              {errors.position_no && (
-                <p className="text-red-500 text-sm">{errors.position_no}</p>
-              )}
-            </div>
-            <div className="col-span-1 ">
-              <Input
-                type="text"
-                placeholder="alternative position no"
-                value={item.alternative_position_no}
-                name="alternative_position_no"
-                //    onChange={(e) => {
-                //     handleChange(e);
-                //     setErrors({ ...errors, part_no: "" });
-                //   }}
-                onChange={handleChange}
-              />
-              {errors.alternative_position_no && (
-                <p className="text-red-500 text-sm">
-                  {errors.alternative_position_no}
-                </p>
-              )}
-            </div>
-            <div className="col-span-1 ">
+        <TableCell>
+          {" "}
+          {/* Description Column */}
+          <div className="grid gap-2 grid-cols-1 items-center">
+            {" "}
+            {/* Single column grid */}
+            <div>
               <Input
                 type="text"
                 placeholder="Impa No"
                 value={item.impa_no}
                 name="impa_no"
-                //    onChange={(e) => {
-                //     handleChange(e);
-                //     setErrors({ ...errors, part_no: "" });
-                //   }}
                 onChange={handleChange}
+                className="p-2" // Added padding to Input
               />
               {errors.impa_no && (
                 <p className="text-red-500 text-sm">{errors.impa_no}</p>
               )}
             </div>
-            <div className="col-span-1 ">
-              <Input
-                type="text"
-                placeholder="Position No"
-                value={item.position_no}
-                name="position_no"
-                //    onChange={(e) => {
-                //     handleChange(e);
-                //     setErrors({ ...errors, position_no: "" });
-                //   }}
-
-                onChange={handleChange}
-              />
-              {errors.offered_qty && (
-                <p className="text-red-500 text-sm">{errors.offered_qty}</p>
-              )}
-            </div>
-            <div className="col-span-1 ">
-              <Input
-                type="text"
-                placeholder="required quanitity"
-                value={item.req_qty}
-                name="req_qty"
-                //    onChange={(e) => {
-                //     handleChange(e);
-                //     setErrors({ ...errors, alternative_part_no: "" });
-                //   }}
-                onChange={handleChange}
-              />
-              {errors.req_qty && (
-                <p className="text-red-500 text-sm">{errors.req_qty}</p>
-              )}
-            </div>
-            <div className="col-span-1 ">
-              <Input
-                type="text"
-                placeholder="Beadth"
-                value={item.beadth}
-                name="beadth"
-                //    onChange={(e) => {
-                //     handleChange(e);
-                //     setErrors({ ...errors, alternative_part_no: "" });
-                //   }}
-                onChange={handleChange}
-              />
-              {errors.beadth && (
-                <p className="text-red-500 text-sm">{errors.beadth}</p>
-              )}
-            </div>
-
-
-            
-{/*             <div className="col-span-1 ">
-              <Input
-                type="text"
-                placeholder="Height"
-                value={item.height}
-                name="height"
-                //    onChange={(e) => {
-                //     handleChange(e);
-                //     setErrors({ ...errors, alternative_part_no: "" });
-                //   }}
-                onChange={handleChange}
-              />
-              {errors.height && (
-                <p className="text-red-500 text-sm">{errors.height}</p>
-              )}
-            </div> */}
-
-
-            
+            <Textarea
+              placeholder="Item Description.."
+              value={item.description}
+              name="description"
+              onChange={handleChange}
+              className="p-2" // Added padding to Textarea
+            />
+            {errors.description && (
+              <p className="text-red-500 text-sm">{errors.description}</p>
+            )}
           </div>
         </TableCell>
-        
-{/*         <TableCell>
-          <Input
-            type="number"
-            placeholder="width"
-            value={item.width}
-            name="width"
-            // onChange={(e) => {
-            //     handleChange(e);
-            //     setErrors({ ...errors, req_qty: "" });
-            //   }}
-            onChange={handleChange}
-          />
-          {errors.width && (
-            <p className="text-red-500 text-sm">{errors.width}</p>
-          )}
-        </TableCell> */}
-
-
-        
         <TableCell>
-          {/* <Input type="text" placeholder="Enter UOM..." value={item.uom} name="uom" onChange={} /> */}
+          {" "}
+          {/* Part No. Column */}
+          <div className="grid gap-2 grid-cols-1 items-center">
+            {" "}
+            {/* Single column grid */}
+            <Input
+              type="text"
+              placeholder="Part No."
+              value={item.part_no}
+              name="part_no"
+              onChange={handleChange}
+              className="p-2" // Added padding to Input
+            />
+            {errors.part_no && (
+              <p className="text-red-500 text-sm">{errors.part_no}</p>
+            )}
+            <Input
+              type="text"
+              placeholder="alt. Part No."
+              value={item.alternate_part_no}
+              name="alternative_part_no"
+              onChange={handleChange}
+              className="p-2" // Added padding to Input
+            />
+            {errors.alternate_part_no && (
+              <p className="text-red-500 text-sm">{errors.alternate_part_no}</p>
+            )}
+          </div>
+        </TableCell>
+        <TableCell>
+          {" "}
+          {/* Position No. Column */}
+          <div className="grid gap-2 grid-cols-1 items-center">
+            {" "}
+            {/* Single column grid */}
+            <Input
+              type="text"
+              placeholder="Position No"
+              value={item.position_no}
+              name="position_no"
+              onChange={handleChange}
+              className="p-2" // Added padding to Input
+            />
+            {errors.offered_qty && (
+              <p className="text-red-500 text-sm">{errors.offered_qty}</p>
+            )}
+            <Input
+              type="text"
+              placeholder="W x B x H"
+              value={item.dimensions}
+              name="dimensions"
+              onChange={handleChange}
+              className="p-2" // Added padding to Input
+            />
+            {errors.dimensions && (
+              <p className="text-red-500 text-sm">{errors.dimensions}</p>
+            )}
+          </div>
+        </TableCell>
+        <TableCell>
+          {" "}
+          {/* Req. Qty. Column */}
+          <Input
+            type="text"
+            placeholder="required quanitity"
+            value={item.req_qty}
+            name="req_qty"
+            onChange={handleChange}
+            className="p-2" // Added padding to Input
+          />
+          {errors.req_qty && (
+            <p className="text-red-500 text-sm">{errors.req_qty}</p>
+          )}
+        </TableCell>
+        <TableCell>
+          {" "}
+          {/* UOM Column */}
           <Select
             name="uom"
-            onValueChange={
-              (v) =>
-                // {
-                handleUpdateItem(item.id, "uom", v)
-              //  setErrors({ ...errors, uom: "" });
-              // }
-            }
+            onValueChange={(v) => handleUpdateItem(item.id, "uom", v)}
           >
             <SelectTrigger>
               <SelectValue placeholder="Select UOM" />
@@ -805,10 +645,25 @@ function Item({ item, handleUpdateItem, handleRemove, setErrors, errors }) {
           </Select>
           {errors.uom && <p className="text-red-500 text-sm">{errors.uom}</p>}
         </TableCell>
+        <TableCell>
+          {" "}
+          {/* General Remarks Column */}
+          <Input
+            type="text"
+            placeholder="General Remarks"
+            value={item.general_remarks}
+            name="general_remarks" // You might want to change this name
+            onChange={handleChange}
+            className="p-2" // Added padding to Input
+          />
+          {errors.general_remarks && (
+            <p className="text-red-500 text-sm">{errors.general_remarks}</p>
+          )}
+        </TableCell>
         <TableCell className="text-right relative">
           <Button
             onClick={() => handleRemove(item.id)}
-            className="absolute top-4 right-4"
+            className=" mt-1 right-4"
             variant={"outline"}
           >
             <Trash2 />
@@ -835,8 +690,6 @@ export default function CreateEnquiryPage() {
       vendorId: "",
     },
   });
-
- 
 
   const [brands, setBrands] = useState<any[]>([]);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -876,8 +729,10 @@ export default function CreateEnquiryPage() {
       req_qty: "",
       offered_qty: "0",
       width: "",
-      beadth: "",
+      dimensions: "",
       height: "",
+      general_remarks: "",
+
     },
   ]);
   console.log("Items", items);
@@ -897,138 +752,69 @@ export default function CreateEnquiryPage() {
   const [isloading, setIsLoading] = useState(false);
 
   const getQuote = async () => {
-    setIsLoading(true);
-    setErrorMessage(null);
-    setSuccessMessage(null);
-    let newErrors = {
-      vessel_name: "",
-      supply_port: "",
-      created_date: "",
-      lead_date: "",
-      drawing_number: "",
-      imo_no: "",
-      equipement_tag: "",
-      brand: "",
-      model: "",
-      category: "",
-      hull_no: "",
-      offer_quality: "",
-      remark: "",
-      serial_no: "",
-      vessel_ex_name: "",
-      upload: "",
-      items: [],
-    };
-
-    if (!createRfq.brand) newErrors.brand = "Brand is Required";
-    if (!createRfq.category) newErrors.category = "Category is requied";
-    if (!createRfq.drawing_number)
-      newErrors.drawing_number = "Drawing Number is required";
-    if (!createRfq.equipement_tag)
-      newErrors.equipement_tag = "Equipment Tag is required";
-    if (!createRfq.hull_no) newErrors.hull_no = "Hull no is required";
-    if (!createRfq.imo_no) newErrors.imo_no = "Impo no is required";
-    if (!createRfq.lead_date) newErrors.lead_date = "Lead date is required";
-    if (!createRfq.model) newErrors.model = "Model is rquired";
-    if (!createRfq.offer_quality)
-      newErrors.offer_quality = "Qffered quality is requied";
-    if (!createRfq.remark) newErrors.remark = "Remark is required";
-    if (!createRfq.serial_no) newErrors.serial_no = "Serial Number is required";
-    if (!createRfq.upload) newErrors.upload = "Upload the file";
-    if (!createRfq.vessel_ex_name)
-      newErrors.vessel_ex_name = "Vessel ex name is required";
-    if (!createRfq.vessel_name)
-      newErrors.vessel_name = "Veseel name is requied";
-    if (!createRfq.supply_port)
-      newErrors.supply_port = "Supply Port is required.";
-
-    const itemErrors = items.map((item: any) => ({
-      description: item.description ? "" : "Description is required.",
-      part_no: item.part_no ? "" : "Part No is required.",
-      alternative_part_no: item.alternative_part_no
-        ? ""
-        : "Alternative Part No is required.",
-      position_no: item.position_no ? "" : "Position No is required.",
-      alternative_position_no: item.alternative_position_no
-        ? ""
-        : "Alternative position nnumber is required",
-      impa_no: item.impa_no ? "" : "Impa code is required",
-      uom: item.uom ? "" : "UOM is required.",
-      offered_qty: item.offered_qty ? "" : "Offered Quantity is required.",
-      req_qty: item.req_qty ? "" : "Required Quantity is required.",
-      width: item.width ? "" : "Width is required",
-      beadth: item.beadth ? "" : "Breadth is required",
-      height: item.height ? "" : "Height is required",
-    }));
-    newErrors.items = itemErrors;
-    setErrors(newErrors);
-    if (
-      !reqdVendors.vendor1.vendorId ||
-      !reqdVendors.vendor2.vendorId ||
-      !reqdVendors.vendor3.vendorId
-    ) {
-      setVendorsError(true);
-      setIsLoading(false);
-      return;
-    } else {
-      setVendorsError(false);
-    }
-    if (
-      itemErrors.some((item: { [s: string]: unknown } | ArrayLike<unknown>) =>
-        Object.values(item).some((err) => err)
-      )
-    )
-      return;
-
     try {
-      // File image start
+      console.log("🔵 Starting RFQ creation process...");
+      setIsLoading(true);
+      setErrorMessage("");
+      setSuccessMessage("");
+  
       let fileUrl = "";
-
-      if (selectedFile) {
-        const fileExt = selectedFile.name.split(".").pop();
-        const fileName = `${Math.random()}.${fileExt}`;
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from("rfq-image") // Replace with your bucket name
-          .upload(`uploads/${fileName}`, selectedFile);
-
-        if (uploadError) {
-          console.error("Error uploading file:", uploadError);
-          setErrorMessage("Failed to upload file. Please try again.");
+  
+      if (!selectedFile) {
+        console.warn("⚠️ No file selected. Skipping file upload.");
+      } else {
+        try {
+          console.log("📁 Uploading selected file...");
+  
+          const fileExt = selectedFile.name.split(".").pop();
+          const fileName = `${Math.random()}.${fileExt}`;
+          const { data: uploadData, error: uploadError } = await supabase.storage
+            .from("rfq-image")
+            .upload(`uploads/${fileName}`, selectedFile);
+  
+          if (uploadError) throw uploadError;
+  
+          const { data: publicUrlData } = supabase.storage
+            .from("rfq-image")
+            .getPublicUrl(uploadData.path);
+  
+          fileUrl = publicUrlData.publicUrl;
+          console.log("✅ File uploaded. Public URL:", fileUrl);
+        } catch (uploadErr) {
+          console.error("❌ File upload failed:", uploadErr);
+          setErrorMessage("Failed to upload file.");
           setIsLoading(false);
           return;
         }
-        const { data: publicUrlData } = supabase.storage
-          .from("rfq-image")
-          .getPublicUrl(uploadData.path);
-
-        fileUrl = publicUrlData.publicUrl;
-
-        // File image end
-        const {
-          data: { user },
-          error: userError,
-        } = await supabase.auth.getUser();
-        const member = await supabase
+      }
+  
+      let user, branchValues = [];
+      try {
+        console.log("👤 Fetching current user...");
+        const { data: userData, error: userError } = await supabase.auth.getUser();
+        if (userError) throw userError;
+        user = userData.user;
+  
+        const { data: memberData, error: memberError } = await supabase
           .from("member")
           .select("branch")
-          .eq("member_profile", user!.id);
-
-        console.log(
-          "selected vendors",
-          Object.values(reqdVendors).map((vendor) => vendor.vendorId)
-        );
-        if (userError) {
-          console.error("Error fetching member:", userError);
-        } else {
-          console.log("Fetched Member Data:", member);
-        }
-        console.log("createRfq state before insertion:", createRfq);
-        console.log("Member Data:", member.data);
-
-        const branchValues = member.data?.map((m) => m.branch) ?? [];
-        console.log("All Branch Values:", branchValues);
-
-        const { data: rfqData, error: rfqError } = await supabase
+          .eq("member_profile", user.id);
+  
+        if (memberError) throw memberError;
+  
+        branchValues = memberData?.map((m) => m.branch) ?? [];
+        console.log("✅ User & branch fetched:", user.id, branchValues);
+      } catch (userErr) {
+        console.error("❌ Error fetching user/member:", userErr);
+        setErrorMessage("User authentication or branch fetch failed.");
+        setIsLoading(false);
+        return;
+      }
+  
+      // Insert into `rfq` table
+      let rfqData;
+      try {
+        const { data, error } = await supabase
           .from("rfq")
           .insert([
             {
@@ -1047,120 +833,73 @@ export default function CreateEnquiryPage() {
               serial_no: createRfq.serial_no,
               vessel_ex_name: createRfq.vessel_ex_name,
               upload: fileUrl,
-              requested_by: user!.id,
+              requested_by: user.id,
               suppliers: Object.values(reqdVendors)
-                .filter((vendor) => vendor.vendorId)
-                .map((vendor) => vendor.vendorId),
+                .filter((v) => v.vendorId)
+                .map((v) => v.vendorId),
               created_at: new Date().toISOString(),
-              branch: branchValues[0] ?? null, // Handling null
-              status: Object.values(reqdVendors).filter(
-                (vendor) => vendor.vendorId
-              ).length
+              branch: branchValues[0] ?? null,
+              status: Object.values(reqdVendors).some((v) => v.vendorId)
                 ? "sent"
                 : "draft",
             },
           ])
           .select("*")
           .single();
-        console.log("RFQ Insert Response:", { rfqData, rfqError });
-        console.log("RFQ ID before inserting into rfq_supplier:", rfqData?.id);
-
-
-        if (rfqError) {
-          console.error("Supabase RFQ Insert Error:", rfqError);
-          setErrorMessage(`Error inserting RFQ: ${rfqError.message}`);
-          setIsLoading(false);
-          return; // ✅ Stop execution if RFQ insertion fails
-        }
-
-        if (!rfqData || !rfqData.id) {
-
-          console.log("RFQ creation failed, no ID returned!");
-          setErrorMessage("RFQ creation failed, please try again.");
-          setIsLoading(false);
-          return;
-        }
-        console.log("✅ RFQ Created with ID:", rfqData.id);
-        
-
-        console.log("Raw RFQ Data:", rfqData);
-        const rfq = Array.isArray(rfqData) ? rfqData[0] : rfqData;
-        console.log("Extracted RFQ:", rfq);
-        console.log("RFQ ID:", rfq?.id);
-
-       
-
-        
-
-        const vendorsToInsert = Object.values(reqdVendors)
-  .filter((vendor) => vendor.vendorId)
-  .map((vendor) => ({
-    rfq_id: rfqData.id,
-    vendor_id: vendor.vendorId, // Ensure vendorId is a valid UUID
-  }));
-
-  console.log("🟢 Step 1: Raw vendor IDs before filtering:", vendorsToInsert);
-
-if (vendorsToInsert.length === 0) {
-  console.warn("⚠️ No vendors selected, skipping rfq_supplier insert.");
-} else {
-  console.log("✅ Vendors to insert:", vendorsToInsert);
-}
-
-// 🟢 Fetch merchants from Supabase to validate vendor IDs
-const { data: validMerchants, error: merchantError } = await supabase
-  .from("merchant")
-  .select("id")
-  .in(
-    "id",
-    vendorsToInsert.map((v) => v.vendor_id)
-  );
-
-console.log("🟢 Step 2: Valid Merchants from merchant table:", validMerchants);
-
-if (merchantError) {
-  console.error("❌ Error fetching merchants:", merchantError);
-} else if (!validMerchants || validMerchants.length === 0) {
-  console.warn("⚠️ No matching merchants found. Vendor IDs might be incorrect.");
-}
-
-// 🟢 Filter vendors that exist in the `merchant` table
-const validVendorIds = validMerchants?.map((m) => m.id) ?? [];
-const filteredVendorsToInsert = vendorsToInsert.filter((v) =>
-  validVendorIds.includes(v.vendor_id)
-);
-
-console.log("🟢 Step 3: Filtered vendor IDs after validation:", filteredVendorsToInsert);
-
-if (filteredVendorsToInsert.length === 0) {
-  console.warn("⚠️ No valid suppliers found after filtering, skipping rfq_supplier insert.");
-} else {
-  console.log("✅ Proceeding to insert into rfq_supplier");
-
-  const { data: suppliersData, error: suppliersError } = await supabase
-    .from("rfq_supplier") // ✅ Ensure table name is correct
-    .insert(filteredVendorsToInsert)
-    .select("*");
-
-  console.log("🟢 Step 4: RFQ Suppliers Insert Response:", suppliersData, suppliersError);
-
-  if (suppliersError) {
-    console.error("❌ Error inserting suppliers:", suppliersError);
-  } else {
-    console.log("✅ RFQ Suppliers inserted successfully:", suppliersData);
-  }
-}
-
-
   
-
-
-        for (let i = 0; i < items.length; i++) {
+        if (error) throw error;
+        rfqData = data;
+        console.log("✅ RFQ inserted:", rfqData);
+      } catch (rfqInsertErr) {
+        console.error("❌ Failed to insert RFQ:", rfqInsertErr);
+        setErrorMessage("Failed to create RFQ.");
+        setIsLoading(false);
+        return;
+      }
+  
+      // Insert into rfq_supplier
+      try {
+        const vendorsToInsert = Object.values(reqdVendors)
+          .filter((v) => v.vendorId)
+          .map((v) => ({ rfq_id: rfqData.id, vendor_id: v.vendorId }));
+  
+        if (vendorsToInsert.length === 0) {
+          console.warn("⚠️ No vendors selected. Skipping rfq_supplier.");
+        } else {
+          const { data: validMerchants, error: merchantError } = await supabase
+            .from("merchant")
+            .select("id")
+            .in("id", vendorsToInsert.map((v) => v.vendor_id));
+  
+          if (merchantError) throw merchantError;
+  
+          const validVendorIds = validMerchants?.map((m) => m.id) ?? [];
+          const filteredVendorsToInsert = vendorsToInsert.filter((v) =>
+            validVendorIds.includes(v.vendor_id)
+          );
+  
+          if (filteredVendorsToInsert.length > 0) {
+            const { data, error } = await supabase
+              .from("rfq_supplier")
+              .insert(filteredVendorsToInsert)
+              .select("*");
+  
+            if (error) throw error;
+            console.log("✅ rfq_supplier inserted:", data);
+          } else {
+            console.warn("⚠️ No valid vendors after filtering.");
+          }
+        }
+      } catch (supplierErr) {
+        console.error("❌ Error inserting into rfq_supplier:", supplierErr);
+        setErrorMessage("Some suppliers couldn't be linked.");
+      }
+  
+      // Insert items
+      for (let i = 0; i < items.length; i++) {
+        try {
           const item = items[i];
-
-          console.log("Inserting RFQ Item for RFQ ID:", rfqData.id);
-
-          const { data: rfqItemData, error: rfqItemError } = await supabase
+          const { data, error } = await supabase
             .from("rfq_items")
             .insert([
               {
@@ -1173,40 +912,37 @@ if (filteredVendorsToInsert.length === 0) {
                 description: item.description,
                 req_qty: item.req_qty,
                 uom: item.uom,
-                width: item.width,
-                height: item.height,
-                beadth: item.beadth,
+                general_remarks: item.general_remarks,
+                dimensions:item.dimensions
+               
               },
             ])
             .select("*")
             .single();
-            
-          if (rfqItemError) {
-            console.error("RFQ Item Insert Error:", rfqItemError);
-          }
-
-          console.log("Inserted RFQ Item:", rfqItemData);
+  
+          if (error) throw error;
+          console.log(`✅ RFQ item ${i + 1} inserted:`, data);
+        } catch (itemErr) {
+          console.error(`❌ Error inserting item ${i + 1}:`, itemErr);
         }
-
-
-        setSuccessMessage("RFQ Successfully Created!");
-        // window.location.reload();
-        setIsLoading(false);
       }
-    } catch (e) {
-      console.error("Error:", e);
-      setErrorMessage("Unable to create RFQ. Please try again!");
+  
+      setSuccessMessage("RFQ Successfully Created!");
+      console.log("🎉 All done!");
+    } catch (finalError) {
+      console.error("🔥 Fatal error in getQuote:", finalError);
+      setErrorMessage("Something went wrong. Please try again.");
+    } finally {
       setIsLoading(false);
     }
   };
+  
 
   const selectedVendors = [
     reqdVendors.vendor1?.name,
     reqdVendors.vendor2?.name,
     reqdVendors.vendor3?.name,
   ].filter(Boolean);
-
-  
 
   const handleAddQuote = () => {
     getQuote();
@@ -1277,7 +1013,7 @@ if (filteredVendorsToInsert.length === 0) {
         />
       )}
       <main className="grid">
-        <div className="pt-4 max-w-6xl w-full grid justify-self-center">
+        <div className="pt-4  w-full grid justify-self-center">
           <h1 className="text-3xl font-bold">Create RFQ</h1>
           <h3 className="mt-2"></h3>
         </div>
@@ -1372,15 +1108,19 @@ if (filteredVendorsToInsert.length === 0) {
 
                 <TableHeader>
                   <TableRow>
-                    <TableHead >No.</TableHead>
+                    <TableHead>No.</TableHead>
                     <TableHead colSpan={3}>
                       Description<span className="text-red-500 ml-1">*</span>
                     </TableHead>
                     <TableHead>
-                      Req. Qty.<span className="text-red-500 ml-1">*</span>
+                      Required Quantity<span className="text-red-500 ml-1">*</span>
                     </TableHead>
+    
                     <TableHead>
                       UOM<span className="text-red-500 ml-1">*</span>
+                    </TableHead>
+                    <TableHead>
+                      General Remark<span className="text-red-500 ml-1">*</span>
                     </TableHead>
                     <TableHead className="text-right">
                       Action<span className="text-red-500 ml-1">*</span>
@@ -1419,7 +1159,8 @@ if (filteredVendorsToInsert.length === 0) {
                         offered_qty: "",
                         width: "",
                         height: "",
-                        beadth: "",
+                        dimensions: "",
+                        general_remarks: "",
                       },
                     ]);
                   }}
@@ -1436,9 +1177,9 @@ if (filteredVendorsToInsert.length === 0) {
             <Button
               onClick={handleAddQuote}
               className="flex items-center justify-center gap-2"
-              disabled={isloading}
+              
             >
-              Get Quote {isloading && <Loader size="small" />}
+              Get Quote 
             </Button>
           </div>
         </div>

@@ -2,14 +2,6 @@
 
 import { Button } from "@/components/ui/button";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  CardFooter,
-} from "@/components/ui/card";
-import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -20,18 +12,19 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react"; // Import useCallback
 import { createClient } from "@/utils/supabase/client";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import Link from "next/link";
-import { Router } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { UserPlus, Pencil, Trash2, Users } from "lucide-react"; // Import icons
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { DotsVerticalIcon } from "@radix-ui/react-icons";
+import { Loader2 } from "lucide-react";
+import { useToast } from "@/components/front/ui/use-toast";
 
 interface Branch {
   id: string;
@@ -52,71 +45,60 @@ interface Profile {
   vessels: string[];
 }
 
-function BranchCard({ branch, vessels }: { branch: Branch; vessels: string[] }) {
+function BranchCard({
+  branch,
+  vessels,
+  fetchDetails,
+}: {
+  branch: Branch;
+  vessels: string[];
+  fetchDetails: () => void;
+}) {
   const [admin, setAdmin] = useState<Member | null>(null);
-  
-  
   const [memberCount, setMemberCount] = useState(0);
+  const [adminCount, setAdminCount] = useState(0);
   const [rfqCount, setRfqCount] = useState(0);
   const [adminProfile, setAdminProfile] = useState<Profile | null>(null);
-  
-  const [newBranch, setNewBranch] = useState<{ name: string; vessels: string[] }>({
+  const [newBranch, setNewBranch] = useState<{
+    name: string;
+    vessels: string[];
+  }>({
     name: "",
     vessels: [],
   });
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editBranchName, setEditBranchName] = useState(branch.name);
+  const [isAssignAdminDialogOpen, setIsAssignAdminDialogOpen] = useState(false);
+  const [updating, setUpdating] = useState(false); // State for update loading
+  const [deleting, setDeleting] = useState(false); // State for delete loading
+  const { toast } = useToast();
 
-  async function addAdmin(e: React.FormEvent) {
-    e.preventDefault();
-
-    const formData = new FormData(e.target as HTMLFormElement);
-
-    const res = await fetch("/api/add-admin-to-branch/", {
-      method: "POST",
-      headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({ email: formData.get("email"), branch: branch.id }),
-    });
-    
-    const data = await res.json();
-    console.log('admin',data)
-    console.log('admin' , data.email)
-    alert("Successfully Added Admin");
-    // window.location.reload();
-  }
-
-  async function addEmployee(e: React.FormEvent) {
-    
-    e.preventDefault();
-
-    const formData = new FormData(e.target as HTMLFormElement);
-
-    const res = await fetch("/api/add-manager-to-branch/", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        email: formData.get("email"),
-        branch: branch.id,
-        vessels: newBranch.vessels,  // Send selected vessels
-      }),
-    });
-
-    const data = await res.json();
-    console.log("Manager Added:", data);
-
-    if (data.success) {
-      
-        alert("Successfully Added Manager");
-        // Reload to reflect changes
-        
-    } else {
-        alert("Error: " + data.error);
-    }
-}
-
-  async function fetchBranch() {
+  // Fetching Branch Details
+  async function fetchBranchDetails() {
     const supabase = createClient();
 
-    const member = await supabase.from("manager").select("*").eq("branch_id", branch.id);
+    const member = await supabase
+      .from("manager")
+      .select("*")
+      .eq("branch_id", branch.id);
     setMemberCount(member.data?.length || 0);
+
+
+
+    const { count, error } = await supabase
+    .from("branch_admin")
+    .select("*", { count: "exact", head: true })
+    .eq("branch", branch.id);
+
+    if (error) {
+      console.error("Error fetching admin count:", error);
+    } else {
+      setAdminCount(count || 0);
+    }
+
+
+
 
     const rfq = await supabase.from("rfq").select("*").eq("branch", branch.id);
     setRfqCount(rfq.data?.length || 0);
@@ -136,333 +118,394 @@ function BranchCard({ branch, vessels }: { branch: Branch; vessels: string[] }) 
       });
       const data = await res.json();
       setAdminProfile(data.userData);
+    } else {
+      setAdminProfile(null); // Ensure adminProfile is null if no admin
+    }
+  }
+
+  //to delete the branch
+  async function handleDeleteBranch() {
+    const supabase = createClient();
+    setDeleting(true);
+
+    // Step 1: Confirm the record exists
+    const { data: checkData, error: checkError } = await supabase
+      .from("branch")
+      .select("*")
+      .eq("id", branch.id);
+
+    if (checkError) {
+      console.error("Error checking record:", checkError.message);
+      toast({
+        title: "Error checking branch",
+        description: checkError.message,
+        variant: "destructive",
+      });
+      setDeleting(false);
+      return;
+    }
+
+    if (!checkData || checkData.length === 0) {
+      toast({
+        title: "Branch not found",
+        description: "No branch found with that ID.",
+        variant: "destructive",
+      });
+      setDeleting(false);
+      return;
+    }
+
+    // Step 2: Attempt to delete
+    const { error } = await supabase
+      .from("branch")
+      .delete()
+      .eq("id", branch.id);
+
+    if (error) {
+      console.error("Delete error:", error.message);
+      toast({
+        title: "Failed to delete",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Branch deleted",
+        description: `"${branch.name}" was successfully deleted.`,
+      });
+      fetchDetails();
+    }
+
+    setIsDeleteDialogOpen(false);
+    setDeleting(false);
+  }
+
+  async function handleUpdateBranch() {
+    const supabase = createClient();
+    setUpdating(true);
+
+    try {
+      const { error } = await supabase
+        .from("branch")
+        .update({ name: editBranchName.trim() })
+        .eq("id", branch.id);
+
+      if (error) {
+        console.error("Error updating branch:", error);
+        toast({
+          title: "Failed to update",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Branch updated",
+          description: `Branch name changed to "${editBranchName}" successfully.`,
+        });
+        fetchDetails();
+      }
+    } catch (err) {
+      console.error("Unexpected error:", err);
+      toast({
+        title: "Unexpected error",
+        description: "Something went wrong while updating the branch.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsEditDialogOpen(false);
+      setUpdating(false);
     }
   }
 
   useEffect(() => {
-    fetchBranch();
-  }, []);
+    fetchBranchDetails();
+    setEditBranchName(branch.name); // Update edit name when branch changes
+  }, [branch.id, fetchDetails]); // Fetch details when the branch changes
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{branch.name}</CardTitle>
-        <CardDescription>Id: {`${branch.id}`.slice(0, 8)}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="mb-2 grid grid-cols-2 gap-2 text-sm">
-          {!admin && (
-            <Dialog>
-              <DialogTrigger>
-                <Button variant={"outline"}>Add Admin</Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Add Admin</DialogTitle>
-                  <DialogDescription>Enter Admin Details</DialogDescription>
-                </DialogHeader>
-                <form onSubmit={addAdmin}>
-                  <div className="grid gap-4 py-4">
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="email" className="text-right">
-                        Admin Email
-                      </Label>
-                      <Input
-                        type="email"
-                        name="email"
-                        placeholder="Enter Admin Email..."
-                        id="email"
-                        className="col-span-3"
-                      />
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="branch" className="text-right">
-                        Branch Id
-                      </Label>
-                      <Input
-                        type="text"
-                        name="branch"
-                        id="branch"
-                        value={branch.id}
-                        disabled
-                        className="col-span-3"
-                      />
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="vessels" className="text-right">
-                        Select Vessels
-                      </Label>
-                      <Select
-                        onValueChange={(value) =>
-                          setNewBranch({ ...newBranch, vessels: [...newBranch.vessels, value] })
-                        }
-                      >
-                        <SelectTrigger className="w-[180px]">
-                          <SelectValue placeholder="Select Vessels..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {vessels.map((vessel, i) => (
-                            <SelectItem value={vessel} key={i}>
-                              {vessel}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  <Button type="submit">Assign</Button>
-                </form>
-                <DialogFooter></DialogFooter>
-              </DialogContent>
-            </Dialog>
-          )}
-          <Dialog>
-            <DialogTrigger>
-              <Button variant={"outline"}>Add Manager</Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Add Manager</DialogTitle>
-                <DialogDescription>Enter Manager Details</DialogDescription>
-              </DialogHeader>
-              <form onSubmit={addEmployee}>
-                <div className="grid gap-4 py-4">
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="email" className="text-right">
-                      Manager Email
-                    </Label>
-                    <Input
-                      type="email"
-                      name="email"
-                      placeholder="Enter Manager Email..."
-                      id="email"
-                      className="col-span-3"
-                    />
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="branch" className="text-right">
-                      Branch Id
-                    </Label>
-                    <Input
-                      type="text"
-                      name="branch"
-                      id="branch"
-                      value={branch.id}
-                      disabled
-                      className="col-span-3"
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="vessels" className="text-right">
-                        Select Vessels
-                      </Label>
-                      <Select onValueChange={(value) =>
-  setNewBranch((prev) => ({
-    ...prev,
-    vessels: prev.vessels.includes(value) ? prev.vessels : [...prev.vessels, value], // Prevent duplicates
-  }))
-}>
-  <SelectTrigger className="w-[180px]">
-    <SelectValue placeholder="Select Vessels..." />
-  </SelectTrigger>
-  <SelectContent>
-    {[...new Set(vessels)].map((vessel, index) => (
-      <SelectItem value={vessel} key={`${vessel}-${index}`}>
-        {vessel}
-      </SelectItem>
-    ))}
-  </SelectContent>
-</Select>
+    <>
+      {/* <td className="text-center px-4 py-3 text-md">
+        {`${branch.id}`.slice(0, 8)}
+      </td> */}
+      <td className="text-center px-4 py-3 text-md">{branch.name}</td>
 
-                    </div>
-                <Button type="submit">Add Manager</Button>
-              </form>
-              <DialogFooter></DialogFooter>
-            </DialogContent>
-          </Dialog>
-        </div>
-        {admin && adminProfile && (
-          <div className="text-xs">
-            <h1 className="text-sm font-bold mb-1">Branch Admin</h1>
-            <p>
-              <span className="font-bold">Id: </span> {(admin.id).slice(1,8)}
-            </p>
-            <p>
-              <span className="font-bold">Email: </span> {adminProfile.email}
-            </p>
-          </div>
-        )}
-        <div className="mt-2 grid text-base">
-          <div>
-            <span className="font-bold">Managers: </span> {memberCount}
-          </div>
-          <div>
-            <span className="font-bold">RFQs: </span> {rfqCount}
-          </div>
-        </div>
-      </CardContent>
-      <CardFooter className="grid">
-        <Link href={`/dashboard/customer/branch/${branch.id}`} className="grid">
-          <Button>View Details</Button>
-        </Link>
-      </CardFooter>
-    </Card>
+      <td className="text-center px-4 py-3 text-md">{adminCount}</td>
+      <td className="text-center px-4 py-3 text-md">{memberCount}</td>
+      <td className="text-center px-4 py-3 text-md">{rfqCount}</td>
+      <td className="text-center px-4 py-3 text-md">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm">
+              <DotsVerticalIcon className="h-5 w-5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-56 bg-white border border-gray-200 shadow-md">
+            <DropdownMenuItem asChild>
+              <Link
+                href={`/dashboard/customer/branch/branchmanagment/${branch.id}`}
+                className="flex items-center"
+              >
+                <Users className="mr-2 h-4 w-4" />
+                Mangae Branch
+              </Link>
+            </DropdownMenuItem>
+
+            <DropdownMenuItem
+              onClick={() => setIsEditDialogOpen(true)}
+              className="flex items-center"
+            >
+              <Pencil className="mr-2 h-4 w-4" />
+              Edit Branch
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => setIsDeleteDialogOpen(true)}
+              className="flex items-center text-red-600"
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete Branch
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Confirm Delete</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete branch "{branch.name}"? This
+                action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => setIsDeleteDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={handleDeleteBranch}
+                disabled={deleting}
+              >
+                {deleting ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : null}
+                Delete
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit Branch</DialogTitle>
+              <DialogDescription>
+                Update the name of the branch.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="editBranchName" className="text-right">
+                  Branch Name
+                </Label>
+                <Input
+                  id="editBranchName"
+                  value={editBranchName}
+                  onChange={(e) => setEditBranchName(e.target.value)}
+                  className="col-span-3"
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => setIsEditDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                onClick={handleUpdateBranch}
+                disabled={updating}
+              >
+                {updating ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : null}
+                Update
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </td>
+    </>
   );
 }
 
 export default function BranchPage() {
-  const [vesselName, setVesselName] = useState("");
-  const [vessels, setVessels] = useState<string[]>([]);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [isClient, setIsClient] = useState(true);
-  const [loading, setloading] = useState(false)
-  const [newBranch, setNewBranch] = useState<{ name: string; vessels: string[] }>({
+  const [loading, setloading] = useState(true); // Initialize loading as true
+  const [newBranch, setNewBranch] = useState<{
+    name: string;
+    vessels: string[];
+  }>({
     name: "",
     vessels: [],
   });
+  const [isAddBranchDialogOpen, setIsAddBranchDialogOpen] = useState(false); // State for controlling the add branch dialog
 
-  console.log('vessels',vessels)
-  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(7); // You can adjust this value
 
-  async function addVessel() {
-    const supabase = createClient();
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentBranches = branches.slice(indexOfFirstItem, indexOfLastItem);
 
-    try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      const profileData = await supabase.from("profiles").select("*").eq("id", user?.id).single();
+  const totalPages = Math.ceil(branches.length / itemsPerPage);
 
-      if (profileData.data?.vessels) {
-        await supabase
-          .from("profiles")
-          .update({
-            vessels: [...profileData.data.vessels, vesselName],
-          })
-          .eq("id", profileData.data.id);
-      } else {
-        await supabase
-          .from("profiles")
-          .update({
-            vessels: [vesselName],
-          })
-          .eq("id", profileData.data?.id);
-      }
+  const handleNextPage = () => {
+    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
+  };
 
-      alert("Vessel Successfully Added!");
-      window.location.reload();
-    } catch (e) {
-      console.log("Error Occurred", e);
-    }
+  const handlePrevPage = () => {
+    setCurrentPage((prev) => Math.max(prev - 1, 1));
+  };
 
-    setVesselName("");
-  }
+  console.log("vessels", []); // Keeping the console log for now, but 'vessels' is now an empty array
 
   async function addBranch() {
     const supabase = createClient();
     setloading(true);
-  
+
     try {
       const {
         data: { user },
       } = await supabase.auth.getUser();
-  
+
       if (!user) {
         console.error("User not logged in.");
-        alert("Please log in first!");
         setloading(false);
         return;
       }
-  
+
       const creatorId = user.id;
       console.log("Creator ID:", creatorId);
-  
+
       const currentTime = new Date().toISOString();
-  
+
       const { data: branchData, error: branchError } = await supabase
         .from("branch")
-        .insert({ name: newBranch.name, creator: creatorId, created_at: currentTime })
+        .insert({
+          name: newBranch.name,
+          creator: creatorId,
+          created_at: currentTime,
+        })
         .select()
         .single();
-  
+
       if (branchError) {
         console.error("Branch Insert Error:", branchError.message);
-        alert("Branch creation failed!");
         setloading(false);
         return;
       }
-  
+
       console.log("Branch Data:", branchData);
-      
+
       // Insert into member table
       const { data: memberData, error: memberError } = await supabase
         .from("member")
-        .insert({ branch: branchData?.id, member_profile: creatorId, member_role: "creator" });
-  
+        .insert({
+          branch: branchData?.id,
+          member_profile: creatorId,
+          member_role: "creator",
+        });
+
       if (memberError) {
         console.error("Member Insert Error:", memberError.message);
-        alert("Failed to add creator to members.");
         setloading(false);
         return;
       }
-  
+
       console.log("Member Data:", memberData);
       setloading(false);
-  
-      alert("Branch Created Successfully!");
-      window.location.reload();
+      setIsAddBranchDialogOpen(false); // Close the dialog after successful addition
+      setNewBranch({ name: "", vessels: [] }); // Reset the form
+      fetchDetails(); // Call fetchDetails to reload the table
     } catch (e) {
       console.error("Unable to Create Branch:", e);
-      alert("Unable to Create Branch!!");
       setloading(false);
     }
   }
-  
-  async function fetchDetails() {
+
+  // Use useCallback to prevent infinite loop in useEffect
+  const fetchDetails = useCallback(async () => {
     const supabase = createClient();
+    setloading(true); // Set loading to true before fetching
 
     try {
       const {
         data: { user },
       } = await supabase.auth.getUser();
 
-      const profileData = await supabase.from("profiles").select("*").eq("id", user!.id).single();
-      setVessels(profileData.data?.vessels || []);
+      const profileData = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user!.id)
+        .single();
+      // REMOVED: setVessels(profileData.data?.vessels || []); // No longer setting vessels here
 
-      const member = await supabase.from("member").select("*").eq("member_profile", user?.id);
+      const member = await supabase
+        .from("member")
+        .select("*")
+        .eq("member_profile", user?.id);
       const allBranches: Branch[] = [];
 
       for (let i = 0; i < member.data!.length; i++) {
         const m = member.data![i];
-        const branchesData = await supabase.from("branch").select("*").eq("id", m.branch).single();
+        const branchesData = await supabase
+          .from("branch")
+          .select("*")
+          .eq("id", m.branch)
+          .single();
         if (branchesData.data) {
           allBranches.push(branchesData.data);
         }
       }
 
-      if (member.data!.length === 1 && member.data![0].member_role !== "creator") {
+      if (
+        member.data!.length === 1 &&
+        member.data![0].member_role !== "creator"
+      ) {
         setIsClient(false);
       }
 
       setBranches(allBranches);
+      setCurrentPage(1); // Reset to first page after fetching new data
     } catch (e) {
       console.log("Unable to Fetch Details, ", e);
+    } finally {
+      setloading(false); // Set loading to false after fetching (success or error)
     }
-  }
+  }, []); // The dependency array is now empty as useCallback memoizes the function
 
   useEffect(() => {
     fetchDetails();
-  }, []);
+  }, [fetchDetails]); // Now the dependency is the memoized fetchDetails function
 
   return (
     <main className="grid max-w-6xl w-full justify-self-center">
       <div className="py-4 sm:flex justify-between">
         <div>Your Branches</div>
         <div className="flex gap-2">
-          <Dialog>
-            <DialogTrigger>
-              <Button>Add BU</Button>
+          <Dialog open={isAddBranchDialogOpen} onOpenChange={setIsAddBranchDialogOpen}>
+            <DialogTrigger asChild>
+              <Button disabled={loading} onClick={() => setIsAddBranchDialogOpen(true)}>Add BU</Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
@@ -478,56 +521,106 @@ export default function BranchPage() {
                     id="branchName"
                     placeholder="Enter Branch Name..."
                     value={newBranch.name}
-                    onChange={(e) => setNewBranch({ ...newBranch, name: e.target.value })}
+                    onChange={(e) =>
+                      setNewBranch({ ...newBranch, name: e.target.value })
+                    }
                     className="col-span-3"
                   />
                 </div>
               </div>
-              
+
               <DialogFooter>
-                <Button  type="submit" disabled={loading} onClick={addBranch}>
-                  {loading ? "Adding branch" : "Add Branch" }
+                <Button type="button" variant="secondary" onClick={() => setIsAddBranchDialogOpen(false)}>
+                  Cancel
                 </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-          <Dialog>
-            <DialogTrigger>
-              <Button>Add Vessel</Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Add Vessel</DialogTitle>
-                <DialogDescription>Create New Vessel</DialogDescription>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="vesselName" className="text-right">
-                    Vessel Name
-                  </Label>
-                  <Input
-                    id="vesselName"
-                    placeholder="Enter Vessel Name..."
-                    value={vesselName}
-                    onChange={(e) => setVesselName(e.target.value)}
-                    className="col-span-3"
-                  />
-                </div>
-              </div>
-              <DialogFooter>
-                <Button type="submit"  onClick={addVessel}>
-                  Add vessel
+                <Button type="submit" disabled={loading} onClick={addBranch}>
+                  {loading ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : null}
+                  Add Branch
                 </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
         </div>
       </div>
-      <div className="mt-4 grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
-        {branches.map((branch, i) => (
-          <BranchCard key={i} branch={branch} vessels={vessels} />
-        ))}
+      <div className="mt-4 overflow-x-auto">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-100">
+            <tr>
+              <th
+                colSpan={6}
+                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider text-center"
+              >
+                <div className="flex justify-end">
+                  {/* Add BU Button remains here */}
+                </div>
+              </th>
+            </tr>
+            <tr>
+              {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider text-center">
+                ID
+              </th> */}
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider text-center">
+                Name
+              </th>
+
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider text-center">
+                No. of Admin
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider text-center">
+                No. of Managers
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider text-center">
+                RFQs
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider text-center">
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-gray-50 divide-y divide-gray-100">
+            {loading ? (
+              <tr>
+                <td colSpan={5} className="py-10 text-center">
+                  <Loader2 className="h-8 w-8 animate-spin mx-auto" />
+                </td>
+              </tr>
+            ) : branches.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="py-10 text-center">
+                  No branches have been added yet.
+                </td>
+              </tr>
+            ) : (
+              currentBranches.map((branch, i) => (
+                <tr key={branch.id} className="hover:bg-gray-50">
+                  <BranchCard
+                    branch={branch}
+                    vessels={[]} // Removed dependency on the 'vessels' state here
+                    fetchDetails={fetchDetails}
+                  />
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
       </div>
+
+      {branches.length > itemsPerPage && !loading && (
+        <div className="flex justify-between items-center mt-4">
+          <Button onClick={handlePrevPage} disabled={currentPage === 1}>
+            Previous
+          </Button>
+          <span>{`Page ${currentPage} of ${totalPages}`}</span>
+          <Button
+            onClick={handleNextPage}
+            disabled={currentPage === totalPages}
+          >
+            Next
+          </Button>
+        </div>
+      )}
     </main>
   );
 }
