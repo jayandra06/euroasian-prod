@@ -12,43 +12,36 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  DialogFooter
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
-import 'react-tagsinput/react-tagsinput.css';
+import "react-tagsinput/react-tagsinput.css";
 import { set } from "react-hook-form";
 import { loadComponents } from "next/dist/server/load-components";
 import { inviteVendorWithEmail } from "@/app/actions";
 import { useRouter } from "next/navigation";
 
-
-
-
-
-
 export default function vendorManagement() {
   const [rfqs, setRfqs] = useState<any[]>([]);
   const [vendors, setVendors] = useState<any[]>([]);
-  const [enable, setEnable] = useState(false)
+  const [enable, setEnable] = useState(false);
   const [expandedRow, setExpandedRow] = useState<number | null>(null);
   const [rfqItems, setRfqItems] = useState<{ [key: number]: any[] }>({}); // Store items for each RFQ
 
   const [tags, setTags] = useState<string[]>([]);
-  const [inputValue, setInputValue] = useState('');
-  const [loading, setLoading] = useState(false)
-  const [email, setemail] = useState("")
-  const router = useRouter()
-  
-
-
+  const [inputValue, setInputValue] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [email, setemail] = useState("");
+  const router = useRouter();
 
   const supabase = createClient();
 
-
   const getVendors = async () => {
-    const { data: vendorData, error: vendorError } = await supabase.from("externalvendor").select();
+    const { data: vendorData, error: vendorError } = await supabase
+      .from("externalvendor")
+      .select();
     if (vendorError) {
       console.log("Failed to fetch vendors", vendorError);
     } else {
@@ -114,59 +107,55 @@ export default function vendorManagement() {
     fetchRfqs();
   }, []);
 
-  const handleToogle = ()=>{
-    setEnable((prev)=>!prev)
-  }
+  const handleToogle = () => {
+    setEnable((prev) => !prev);
+  };
 
-
-
-  const handleVendorEmail = async(e:any)=>{
+  const handleVendorEmail = async (e: any) => {
     e.preventDefault();
-      setLoading(true);
-  
-      const formData = new FormData();
-      formData.append("email", email);
-  
-      const response = await inviteVendorWithEmail(formData);
-  
-      if (response.success) {
+    setLoading(true);
+
+    try {
+      const res = await fetch("/api/invite-vendor", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      if (res.ok) {
         alert("Vendor invite email sent successfully!");
-        
       } else {
-        alert("Failed to send invite: " + response.error);
-        router.push('/invite-vendor')
+        const errorText = await res.text();
+        alert("Failed to send invite: " + errorText);
       }
-  
+    } catch (error) {
+      console.error("Error sending invite:", error);
+      alert("Something went wrong. Please try again later.");
+    } finally {
       setLoading(false);
     }
-  
+  };
 
-  
-
-
-
-  const addTag = (event:React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === 'Enter') {
+  const addTag = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Enter") {
       const value = event.currentTarget.value.trim();
-      if (value !== '') {
+      if (value !== "") {
         setTags([...tags, value]);
-        event.currentTarget.value = ''; // Clear input after adding a tag
+        event.currentTarget.value = ""; // Clear input after adding a tag
       }
     }
   };
 
-  const removeTag = (index:any) => {
+  const removeTag = (index: any) => {
     setTags(tags.filter((_, i) => i !== index));
   };
-  const handleBackspace = (event:any) => {
-    if (event.key === 'Backspace' && inputValue === '' && tags.length > 0) {
+  const handleBackspace = (event: any) => {
+    if (event.key === "Backspace" && inputValue === "" && tags.length > 0) {
       removeTag(tags.length - 1); // Remove last tag
     }
   };
-
-
-
-
 
   return (
     <>
@@ -177,51 +166,53 @@ export default function vendorManagement() {
         <h1 className="text-3xl font-bold">Your Vendors</h1>
 
         <Dialog>
-  <DialogTrigger>
-    
-            
-         
-            <Button className="text-center text-white py-2 text-xs font-semibold grid w-full rounded-lg bg-black dark:text-black dark:bg-white">Invite Vendor</Button>
-         </DialogTrigger>
-  <DialogContent>
-    <DialogHeader>
-      <DialogTitle className="text-center">Invite Vendor</DialogTitle>
-      <DialogDescription className="mt-4">
-      <Label className="text-black font-bold" htmlFor="email">Email</Label>
-      
+          <DialogTrigger>
+            <Button className="text-center text-white py-2 text-xs font-semibold grid w-full rounded-lg bg-black dark:text-black dark:bg-white">
+              Invite Vendor
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="text-center">Invite Vendor</DialogTitle>
+              <DialogDescription className="mt-4">
+                <Label className="text-black font-bold" htmlFor="email">
+                  Email
+                </Label>
 
-      
-      
-      <div className="flex flex-wrap gap-2 border border-black rounded-md mt-2">
-        {tags.map((tag, index) => (
-          <div key={index} className="flex items-center bg-black text-white px-2 py-1 ml-1 rounded-md">
-            <span>{tag}</span>
-          </div>
-        ))}
-        <input
-          type="text"
-          placeholder="Enter a Email"
-          value={email}
-          onChange={(e) => setemail(e.target.value)}
-          onKeyDown={(e) => {
-            addTag(e);
-            handleBackspace(e);
-          }}
-          className="flex-1 min-w-[120px]  bg-white text-black border-none outline-none p-2"
-        />
-      </div>
-      
-
-      </DialogDescription>
-    </DialogHeader>
-    <DialogFooter><Button disabled={loading} onClick={handleVendorEmail} className="mx-auto">{loading ? "Sending..." : "Send Invite"}</Button></DialogFooter>
-    
-  </DialogContent>
-</Dialog>
-
-
-        
-
+                <div className="flex flex-wrap gap-2 border border-black rounded-md mt-2">
+                  {tags.map((tag, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center bg-black text-white px-2 py-1 ml-1 rounded-md"
+                    >
+                      <span>{tag}</span>
+                    </div>
+                  ))}
+                  <input
+                    type="text"
+                    placeholder="Enter a Email"
+                    value={email}
+                    onChange={(e) => setemail(e.target.value)}
+                    onKeyDown={(e) => {
+                      addTag(e);
+                      handleBackspace(e);
+                    }}
+                    className="flex-1 min-w-[120px]  bg-white text-black border-none outline-none p-2"
+                  />
+                </div>
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button
+                disabled={loading}
+                onClick={handleVendorEmail}
+                className="mx-auto"
+              >
+                {loading ? "Sending..." : "Send Invite"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
       <table className="mt-4 w-full max-w-7xl border-collapse border border-gray-300">
         <thead>
@@ -247,10 +238,18 @@ export default function vendorManagement() {
           {vendors.length > 0 ? (
             vendors.map((vendor, i) => (
               <tr key={vendor.id} className="border border-gray-300">
-                <td className="border border-gray-300 px-4 py-2">{(vendor.id).slice(0,8)}</td>
-                <td className="border border-gray-300 px-4 py-2">{vendor.username}</td>
-                <td className="border border-gray-300 px-4 py-2">{vendor.email}</td>
-                <td className="border border-gray-300 px-4 py-2">{vendor.phonenumber}</td>
+                <td className="border border-gray-300 px-4 py-2">
+                  {vendor.id.slice(0, 8)}
+                </td>
+                <td className="border border-gray-300 px-4 py-2">
+                  {vendor.username}
+                </td>
+                <td className="border border-gray-300 px-4 py-2">
+                  {vendor.email}
+                </td>
+                <td className="border border-gray-300 px-4 py-2">
+                  {vendor.phonenumber}
+                </td>
                 <td className="border border-gray-300 px-4 py-2">
                   <label className="inline-flex items-center cursor-pointer">
                     <input
@@ -260,7 +259,9 @@ export default function vendorManagement() {
                       className="sr-only peer"
                     />
                     <div className="relative w-11 h-6 bg-gray-200 rounded-full peer-checked:bg-blue-600 after:absolute after:top-[2px] after:left-[2px] after:bg-white after:h-5 after:w-5 after:rounded-full after:transition-all peer-checked:after:translate-x-full"></div>
-                    <span className="ml-3 text-sm font-medium">{enable ? "Enable" : "Disable"}</span>
+                    <span className="ml-3 text-sm font-medium">
+                      {enable ? "Enable" : "Disable"}
+                    </span>
                   </label>
                 </td>
               </tr>
@@ -276,6 +277,4 @@ export default function vendorManagement() {
       </table>
     </>
   );
-
-
 }

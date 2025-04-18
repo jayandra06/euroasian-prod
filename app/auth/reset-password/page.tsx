@@ -25,71 +25,66 @@ const ResetPasswordPage = () => {
   const handleResetPassword = async () => {
     setLoading(true);
     setMessage('');
-
+  
     if (password !== confirmPassword) {
       setMessage('Passwords do not match.');
       setLoading(false);
       return;
     }
-
+  
     const supabase = createClient();
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-
-    if (userError) {
-      console.error('Error fetching user:', userError.message);
-      setMessage('Error fetching user details.');
+  
+    // Update the user's password
+    const { data, error } = await supabase.auth.updateUser({ password });
+  
+    if (error) {
+      console.error('Error updating password:', error.message);
+      setMessage('Failed to update password.');
       setLoading(false);
       return;
     }
-
-    if (!user) {
-      console.error('No user found.');
-      setMessage('No user found.');
+  
+    // Optional: Fetch the user and profile again to redirect appropriately
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+  
+    if (userError || !user) {
+      console.error('Error fetching user:', userError?.message || 'No user');
+      setMessage('Error fetching user info.');
       setLoading(false);
       return;
     }
-
-    console.log('Fetched user:', user); // Log the fetched user
-
+  
     const { data: profile, error: profileError } = await supabase
-      .from('profiles') // Replace 'profiles' with your actual table name
+      .from('profiles')
       .select('user_role')
       .eq('id', user.id)
       .single();
-
+  
     if (profileError) {
       console.error('Error fetching profile:', profileError.message);
-      setMessage('Error fetching profile.');
+      setMessage('Error fetching user role.');
       setLoading(false);
       return;
     }
-
-    console.log('Fetched profile:', profile); // Log the fetched profile
-
-    if (profile?.user_role) {
-      console.log('User role:', profile.user_role); // Log the user role
-      let redirectTo = '/dashboard'; // Default redirection path
-
-      if (profile.user_role === 'customer') {
-        redirectTo = `/dashboard/oboarding/customer-onboarding/${user.email}`;
-      } else if (profile.user_role === 'vendor') {
-        redirectTo = '/vendor-onboarding';
-      }
-
-      setMessage('Password updated successfully! Redirecting...');
-      setTimeout(() => {
-        console.log('Redirecting to:', redirectTo); // Log the redirection URL
-        router.replace(redirectTo);
-      }, 1500);
-      return; // Exit the function to prevent further code execution
-    } else {
-      console.error('No user role found in profile.');
-      setMessage('No user role found.');
-      setTimeout(() => router.replace('/dashboard'), 1500); // Default redirection if no role is found
+  
+    let redirectTo = '/dashboard';
+    if (profile?.user_role === 'customer') {
+      redirectTo = `/dashboard/oboarding/customer-onboarding/${user.email}`;
+    } else if (profile?.user_role === 'vendor') {
+      redirectTo = `/dashboard/oboarding/customer-onboarding/${user.id}`;
     }
-
+  
+    setMessage('Password updated successfully! Redirecting...');
+    setTimeout(() => {
+      router.replace(redirectTo);
+    }, 1500);
+  
     setLoading(false);
   };
+  
 
   return (
     <div className="max-w-md mx-auto mt-20 p-4 border rounded">
