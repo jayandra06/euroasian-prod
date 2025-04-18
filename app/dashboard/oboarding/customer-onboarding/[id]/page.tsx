@@ -26,18 +26,21 @@ import {
 import axios from "axios";
 import toast from 'react-hot-toast';
 import { createClient } from "@/utils/supabase/client";
+import { useParams } from 'next/navigation';
 
 
-interface CustomerOnboardingFormProps {
-  email: string;
-}
 
-export default function CustomerOnboardingForm({ email: initialEmail }: CustomerOnboardingFormProps) {
+export default function CustomerOnboardingForm() {
   const [loading, setLoading] = useState(false);
   const [companyName, setCompanyName] = useState("");
-  const [email, setEmail] = useState(initialEmail);
+  const [email, setEmail] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [userId, setUserId] = useState<string | null>(null);
+
+  const params = useParams();
+  const emailFetch = decodeURIComponent(params.id as string);
+
+  console.log("email",emailFetch);
 
   useEffect(() => {
     async function fetchUser() {
@@ -73,7 +76,7 @@ export default function CustomerOnboardingForm({ email: initialEmail }: Customer
       const { data, error } = await supabase
         .from("invitations")
         .select("*")
-        .eq("email", "arun@vijethasoftwares.in")
+        .eq("email", emailFetch)
         .single(); // Assuming only one invitation per email
 
       if (error) {
@@ -89,7 +92,7 @@ export default function CustomerOnboardingForm({ email: initialEmail }: Customer
     }
 
     fetchInvitations();
-  }, [initialEmail]);
+  }, [emailFetch]);
 
 
   const handleSubmit = async () => {
