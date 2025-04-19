@@ -1,9 +1,10 @@
 "use client";
-import Link from "next/link";
 import { createClient } from "@/utils/supabase/client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import React from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "react-hot-toast";
 
 import {
   Dialog,
@@ -16,104 +17,65 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PlusIcon } from "@radix-ui/react-icons";
+import { Switch } from "@/components/ui/switch";
+import {
+  Table,
+  TableHeader,
+  TableRow,
+  TableHead,
+  TableBody,
+  TableCell,
+} from "@/components/ui/table";
 
-import "react-tagsinput/react-tagsinput.css";
-import { set } from "react-hook-form";
-import { loadComponents } from "next/dist/server/load-components";
-import { inviteVendorWithEmail } from "@/app/actions";
-import { useRouter } from "next/navigation";
+interface Vendor {
+  id: string;
+  name: string;
+  business_email: string;
+  phone: string;
+  is_active: boolean;
+}
 
-export default function vendorManagement() {
-  const [rfqs, setRfqs] = useState<any[]>([]);
-  const [vendors, setVendors] = useState<any[]>([]);
-  const [enable, setEnable] = useState(false);
-  const [expandedRow, setExpandedRow] = useState<number | null>(null);
-  const [rfqItems, setRfqItems] = useState<{ [key: number]: any[] }>({}); // Store items for each RFQ
-
-  const [tags, setTags] = useState<string[]>([]);
-  const [inputValue, setInputValue] = useState("");
+export default function VendorManagement() {
+  const [vendors, setVendors] = useState<Vendor[]>([]);
+  const [inviteEmail, setInviteEmail] = useState("");
   const [loading, setLoading] = useState(false);
-  const [email, setemail] = useState("");
+  const supabase = createClient();
+  const [userId, setuserId] = useState("");
   const router = useRouter();
 
-  const supabase = createClient();
+  const getVendors = useCallback(async () => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    setuserId(user?.id || "");
+    const { data: merchantData, error } = await supabase
+      .from("merchant")
+      .select("*")
+      .eq("parent_id", user?.id);
 
-  const getVendors = async () => {
-    const { data: vendorData, error: vendorError } = await supabase
-      .from("externalvendor")
-      .select();
-    if (vendorError) {
-      console.log("Failed to fetch vendors", vendorError);
-    } else {
-      setVendors(vendorData || []);
-    }
-  };
-
-  useEffect(() => {
-    getVendors();
-  }, []);
-  const toggleRow = async (index: number, rfqId: number) => {
-    if (expandedRow === index) {
-      setExpandedRow(null);
+    if (error) {
+      console.error("Error fetching vendors:", error);
+      toast.error("Failed to load vendors.");
       return;
     }
 
-    // Fetch items if not already fetched
-    if (!rfqItems[rfqId]) {
-      try {
-        const { data: items, error } = await supabase
-          .from("rfq_items")
-          .select("*")
-          .eq("rfq_id", rfqId);
-
-        if (error) throw error;
-        setRfqItems((prev) => ({ ...prev, [rfqId]: items || [] }));
-      } catch (err) {
-        console.error("Error fetching RFQ items:", err);
-      }
-    }
-
-    setExpandedRow(index);
-  };
-
-  async function fetchRfqs() {
-    try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      const { data: memberData } = await supabase
-        .from("member")
-        .select("*")
-        .eq("member_profile", user!.id);
-
-      let allRfqs: any[] = [];
-
-      for (const member of memberData!) {
-        const { data: rfqsAll } = await supabase
-          .from("rfq")
-          .select("*")
-          .eq("branch", member.branch);
-
-        allRfqs = [...allRfqs, ...rfqsAll!];
-      }
-
-      setRfqs(allRfqs);
-    } catch (e) {
-      console.error("Unable to fetch RFQs:", e);
-    }
-  }
+    setVendors(merchantData as Vendor[]);
+  }, [supabase]);
 
   useEffect(() => {
-    fetchRfqs();
-  }, []);
+    getVendors();
+  }, [getVendors]);
 
-  const handleToogle = () => {
-    setEnable((prev) => !prev);
-  };
+  const type = "INTERNAL_VENDOR";
 
-  const handleVendorEmail = async (e: any) => {
-    e.preventDefault();
+  const handleInviteVendor = async () => {
     setLoading(true);
+    if (!inviteEmail.trim()) {
+      toast.error("Please enter an email to invite.");
+      setLoading(false);
+      return;
+    }
 
     try {
       const res = await fetch("/api/invite-vendor", {
@@ -121,160 +83,168 @@ export default function vendorManagement() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email }),
+
+        body: JSON.stringify({
+          email: inviteEmail.trim(),
+          userId: userId,
+          type,
+        }),
       });
 
       if (res.ok) {
-        alert("Vendor invite email sent successfully!");
+        toast.success("Vendor invite sent successfully!");
+        setInviteEmail("");
       } else {
-        const errorText = await res.text();
-        alert("Failed to send invite: " + errorText);
+        const errorData = await res.json();
+        toast.error(
+          `Failed to send invite: ${errorData?.message || "Unknown error"}`
+        );
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error sending invite:", error);
-      alert("Something went wrong. Please try again later.");
+      toast.error("Something went wrong. Please try again later.");
     } finally {
       setLoading(false);
     }
   };
 
-  const addTag = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === "Enter") {
-      const value = event.currentTarget.value.trim();
-      if (value !== "") {
-        setTags([...tags, value]);
-        event.currentTarget.value = ""; // Clear input after adding a tag
-      }
-    }
-  };
+  const handleStatusChange = async (vendorId: string, isActive: boolean) => {
+    const { error } = await supabase
+      .from("merchant")
+      .update({ is_active: isActive })
+      .eq("id", vendorId);
 
-  const removeTag = (index: any) => {
-    setTags(tags.filter((_, i) => i !== index));
-  };
-  const handleBackspace = (event: any) => {
-    if (event.key === "Backspace" && inputValue === "" && tags.length > 0) {
-      removeTag(tags.length - 1); // Remove last tag
+    if (error) {
+      console.error("Error updating vendor status:", error);
+      toast.error("Failed to update vendor status.");
+    } else {
+      // Optimistically update the UI
+      setVendors((prevVendors) =>
+        prevVendors.map((vendor) =>
+          vendor.id === vendorId ? { ...vendor, is_active: isActive } : vendor
+        )
+      );
+      toast.success(
+        `Vendor status updated to ${isActive ? "Enabled" : "Disabled"}`
+      );
     }
   };
 
   return (
-    <>
-      <div
-        className="pt-4"
-        style={{ display: "flex", justifyContent: "space-between" }}
-      >
-        <h1 className="text-3xl font-bold">Your Vendors</h1>
-
+    <div className="p-6">
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-semibold text-gray-800 dark:text-gray-100">
+          Manage Your Vendors
+        </h1>
         <Dialog>
-          <DialogTrigger>
-            <Button className="text-center text-white py-2 text-xs font-semibold grid w-full rounded-lg bg-black dark:text-black dark:bg-white">
+          <DialogTrigger asChild>
+            <Button className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-md shadow-sm transition duration-200">
+              <PlusIcon className="mr-2 h-4 w-4" />
               Invite Vendor
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-w-md">
             <DialogHeader>
-              <DialogTitle className="text-center">Invite Vendor</DialogTitle>
-              <DialogDescription className="mt-4">
-                <Label className="text-black font-bold" htmlFor="email">
-                  Email
-                </Label>
-
-                <div className="flex flex-wrap gap-2 border border-black rounded-md mt-2">
-                  {tags.map((tag, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center bg-black text-white px-2 py-1 ml-1 rounded-md"
-                    >
-                      <span>{tag}</span>
-                    </div>
-                  ))}
-                  <input
-                    type="text"
-                    placeholder="Enter a Email"
-                    value={email}
-                    onChange={(e) => setemail(e.target.value)}
-                    onKeyDown={(e) => {
-                      addTag(e);
-                      handleBackspace(e);
-                    }}
-                    className="flex-1 min-w-[120px]  bg-white text-black border-none outline-none p-2"
-                  />
-                </div>
+              <DialogTitle className="text-lg font-semibold text-gray-800 dark:text-gray-100">
+                Invite New Vendor
+              </DialogTitle>
+              <DialogDescription className="text-sm text-gray-500 dark:text-gray-400">
+                Enter the email address of the vendor you wish to invite.
               </DialogDescription>
             </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label
+                  htmlFor="invite-email"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
+                  Email Address
+                </Label>
+                <Input
+                  id="invite-email"
+                  type="email"
+                  placeholder="vendor@example.com"
+                  value={inviteEmail}
+                  onChange={(e) => setInviteEmail(e.target.value)}
+                  className="w-full rounded-md shadow-sm border-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100 focus:ring-indigo-500 focus:border-indigo-500"
+                />
+              </div>
+            </div>
             <DialogFooter>
               <Button
-                disabled={loading}
-                onClick={handleVendorEmail}
-                className="mx-auto"
+                type="button"
+                variant="secondary"
+                onClick={() => setInviteEmail("")}
               >
-                {loading ? "Sending..." : "Send Invite"}
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                onClick={handleInviteVendor}
+                disabled={loading}
+              >
+                {loading ? "Sending Invite..." : "Send Invitation"}
               </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
-      <table className="mt-4 w-full max-w-7xl border-collapse border border-gray-300">
-        <thead>
-          <tr className="bg-gray-100">
-            <th className="border border-gray-300 px-4 py-2 text-left">
-              Vendor ID
-            </th>
-            <th className="border border-gray-300 px-4 py-2 text-left">
-              Vendor Name
-            </th>
-            <th className="border border-gray-300 px-4 py-2 text-left">
-              Mail Id
-            </th>
-            <th className="border border-gray-300 px-4 py-2 text-left">
-              Contact No.
-            </th>
-            <th className="border border-gray-300 px-4 py-2 text-left">
-              Status
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {vendors.length > 0 ? (
-            vendors.map((vendor, i) => (
-              <tr key={vendor.id} className="border border-gray-300">
-                <td className="border border-gray-300 px-4 py-2">
-                  {vendor.id.slice(0, 8)}
-                </td>
-                <td className="border border-gray-300 px-4 py-2">
-                  {vendor.username}
-                </td>
-                <td className="border border-gray-300 px-4 py-2">
-                  {vendor.email}
-                </td>
-                <td className="border border-gray-300 px-4 py-2">
-                  {vendor.phonenumber}
-                </td>
-                <td className="border border-gray-300 px-4 py-2">
-                  <label className="inline-flex items-center cursor-pointer">
-                    <input
-                      checked={enable}
-                      onChange={() => setEnable((prev) => !prev)}
-                      type="checkbox"
-                      className="sr-only peer"
+
+      <div className="overflow-x-auto">
+        <Table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+          <TableHeader className="bg-gray-50 dark:bg-gray-800 dark:text-gray-300">
+            <TableRow>
+              <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                Vendor Name
+              </TableHead>
+              <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                Email ID
+              </TableHead>
+              <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                Contact No.
+              </TableHead>
+              <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                Status
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
+            {vendors.length > 0 ? (
+              vendors.map((vendor) => (
+                <TableRow key={vendor.id}>
+                  <TableCell className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
+                    {vendor.name}
+                  </TableCell>
+                  <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                    {vendor.business_email}
+                  </TableCell>
+                  <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                    {vendor.phone || "N/A"}
+                  </TableCell>
+                  <TableCell className="px-6 py-4 whitespace-nowrap text-sm">
+                    <Switch
+                      id={`vendor-status-${vendor.id}`}
+                      checked={vendor.is_active}
+                      onCheckedChange={(checked) =>
+                        handleStatusChange(vendor.id, checked)
+                      }
                     />
-                    <div className="relative w-11 h-6 bg-gray-200 rounded-full peer-checked:bg-blue-600 after:absolute after:top-[2px] after:left-[2px] after:bg-white after:h-5 after:w-5 after:rounded-full after:transition-all peer-checked:after:translate-x-full"></div>
-                    <span className="ml-3 text-sm font-medium">
-                      {enable ? "Enable" : "Disable"}
-                    </span>
-                  </label>
-                </td>
-              </tr>
-            ))
-          ) : (
-            <tr>
-              <td colSpan={5} className="text-center py-4 text-gray-500">
-                No Vendors Found
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
-    </>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell
+                  colSpan={4}
+                  className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 dark:text-gray-400"
+                >
+                  No Vendors Found
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
   );
 }

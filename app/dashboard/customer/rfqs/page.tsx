@@ -1,169 +1,237 @@
 "use client";
 import Link from "next/link";
 import { createClient } from "@/utils/supabase/client";
-import { useEffect, useState } from "react";
-import {Button} from "@/components/ui/button"
+import { useEffect, useState, useCallback } from "react";
+import { Button } from "@/components/ui/button";
 import React from "react";
+import { PlusIcon } from "@radix-ui/react-icons";
+import {
+  Table,
+  TableHeader,
+  TableRow,
+  TableHead,
+  TableBody,
+  TableCell,
+} from "@/components/ui/table";
+import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/20/solid";
 
+interface RFQ {
+  id: number;
+  created_at: string;
+  supply_port: string | null;
+  vessel_name: string | null;
+  brand: string | null;
+  status: string | null;
+}
+
+interface RFQItem {
+  id: number;
+  description: string | null;
+  quantity: number | null;
+  uom: string | null;
+}
 
 export default function RFQsPage() {
- 
-  const [rfqs, setRfqs] = useState<any[]>([]);
+  const [rfqs, setRfqs] = useState<RFQ[]>([]);
   const [expandedRow, setExpandedRow] = useState<number | null>(null);
-  const [rfqItems, setRfqItems] = useState<{ [key: number]: any[] }>({}); // Store items for each RFQ
-
+  const [rfqItems, setRfqItems] = useState<{ [key: number]: RFQItem[] }>({});
   const supabase = createClient();
 
-  const toggleRow = async (index: number, rfqId: number) => {
-    if (expandedRow === index) {
-      setExpandedRow(null);
-      return;
-    }
-
-    // Fetch items if not already fetched
-    if (!rfqItems[rfqId]) {
-      try {
-        const { data: items, error } = await supabase
-          .from("rfq_items")
-          .select("*")
-          .eq("rfq_id", rfqId);
-
-        if (error) throw error;
-        setRfqItems((prev) => ({ ...prev, [rfqId]: items || [] }));
-      } catch (err) {
-        console.error("Error fetching RFQ items:", err);
+  const toggleRow = useCallback(
+    async (index: number, rfqId: number) => {
+      if (expandedRow === index) {
+        setExpandedRow(null);
+        return;
       }
-    }
 
-    setExpandedRow(index);
-  };
+      if (!rfqItems[rfqId]) {
+        try {
+          const { data: items, error } = await supabase
+            .from("rfq_items")
+            .select("*")
+            .eq("rfq_id", rfqId);
 
-  async function fetchRfqs() {
+          if (error) throw error;
+          setRfqItems((prev) => ({ ...prev, [rfqId]: (items as RFQItem[]) || [] }));
+        } catch (err) {
+          console.error("Error fetching RFQ items:", err);
+        }
+      }
+
+      setExpandedRow(index);
+    },
+    [expandedRow, rfqItems, supabase]
+  );
+
+  const fetchRfqs = useCallback(async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-  
-      // Fetch member details for the logged-in user
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
       const { data: memberData, error: memberError } = await supabase
         .from("member")
         .select("branch, member_role")
         .eq("member_profile", user!.id);
-  
-      if (memberError || !memberData?.length) throw new Error("User is not a member.");
-  
-      let allRfqs: any[] = [];
-  
+
+      if (memberError || !memberData?.length)
+        throw new Error("User is not a member.");
+
+      let allRfqs: RFQ[] = [];
+
       for (const member of memberData) {
-        // Fetch RFQs for the branch where user is either creator or employee
         const { data: rfqsAll, error: rfqError } = await supabase
           .from("rfq")
           .select("*")
-          .eq("branch", member.branch);  // Fetch RFQs of the user's branch
-  
+          .eq("branch", member.branch);
+
         if (rfqError) throw rfqError;
-  
-        allRfqs = [...allRfqs, ...(rfqsAll || [])];
+
+        allRfqs = [...allRfqs, ...(rfqsAll as RFQ[])];
       }
-  
+
       setRfqs(allRfqs);
     } catch (e) {
       console.error("Unable to fetch RFQs:", e);
     }
-  }
-  
+  }, [supabase]);
 
   useEffect(() => {
     fetchRfqs();
-  }, []);
-
-  
+  }, [fetchRfqs]);
 
   return (
-    <>
-      <div className="pt-4" style={{display:"flex", justifyContent:"space-between"}}>
-        <h1 className="text-3xl font-bold">Your RFQs</h1>
-        <Button className="ml-9">
-              <Link
-                href={"/dashboard/customer/create-enquiry"}
-                className="text-center text-white py-2 text-xs font-semibold grid w-full rounded-lg bg-black dark:text-black dark:bg-white "
-              >
-                Create Enquiry
-              </Link>
-              </Button>
- 
+    <div className="p-6">
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-semibold text-gray-800 dark:text-gray-100">
+          Your RFQs
+        </h1>
+        <Button asChild>
+          <Link
+            href={"/dashboard/customer/create-enquiry"}
+            className="inline-flex items-center bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-md shadow-sm transition duration-200 px-4 py-2"
+          >
+            <PlusIcon className="mr-2 h-4 w-4" />
+            Create Enquiry
+          </Link>
+        </Button>
       </div>
-      <table className="mt-4 w-full max-w-7xl border-collapse border border-gray-300">
-      <thead>
-        <tr className="bg-gray-100">
-          <th className="border border-gray-300 px-4 py-2 text-left">Ref ID</th>
-          <th className="border border-gray-300 px-4 py-2 text-left">Lead Date</th>
-          <th className="border border-gray-300 px-4 py-2 text-left">Supply Port</th>
-          <th className="border border-gray-300 px-4 py-2 text-left">Vessel Name</th>
-          <th className="border border-gray-300 px-4 py-2 text-left">Brand</th>
-          <th className="border border-gray-300 px-4 py-2 text-left">Status</th>
-          
-        </tr>
-      </thead>
-      <tbody>
-        {rfqs.map((rfq, i) => (
-          <React.Fragment key={rfq.id}>
-         
-            <tr  onClick={() => toggleRow(i, rfq.id)} key={i} className="border cursor-pointer border-gray-300">
-              <td className="border border-gray-300 px-4 py-2">{` EA${new Date().getFullYear()}${rfq.id}`.slice(1, 15)}</td>
-              <td className="border border-gray-300 px-4 py-2">{new Date(rfq.created_at).toLocaleString('en-US', { year: 'numeric', month: 'short', day:"2-digit", hour: '2-digit', minute: '2-digit' })}</td>
-              <td className="border border-gray-300 px-4 py-2">{rfq.supply_port || "-"}</td>
-              <td className="border border-gray-300 px-4 py-2">{rfq.vessel_name || "-"}</td>
-              <td className="border border-gray-300 px-4 py-2">{rfq.brand || "-"}</td>
-              <td className="border border-gray-300 px-4 py-2">{rfq.status || "-"}</td>
-              
-             
-              
-            </tr>
-            {expandedRow === i && (
-              <tr className="bg-gray-50">
-                <td colSpan={5} className="px-4 py-2">
-                  <div className="p-2">
-                  <strong>Items:</strong>
-                      {rfqItems[rfq.id] ? (
-                        rfqItems[rfq.id].length > 0 ? (
-                          <ul className="list-disc pl-4">
+
+      <div className="overflow-x-auto">
+        <Table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+          <TableHeader className="bg-gray-50 dark:bg-gray-800 dark:text-gray-300">
+            <TableRow>
+              <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                Lead Date
+              </TableHead>
+              <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                Supply Port
+              </TableHead>
+              <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                Vessel Name
+              </TableHead>
+              <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                Brand
+              </TableHead>
+              <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                Status
+              </TableHead>
+              <TableHead className="relative px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <span className="sr-only">View Details</span>
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
+            {rfqs.map((rfq, index) => (
+              <React.Fragment key={rfq.id}>
+                <TableRow
+                  onClick={() => toggleRow(index, rfq.id)}
+                  className={`cursor-pointer ${
+                    expandedRow === index ? "bg-gray-100 dark:bg-gray-800" : ""
+                  }`}
+                >
+                  <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                    {new Date(rfq.created_at).toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "short",
+                      day: "2-digit",
+                    })}
+                  </TableCell>
+                  <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                    {rfq.supply_port || "-"}
+                  </TableCell>
+                  <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                    {rfq.vessel_name || "-"}
+                  </TableCell>
+                  <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                    {rfq.brand || "-"}
+                  </TableCell>
+                  <TableCell className="px-6 py-4 whitespace-nowrap text-sm">
+                    <span className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-800 dark:text-blue-100">
+                      {rfq.status || "Pending"}
+                    </span>
+                  </TableCell>
+                  <TableCell className="relative px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    {expandedRow === index ? (
+                      <ChevronUpIcon className="h-5 w-5 text-gray-500 dark:text-gray-400" />
+                    ) : (
+                      <ChevronDownIcon className="h-5 w-5 text-gray-500 dark:text-gray-400" />
+                    )}
+                  </TableCell>
+                </TableRow>
+                {expandedRow === index && (
+                  <TableRow className="bg-gray-50 dark:bg-gray-800">
+                    <TableCell colSpan={6} className="px-6 py-4">
+                      <div className="py-2">
+                        <strong className="block font-medium text-gray-700 dark:text-gray-300 mb-2">
+                          RFQ Items:
+                        </strong>
+                        {rfqItems[rfq.id] && rfqItems[rfq.id].length > 0 ? (
+                          <ul className="list-disc pl-5 text-gray-600 dark:text-gray-400">
                             {rfqItems[rfq.id].map((item) => (
-                              <li key={item.id}>
-                                <strong>Description:</strong> {item.description || "N/A"} <br />
-                                <strong>Req. Qty.:</strong> {item.quantity || "N/A"} <br />
-                                <strong>UOM:</strong> {item.uom || "N/A"}
+                              <li key={item.id} className="mb-1">
+                                <strong className="font-semibold">Description:</strong>{" "}
+                                {item.description || "N/A"}
+                                {item.quantity && (
+                                  <>
+                                    , <strong className="font-semibold">Req. Qty.:</strong>{" "}
+                                    {item.quantity}
+                                  </>
+                                )}
+                                {item.uom && (
+                                  <>
+                                    , <strong className="font-semibold">UOM:</strong> {item.uom}
+                                  </>
+                                )}
                               </li>
                             ))}
                           </ul>
-                        ): (
-                          <p>No items found</p>
-                        )
-                      ) : (
-                        <p>Loading...</p>
-                      )}
-                      
-                    {/* <Link
-                      href={`/dashboard/customer/rfqs/${rfq.id}`}
-                      className="text-blue-500 underline mt-2 inline-block"
-                    >
-                      Go to Full Details
-                    </Link> */}
-                  </div>
-                </td>
-                <td><Button><Link
-                href={`/dashboard/customer/view-rfq/${rfq.id}`}
-                className="text-center text-white py-2 text-xs font-semibold grid w-full rounded-lg bg-black dark:text-black dark:bg-white "
-              >
-                View Rfq
-              </Link></Button></td>
-              </tr>
-            )}
-          </React.Fragment>
-        ))}
-      </tbody>
-    </table>
-
-      
-
-    </>
+                        ) : (
+                          <p className="text-gray-500 dark:text-gray-400">
+                            {rfqItems[rfq.id]?.length === 0
+                              ? "No items found for this RFQ."
+                              : "Loading items..."}
+                          </p>
+                        )}
+                        <div className="mt-4">
+                          <Button asChild>
+                            <Link
+                              href={`/dashboard/customer/view-rfq/${rfq.id}`}
+                              className="inline-flex items-center bg-blue-500 hover:bg-blue-700 text-white font-semibold rounded-md shadow-sm transition duration-200 px-4 py-2 text-sm"
+                            >
+                              View Full RFQ Details
+                            </Link>
+                          </Button>
+                        </div>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )}
+              </React.Fragment>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
   );
 }

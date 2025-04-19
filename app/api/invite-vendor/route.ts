@@ -3,7 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 export async function POST(request: Request) {
   try {
     const formdata = await request.json();
-    const { email } = formdata;
+    const { email, type, userId } = formdata;
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -20,16 +20,20 @@ export async function POST(request: Request) {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
-    // Step 1: Invite User by Email
-    const { data: inviteData, error: inviteError } =
-      await supabaseAdmin.auth.admin.inviteUserByEmail(email);
-
-    if (inviteError || !inviteData?.user) {
-      console.error("Invite failed:", inviteError);
+    let inviteData;
+    try {
+      // Step 1: Invite User by Email
+      const result = await supabaseAdmin.auth.admin.inviteUserByEmail(email);
+      inviteData = result.data;
+      if (result.error || !inviteData?.user) {
+        throw result.error || new Error("Invitation failed");
+      }
+    } catch (error) {
+      console.error("Error inviting user:", error);
       return new Response(
         JSON.stringify({
           success: false,
-          error: inviteError?.message || "Invitation failed",
+          error: "Failed to invite user",
         }),
         { status: 400 }
       );
@@ -37,40 +41,52 @@ export async function POST(request: Request) {
 
     const profile_id = inviteData.user.id;
 
-    // Step 2: Update user role in profiles table
-    const { error: profileUpdateError } = await supabaseAdmin
-      .from("profiles")
-      .update({ user_role: "vendor" })
-      .eq("id", profile_id);
+    try {
+      // Step 2: Update user role in profiles table
+      const { error: profileUpdateError } = await supabaseAdmin
+        .from("profiles")
+        .update({ user_role: "vendor" })
+        .eq("id", profile_id);
 
-    if (profileUpdateError) {
-      console.error("Failed to update profile role:", profileUpdateError);
+      if (profileUpdateError) {
+        throw profileUpdateError;
+      }
+    } catch (error) {
+      console.error("Error updating user role:", error);
       return new Response(
         JSON.stringify({
           success: false,
-          error: "Failed to update user role",
+          error: "Failed to update user role in profiles table",
         }),
         { status: 500 }
       );
     }
 
-    // Step 3: Insert into invitations table
-    const { data: invitationData, error: invitationError } = await supabaseAdmin
-      .from("invitations")
-      .insert({
-        type: "vendor",
-        email,
-        status: "pending",
-      })
-      .select()
-      .single();
+    try {
+      // Step 4: Insert into invitations table
+      const { data: invitationData, error: invitationError } =
+        await supabaseAdmin
+          .from("invitations")
+          .insert({
+            type: type,
+            email,
 
-    if (invitationError || !invitationData) {
-      console.error("Error inserting into invitations table:", invitationError);
+            new_user_id: profile_id,
+            status: "pending",
+            invited_by: userId,
+          })
+          .select()
+          .single();
+
+      if (invitationError || !invitationData) {
+        throw invitationError || new Error("Insert failed");
+      }
+    } catch (error) {
+      console.error("Error inserting invitation record:", error);
       return new Response(
         JSON.stringify({
           success: false,
-          error: "Failed to add invitation details",
+          error: "Failed to log invitation in the database",
         }),
         { status: 500 }
       );
@@ -84,7 +100,7 @@ export async function POST(request: Request) {
       { status: 200 }
     );
   } catch (err: any) {
-    console.error("Unexpected error:", err);
+    console.error("Unexpected error:", err.message || err);
     return new Response(
       JSON.stringify({ success: false, error: "Internal Server Error" }),
       { status: 500 }

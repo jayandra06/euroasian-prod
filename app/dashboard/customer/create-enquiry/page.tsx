@@ -956,43 +956,83 @@ export default function CreateEnquiryPage() {
 
   async function fetchDetails() {
     const supabase = createClient();
-
-    const externalVendor = await supabase.from("merchant").select("*");
-    updateVendors([...externalVendor.data!]);
-
-    const brands = await supabase
+  
+    // Get current user first
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+  
+    if (userError || !user) {
+      console.error("User not found or error:", userError);
+      return;
+    }
+  
+    // Fetch external vendors
+    const { data: externalVendors, error: vendorError } = await supabase
+      .from("merchant")
+      .select("*")
+      .eq("parent_id", user.id);
+  
+    if (vendorError) {
+      console.error("Vendor fetch error:", vendorError);
+    } else {
+      updateVendors(externalVendors || []);
+    }
+  
+    // Fetch brands
+    const { data: brands, error: brandError } = await supabase
       .from("brand")
       .select("*")
       .eq("is_active", true);
-    setBrands([...brands.data!]);
-
-    const models = await supabase
+  
+    if (brandError) {
+      console.error("Brand fetch error:", brandError);
+    } else {
+      setBrands(brands || []);
+    }
+  
+    // Fetch models
+    const { data: models, error: modelError } = await supabase
       .from("model")
       .select("*")
       .eq("is_active", true);
-    console.log(models);
-    setModels([...models.data!]);
-
-    const categories = await supabase
+  
+    if (modelError) {
+      console.error("Model fetch error:", modelError);
+    } else {
+      console.log(models);
+      setModels(models || []);
+    }
+  
+    // Fetch categories
+    const { data: categories, error: categoryError } = await supabase
       .from("category")
       .select("*")
       .eq("is_active", true);
-    setCategory([...categories.data!]);
-
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    const member = await supabase
+  
+    if (categoryError) {
+      console.error("Category fetch error:", categoryError);
+    } else {
+      setCategory(categories || []);
+    }
+  
+    // Fetch member
+    const { data: member, error: memberError } = await supabase
       .from("member")
       .select("*")
-      .eq("member_profile", user!.id);
-    console.log(member);
-    if (member.data) {
-      setIsMem(true);
+      .eq("member_profile", user.id);
+  
+    if (memberError) {
+      console.error("Member fetch error:", memberError);
+    } else {
+      console.log(member);
+      if (member && member.length > 0) {
+        setIsMem(true);
+      }
     }
   }
-
+  
   useEffect(() => {
     void fetchDetails();
   }, []);

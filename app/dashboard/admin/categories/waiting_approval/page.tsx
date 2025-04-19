@@ -81,6 +81,7 @@ export default function BrandsPage() {
 
         setBrands([...brands.data!]);
     }
+    console.log("this");
 
     async function addBrand() {
         const supabase = createClient();
