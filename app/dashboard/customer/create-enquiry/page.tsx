@@ -68,13 +68,29 @@ function RFQInfoCard({
 
   const fetchVessels = async () => {
     try {
-      const res = await axios.get('/api/fetch-vessel-role-wise');
-      console.log('Fetched vessels (object):', res.data);
-      console.log('Type of res.data:', typeof res.data);
-      console.log('Is res.data an array?', Array.isArray(res.data));
-
+      const supabase = createClient();
+  
+      // --- get current user ---
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+  
+      if (userError || !user) {
+        console.error("User not found or error:", userError);
+        return;
+      }
+  
+      // Properly structure the GET request with query params or use POST for body
+      const res = await axios.get('/api/fetch-vessel-role-wise', {
+        params: {
+          email: user.email,
+          id: user.id,
+        },
+      });
+      
+  
       if (res.data && res.data.data && Array.isArray(res.data.data)) {
-        // The array of vessels is in res.data.data
         setVessels(res.data.data);
       } else {
         console.error('Error: API response does not contain an array in the "data" property.');
@@ -85,6 +101,7 @@ function RFQInfoCard({
       setVessels([]);
     }
   };
+  
   
 
   useEffect(() => {
@@ -954,45 +971,81 @@ export default function CreateEnquiryPage() {
     setItems([...filteredItem]);
   }
 
+
   async function fetchDetails() {
     const supabase = createClient();
-
-    const externalVendor = await supabase.from("merchant").select("*");
-    updateVendors([...externalVendor.data!]);
-
-    const brands = await supabase
+  
+    // --- get current user ---
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+    if (userError || !user) {
+      console.error("User not found or error:", userError);
+      return;
+    }
+  
+    // --- 1) Direct vendors ---
+    const { data: dv, error: directError } = await supabase
+      .from("merchant")
+      .select("*")
+      .eq("parent_id", user.id);
+    if (directError) console.error("Direct vendor fetch error:", directError);
+  
+    // default to [] so we can iterate
+    const directVendors = dv ?? [];
+  
+    // --- 2) Associated vendors ---
+    const { data: ar, error: accessError } = await supabase
+      .from("vendor_access")
+      .select("merchant:vendor_id(*)")
+      .eq("customer_id", user.id);
+    if (accessError) console.error("Associated vendor fetch error:", accessError);
+  
+    // default to [] and extract
+    const accessRows = ar ?? [];
+    const associatedVendors = accessRows
+      .map((r: any) => r.merchant)
+      .filter((m: any) => m !== null);
+  
+    // --- 3) Merge & dedupe ---
+    const vendorMap = new Map<string, any>();
+    for (const v of [...directVendors, ...associatedVendors]) {
+      if (v && v.id) vendorMap.set(v.id, v);
+    }
+    updateVendors(Array.from(vendorMap.values()));
+  
+    // --- the rest of your logic unchanged ---
+    const { data: brands, error: brandError } = await supabase
       .from("brand")
       .select("*")
       .eq("is_active", true);
-    setBrands([...brands.data!]);
-
-    const models = await supabase
+    if (brandError) console.error("Brand fetch error:", brandError);
+    else setBrands(brands ?? []);
+  
+    const { data: models, error: modelError } = await supabase
       .from("model")
       .select("*")
       .eq("is_active", true);
-    console.log(models);
-    setModels([...models.data!]);
-
-    const categories = await supabase
+    if (modelError) console.error("Model fetch error:", modelError);
+    else setModels(models ?? []);
+  
+    const { data: categories, error: categoryError } = await supabase
       .from("category")
       .select("*")
       .eq("is_active", true);
-    setCategory([...categories.data!]);
-
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    const member = await supabase
+    if (categoryError) console.error("Category fetch error:", categoryError);
+    else setCategory(categories ?? []);
+  
+    const { data: member, error: memberError } = await supabase
       .from("member")
       .select("*")
-      .eq("member_profile", user!.id);
-    console.log(member);
-    if (member.data) {
-      setIsMem(true);
-    }
+      .eq("member_profile", user.id);
+    if (memberError) console.error("Member fetch error:", memberError);
+    else if ((member ?? []).length) setIsMem(true);
   }
-
+  
+  
   useEffect(() => {
     void fetchDetails();
   }, []);

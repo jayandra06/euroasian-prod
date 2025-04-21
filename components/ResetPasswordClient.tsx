@@ -71,7 +71,7 @@ const ResetPasswordClient = () => {
     if (profile?.user_role === 'customer') {
       redirectTo = `/dashboard/oboarding/customer-onboarding/${user.email}`;
     } else if (profile?.user_role === 'vendor') {
-      redirectTo = `/dashboard/oboarding/customer-onboarding/${user.id}`;
+      redirectTo = `/dashboard/oboarding/vendor-onboarding/${user.id}`;
     }
 
     setMessage('Password updated successfully! Redirecting...');

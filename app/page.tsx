@@ -23,6 +23,7 @@ import { Toaster } from 'react-hot-toast';
 export default function Home() {
   return (
     <>
+ 
       <LoggingProvider>
         <NavigationProvider>
           <AOSWrapper>
@@ -33,6 +34,7 @@ export default function Home() {
             
               <main className="flex-grow">
                 <Hero />
+                <Toaster position="top-right" />
                 <ShortCarousel />
                 <PopularServices />
                 <CoreFunctionality />
@@ -44,7 +46,7 @@ export default function Home() {
           </AOSWrapper>
         </NavigationProvider>
       </LoggingProvider>
-      <Toaster/>
+    
     </>
   );
 }

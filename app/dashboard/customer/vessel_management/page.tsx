@@ -24,6 +24,7 @@ import {
 import { DotsVerticalIcon } from "@radix-ui/react-icons";
 import { Loader2 } from "lucide-react";
 import * as XLSX from "xlsx"; // Import the xlsx library
+import toast  from "react-hot-toast";
 
 interface Vessel {
   id: string;
@@ -395,36 +396,50 @@ useEffect(() => {
 
   async function addVessel() {
     setLoading(true);
-
+  
     try {
       const {
         data: { user },
       } = await supabase.auth.getUser();
-
+  
       if (!user) {
         console.error("User not logged in.");
+        toast.error("You must be logged in to add vessels.");
         setLoading(false);
         return;
       }
-
-      const login_id = user.id; // Assuming user ID is the customer ID
-
+  
+      const login_id = user.id;
+  
       const res = await fetch("/api/bulk-vessel-save", {
-        // Changed to bulk save API
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ vessels: newVessels, login_id: login_id }), // Sending array of new vessels
+        body: JSON.stringify({
+          vessels: newVessels,
+          login_id,
+          vessel_added: filledVesselsCount,
+          total_vessel: assignedVesselsCount,
+        }),
       });
-
+  
+      const result = await res.json();
+  
       if (!res.ok) {
-        const errorData = await res.json();
-        console.error("Error creating vessels:", errorData);
+        console.error("Error creating vessels:", result);
+        if (res.status === 403 && result.allowed !== undefined) {
+          toast.error(`You can only add ${result.allowed} more vessel(s).`);
+        } else if (res.status === 207) {
+          toast.success("Some vessels added successfully.");
+          toast.error("Some vessels failed to add. Check console for details.");
+        } else {
+          toast.error(result.message || "Something went wrong while saving vessels.");
+        }
       } else {
-        setIsAddVesselDialogOpen(false); // Close the dialog after successful addition
+        toast.success("All vessels added successfully!");
+        setIsAddVesselDialogOpen(false);
         setNewVessels([
-          // Reset to one empty vessel input
           {
             imoNumber: "",
             vesselName: "",
@@ -432,26 +447,33 @@ useEffect(() => {
             vesselType: "",
           },
         ]);
-        fetchDetails(); // Call fetchDetails to reload the table
+        fetchDetails();
       }
     } catch (e) {
       console.error("Unable to Create Vessels:", e);
+      toast.error("Unexpected error occurred.");
     } finally {
       setLoading(false);
     }
   }
 
-  const handleBulkUpload = async (file: File) => {
-    setBulkAdding(true);
-    try {
-      const reader = new FileReader();
-      reader.onload = async (e: ProgressEvent<FileReader>) => {
+  
+
+const handleBulkUpload = async (file: File) => {
+  setBulkAdding(true);
+
+  try {
+    const reader = new FileReader();
+
+    reader.onload = async (e: ProgressEvent<FileReader>) => {
+      try {
         const data = new Uint8Array(e.target?.result as ArrayBuffer);
         const workbook = XLSX.read(data, { type: "array" });
         const firstSheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[firstSheetName];
         const jsonData: any[] = XLSX.utils.sheet_to_json(worksheet);
-        console.log("Parsed JSON Data from Excel:", jsonData); // Add this line
+
+        console.log("Parsed JSON Data from Excel:", jsonData);
 
         const {
           data: { user },
@@ -459,6 +481,7 @@ useEffect(() => {
 
         if (!user) {
           console.error("User not logged in.");
+          toast.error("User not logged in.");
           setBulkAdding(false);
           return;
         }
@@ -479,35 +502,59 @@ useEffect(() => {
           body: JSON.stringify({
             vessels: vesselsToCreate,
             login_id: login_id,
+            vessel_added: filledVesselsCount,
+            total_vessel: assignedVesselsCount,
           }),
         });
 
         if (!res.ok) {
           const errorData = await res.json();
           console.error("Error during bulk add:", errorData);
+
+          if (res.status === 403) {
+            toast.error(errorData.message); // too many vessels
+          } else if (res.status === 207) {
+            toast.error("Some vessels failed to save.");
+          } else {
+            toast.error("Failed to add vessels.");
+          }
         } else {
+          const responseData = await res.json();
+          toast.success(responseData.message || "Vessels added successfully!");
           setIsBulkAddVesselDialogOpen(false);
           if (fileInputRef.current) {
-            fileInputRef.current.value = ""; // Reset the file input
+            fileInputRef.current.value = "";
           }
           fetchDetails();
         }
-      };
-      reader.onerror = (error) => {
-        console.error("Error reading file:", error);
+      } catch (parseError) {
+        console.error("Error parsing Excel data:", parseError);
+        toast.error("Invalid Excel format.");
+      } finally {
         setBulkAdding(false);
-      };
-      reader.onabort = () => {
-        console.error("File reading aborted.");
-        setBulkAdding(false);
-      };
-      reader.readAsArrayBuffer(file);
-    } catch (error) {
-      console.error("Error processing Excel file:", error);
-    } finally {
+      }
+    };
+
+    reader.onerror = (error) => {
+      console.error("Error reading file:", error);
+      toast.error("Error reading file.");
       setBulkAdding(false);
-    }
-  };
+    };
+
+    reader.onabort = () => {
+      console.error("File reading aborted.");
+      toast.error("File reading was aborted.");
+      setBulkAdding(false);
+    };
+
+    reader.readAsArrayBuffer(file);
+  } catch (error) {
+    console.error("Error processing Excel file:", error);
+    toast.error("Something went wrong while uploading.");
+    setBulkAdding(false);
+  }
+};
+
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];

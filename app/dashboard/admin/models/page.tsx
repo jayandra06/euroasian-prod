@@ -1,139 +1,357 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardFooter,
-    CardHeader,
-    CardTitle,
-} from "@/components/ui/card"
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-    DialogFooter
-} from "@/components/ui/dialog"
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createClient } from "@/utils/supabase/client";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import {
+  Table,
+  TableHeader,
+  TableRow,
+  TableHead,
+  TableBody,
+  TableCell,
+} from "@/components/ui/table";
+import { Pencil, Trash, MoreVertical } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
-
-function BrandBox({ brand }: { brand: any }) {
-    return (
-        <Card>
-            <CardHeader>
-                <CardTitle>
-                    {brand?.name}
-                </CardTitle>
-                <CardDescription>
-                    {brand?.description}
-                </CardDescription>
-            </CardHeader>
-            <CardContent>
-                <div>
-                    <h1 className="text-sm">
-                        <span>Id: </span>{brand?.id}
-                    </h1>
-                    <h1 className="text-sm">
-                        <span>Status: </span>{brand?.is_active ? "Active" : "Waiting Approval"}
-                    </h1>
-                </div>
-            </CardContent>
-            <CardFooter>
-                <p className="text-zinc-500">
-                    Model Details
-                </p>
-            </CardFooter>
-        </Card>
-    )
+interface Model {
+  id: string;
+  name: string;
+  description: string | null;
+  is_active: boolean;
+  created_at: string;
 }
 
+export default function ModelsPage() {
+  const [models, setModels] = useState<Model[]>([]);
+  const [newModel, setNewModel] = useState({ name: "", description: "" });
+  const [editModelDialogOpen, setEditModelDialogOpen] = useState(false);
+  const [editModel, setEditModel] = useState<Model | null>(null);
+  const [deleteModelDialogOpen, setDeleteModelDialogOpen] = useState(false);
+  const [modelToDelete, setModelToDelete] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("active");
 
-export default function BrandsPage() {
-    const [brands, setBrands] = useState<any[]>([]);
-    const [newBrand, setNewBrand] = useState({ name: "", description: "" });
+  const filteredModels = models.filter((model) =>
+    activeTab === "active" ? model.is_active : !model.is_active
+  );
 
-    async function fetchBrands() {
-        const supabase = createClient();
-        const brands = await supabase.from("model").select("*");
+  async function fetchModels() {
+    setLoading(true);
+    const supabase = createClient();
+    const { data, error } = await supabase
+      .from("model")
+      .select("*")
+      .order("created_at", { ascending: false });
 
-        setBrands([...brands.data!]);
+    if (error) {
+      console.error("Error fetching models:", error);
+      alert("Error fetching models. Please check the console.");
+    } else if (data) {
+      setModels(data);
+    }
+    setLoading(false);
+  }
+
+  async function addModel() {
+    const supabase = createClient();
+    const { error } = await supabase
+      .from("model")
+      .insert({
+        ...newModel,
+        is_active: false,
+        created_at: new Date().toISOString(),
+      }); // Default to pending
+
+    if (error) {
+      console.error("Error adding model:", error);
+      alert("Failed to add the new model. Please check the console.");
+    } else {
+      alert(
+        `${newModel.name} has been successfully added and is pending approval.`
+      );
+      setNewModel({ name: "", description: "" });
+      fetchModels();
+    }
+  }
+
+  async function updateModel() {
+    if (!editModel) return;
+
+    const supabase = createClient();
+    const { error } = await supabase
+      .from("model")
+      .update({ name: editModel.name, description: editModel.description })
+      .eq("id", editModel.id);
+
+    if (error) {
+      console.error("Error updating model:", error);
+      alert("Failed to update the model details. Please check the console.");
+    } else {
+      alert(`${editModel.name} has been successfully updated.`);
+      setEditModelDialogOpen(false);
+      setEditModel(null);
+      fetchModels();
+    }
+  }
+
+  async function deleteModel(id: string) {
+    if (!window.confirm("Are you sure you want to delete this model?")) {
+      return;
     }
 
-    async function addBrand() {
-        const supabase = createClient();
+    const supabase = createClient();
+    const { error } = await supabase.from("model").delete().eq("id", id);
 
-        const brand = await supabase.from("model").insert({ ...newBrand, created_at: new Date().toISOString() }).select().single();
-
-        setBrands([...brands, brand.data!]);
-        alert("Model Successfully Added!!!");
-        window.location.reload();
+    if (error) {
+      console.error("Error deleting model:", error);
+      alert("Failed to delete the model. Please check the console.");
+    } else {
+      alert("The model has been successfully deleted.");
+      fetchModels();
     }
+  }
 
+  const handleEditDialogOpen = (model: Model) => {
+    setEditModel(model);
+    setEditModelDialogOpen(true);
+  };
 
-    useEffect(() => {
-        fetchBrands();
-    }, []);
+  const handleEditInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
 
-    return (
-        <>
-            <div className="mt-8 p-4 flex justify-between">
-                <h1 className="text-2xl font-bold">
-                    All Models
-                </h1>
+    setEditModel((prevModel) => {
+      if (!prevModel) return prevModel; // safeguard against null
 
-                <div className="flex gap-2">
-                    <Dialog>
-                        <DialogTrigger>
-                            <Button>
-                                Add Model
-                            </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                            <DialogHeader>
-                                <DialogTitle>Add Model</DialogTitle>
-                                <DialogDescription>
-                                    Enter Details of New Model
-                                </DialogDescription>
-                            </DialogHeader>
-                            <div className="grid gap-2">
-                                <div>
-                                    <Label>
-                                        Name
-                                    </Label>
-                                    <Input type="text" value={newBrand.name} onChange={(e) => setNewBrand({ ...newBrand, name: e.target.value })} />
-                                </div>
-                                <div>
-                                    <Label>
-                                        Description
-                                    </Label>
-                                    <Input type="text" value={newBrand.description} onChange={(e) => setNewBrand({ ...newBrand, description: e.target.value })} />
-                                </div>
-                            </div>
+      return {
+        ...prevModel,
+        [name]: value,
+      };
+    });
+  };
 
-                            <DialogFooter>
-                                <Button type="submit" onClick={addBrand}>Add Model</Button>
-                            </DialogFooter>
-                        </DialogContent>
-                    </Dialog>
-                    <Link href="/dashboard/admin/models/waiting_approval">
-                        <Button>
-                            Waiting Approval
-                        </Button>
-                    </Link>
+  const handleDeleteDialogOpen = (id: string) => {
+    setModelToDelete(id);
+    setDeleteModelDialogOpen(true);
+  };
+
+  const handleTabChange = (tab: "active" | "pending") => {
+    setActiveTab(tab);
+  };
+
+  useEffect(() => {
+    fetchModels();
+  }, []);
+
+  if (loading) {
+    return <div>Loading models...</div>;
+  }
+
+  return (
+    <>
+      <div className="mt-8 p-4 flex justify-between items-center">
+        <h1 className="text-2xl font-bold">All Models</h1>
+        <div className="flex gap-2 justify-end">
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button>Add Model</Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Add New Model</DialogTitle>
+                <DialogDescription>
+                  Enter the details for the new model.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="name">Name</Label>
+                  <Input
+                    id="name"
+                    value={newModel.name}
+                    onChange={(e) =>
+                      setNewModel({ ...newModel, name: e.target.value })
+                    }
+                  />
                 </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="description">Description</Label>
+                  <Input
+                    id="description"
+                    value={newModel.description}
+                    onChange={(e) =>
+                      setNewModel({
+                        ...newModel,
+                        description: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button type="button" onClick={addModel}>
+                  Add Model
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
+      </div>
+
+      <div className="p-4">
+        <div className="flex gap-4 mb-4">
+          <Button
+            variant={activeTab === "active" ? "default" : "outline"}
+            onClick={() => handleTabChange("active")}
+          >
+            Active
+          </Button>
+          <Button
+            variant={activeTab === "pending" ? "default" : "outline"}
+            onClick={() => handleTabChange("pending")}
+          >
+            Pending
+          </Button>
+        </div>
+
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Name</TableHead>
+              <TableHead>Description</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filteredModels.map((model) => (
+              <TableRow key={model.id}>
+                <TableCell>{model.name}</TableCell>
+                <TableCell>{model.description || "-"}</TableCell>
+                <TableCell>{model.is_active ? "Active" : "Pending"}</TableCell>
+                <TableCell className="text-right">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm">
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem
+                        onClick={() => handleEditDialogOpen(model)}
+                      >
+                        <Pencil className="h-4 w-4 mr-2" />
+                        Edit
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => handleDeleteDialogOpen(model.id)}
+                      >
+                        <Trash className="h-4 w-4 mr-2" />
+                        Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TableCell>
+              </TableRow>
+            ))}
+            {filteredModels.length === 0 && !loading && (
+              <TableRow>
+                <TableCell colSpan={4} className="text-center">
+                  No models found in the "{activeTab}" tab.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
+
+      {/* Edit Model Dialog */}
+      <Dialog open={editModelDialogOpen} onOpenChange={setEditModelDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Model</DialogTitle>
+            <DialogDescription>
+              Update the details for the selected model.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="edit-name">Name</Label>
+              <Input
+                id="edit-name"
+                name="name"
+                value={editModel?.name || ""}
+                onChange={handleEditInputChange}
+              />
             </div>
-            <main className="max-w-6xl grid justify-self-center gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
-                {brands.map((brand, i) =>
-                    <BrandBox brand={brand} key={i} />
-                )}
-            </main>
-        </>
-    )
+            <div className="grid gap-2">
+              <Label htmlFor="edit-description">Description</Label>
+              <Input
+                id="edit-description"
+                name="description"
+                value={editModel?.description || ""}
+                onChange={handleEditInputChange}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="button" onClick={() => setEditModelDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="button" onClick={updateModel}>
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Model Dialog */}
+      <Dialog
+        open={deleteModelDialogOpen}
+        onOpenChange={setDeleteModelDialogOpen}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm Delete</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this model? This action cannot be
+              undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              type="button"
+              onClick={() => setDeleteModelDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => deleteModel(modelToDelete!)}
+            >
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
 }
