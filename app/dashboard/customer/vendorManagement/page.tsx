@@ -45,23 +45,59 @@ export default function VendorManagement() {
   const router = useRouter();
 
   const getVendors = useCallback(async () => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    setuserId(user?.id || "");
-    const { data: merchantData, error } = await supabase
-      .from("merchant")
-      .select("*")
-      .eq("parent_id", user?.id);
-
-    if (error) {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+  
+      const userId = user?.id;
+      if (!userId) {
+        toast.error("User not found.");
+        return;
+      }
+  
+      setuserId(userId);
+  
+      // Fetch merchants where user is the parent
+      const { data: directMerchants, error: directError } = await supabase
+        .from("merchant")
+        .select("*")
+        .eq("parent_id", userId);
+  
+      if (directError) throw directError;
+  
+      // Fetch merchants associated via vendor_access
+      const { data: accessMerchants, error: accessError } = await supabase
+        .from("vendor_access")
+        .select("merchant:vendor_id(*)") // Get vendor info from merchant table
+        .eq("customer_id", userId);
+  
+      if (accessError) throw accessError;
+  
+      // Extract nested merchant data from vendor_access
+      const associatedMerchants = accessMerchants
+        .map((item: any) => item.merchant)
+        .filter((m: any) => m !== null); // In case of null joins
+  
+      // Combine both sets, remove duplicates by merchant id
+      const allMerchantsMap = new Map();
+      [...directMerchants, ...associatedMerchants].forEach((merchant: any) => {
+        if (merchant && merchant.id) {
+          allMerchantsMap.set(merchant.id, merchant);
+        }
+      });
+  
+      const combinedMerchants = Array.from(allMerchantsMap.values());
+  
+      setVendors(combinedMerchants as Vendor[]);
+    } catch (error) {
       console.error("Error fetching vendors:", error);
       toast.error("Failed to load vendors.");
-      return;
     }
-
-    setVendors(merchantData as Vendor[]);
   }, [supabase]);
+  
+  
+  
 
   useEffect(() => {
     getVendors();
@@ -71,35 +107,72 @@ export default function VendorManagement() {
 
   const handleInviteVendor = async () => {
     setLoading(true);
-    if (!inviteEmail.trim()) {
+  
+    const trimmedEmail = inviteEmail.trim();
+  
+    if (!trimmedEmail) {
       toast.error("Please enter an email to invite.");
       setLoading(false);
       return;
     }
-
+  
     try {
-      const res = await fetch("/api/invite-vendor", {
+      // Step 1: Check if email exists and is already linked
+      const checkRes = await fetch("/api/check-user-exist", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-
         body: JSON.stringify({
-          email: inviteEmail.trim(),
-          userId: userId,
+          email: trimmedEmail,
+          userId,
           type,
         }),
       });
-
-      if (res.ok) {
-        toast.success("Vendor invite sent successfully!");
-        setInviteEmail("");
+  
+      const checkData = await checkRes.json();
+  
+      if (checkRes.ok) {
+        // Handle case where the user exists but is already linked
+        if (checkData.exists && checkData.linked) {
+          toast.success("Vendor already exist in admin. Added Successfully");
+          setLoading(false);
+          return;
+        }
+  
+        // Handle case where user exists but is not linked (you may want to take specific action here)
+        if (checkData.exists && !checkData.linked) {
+          toast.error("This vendor exists but is not yet linked. You can proceed with linking.");
+        }
       } else {
-        const errorData = await res.json();
-        toast.error(
-          `Failed to send invite: ${errorData?.message || "Unknown error"}`
-        );
+        // Handle any error in the check API (e.g., failed request)
+        toast.error(checkData?.message || "Error checking vendor access.");
+        setLoading(false);
+        return;
       }
+  
+      // Step 2: Proceed with sending invite
+      const inviteRes = await fetch("/api/invite-vendor", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: trimmedEmail,
+          userId,
+          type,
+        }),
+      });
+  
+      const inviteData = await inviteRes.json();
+  
+      if (inviteRes.ok) {
+        toast.success("Vendor invite sent successfully!");
+        setInviteEmail("");  // Clear email input after success
+      } else {
+        toast.error(`Failed to send invite: ${inviteData?.message || "Unknown error"}`);
+      }
+  
     } catch (error: any) {
       console.error("Error sending invite:", error);
       toast.error("Something went wrong. Please try again later.");
@@ -107,6 +180,8 @@ export default function VendorManagement() {
       setLoading(false);
     }
   };
+  
+  
 
   const handleStatusChange = async (vendorId: string, isActive: boolean) => {
     const { error } = await supabase

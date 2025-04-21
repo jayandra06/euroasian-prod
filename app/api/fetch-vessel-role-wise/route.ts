@@ -5,16 +5,15 @@ export async function GET(req: NextRequest) {
   const supabase = createClient();
 
   try {
-     const user={
-      email:"customer1@vijethasoftwares.in",
-      id:"5053368a-b840-4df5-b1c6-cca94cba74ef"
-     }
+    const { searchParams } = new URL(req.url);
+    const email = searchParams.get('email');
+    const userId = searchParams.get('id');
 
     // 1️⃣ Get user role from profiles table
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
       .select("user_role")
-      .eq("id", user.id)
+      .eq("id", userId)
       .single();
 
     if (profileError || !profile) {
@@ -32,7 +31,7 @@ export async function GET(req: NextRequest) {
       const { data: cust, error: custErr } = await supabase
         .from("customer_details")
         .select("id")
-        .eq("login_id", user.id)
+        .eq("login_id", userId)
         .single();
 
       if (custErr || !cust?.id) {
@@ -71,7 +70,7 @@ export async function GET(req: NextRequest) {
       const { data: branchAdmin, error: branchError } = await supabase
         .from("branch_admin")
         .select("branch")
-        .eq("email", user.email)
+        .eq("email", email)
         .single();
 
       if (branchError || !branchAdmin) {
@@ -96,7 +95,7 @@ export async function GET(req: NextRequest) {
       const { data: manager, error: managerError } = await supabase
         .from("manager")
         .select("id")
-        .eq("email", user.email)
+        .eq("email", email)
         .single();
 
       if (managerError || !manager) {

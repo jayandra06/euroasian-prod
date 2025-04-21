@@ -44,6 +44,7 @@ export function NavBar() {
 
     
     <nav className="bg-gray-800 text-white p-4 flex justify-between items-center">
+      
       <div className="text-2xl font-bold">MyApp</div>
       <div className="flex items-center">
         <ul className="hidden md:flex space-x-4">
