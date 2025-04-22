@@ -911,6 +911,8 @@ export default function CreateEnquiryPage() {
         console.error("❌ Error inserting into rfq_supplier:", supplierErr);
         setErrorMessage("Some suppliers couldn't be linked.");
       }
+
+      items.forEach((item: any) => console.log(item))
   
       // Insert items
       for (let i = 0; i < items.length; i++) {

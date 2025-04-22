@@ -34,7 +34,7 @@ export async function POST(request: Request) {
         //Update the role in profile table
         const { error: updateProfileError } = await supabaseAdmin
             .from("profiles")
-            .update({ user_role: "admin" })
+            .update({ user_role: "branch_admin" })
             .eq("id", userId);
 
         // Step 2: Insert into member table
@@ -43,7 +43,7 @@ export async function POST(request: Request) {
             .insert({
                 member_profile: userId,
                 branch: branch,
-                member_role: "admin",
+                member_role: "branch_admin",
             })
             .select()
             .single();
