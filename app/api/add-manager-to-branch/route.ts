@@ -53,7 +53,7 @@ export async function POST(request: Request) {
       .insert({
         member_profile: userId,
         branch: branch,
-        member_role: "employee",
+        member_role: "manager",
       })
       .select()
       .single();

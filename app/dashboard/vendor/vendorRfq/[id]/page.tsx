@@ -26,22 +26,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader, Loader2Icon, Trash2 } from "lucide-react";
+import { Loader2Icon } from "lucide-react";
 import ErrorToast from "@/components/ui/errorToast";
 import SuccessToast from "@/components/ui/successToast";
 import Image from "next/image";
-import { useRouter } from "next/router";
+
 import { useParams, useSearchParams } from "next/navigation";
 import { create } from "domain";
 
 // @ts-ignore
 function RFQInfoCard({
   rfqInfo,
- 
+
   setRfqInfo,
 }: {
   rfqInfo: any;
-  
+
   setRfqInfo: any;
 }) {
   console.log("efq", rfqInfo);
@@ -59,7 +59,7 @@ function RFQInfoCard({
 
   return (
     <>
-      <div  className="w-[950px] max-w-7xl mx-auto p-6 bg-white shadow-lg rounded-lg">
+      <div className="w-[950px] max-w-7xl mx-auto  p-6 bg-white shadow-lg rounded-lg">
         <div className="mb-6 text-center">
           <h2 className="text-xl font-bold">RFQ and Vessel Information</h2>
           <p className="text-gray-600">
@@ -77,7 +77,8 @@ function RFQInfoCard({
                   type="date"
                   className="mt-2"
                   id="leadDate"
-                  value={rfqInfo?.lead_date || ""}
+                  value={rfqInfo?.lead_date?.split("T")[0] || ""}
+                  disabled
                 />
               </div>
               <div className="flex flex-col">
@@ -225,12 +226,12 @@ function RFQInfoCard({
                 />
               </div>
               <div className="flex flex-col">
-                <Label htmlFor="clientName">Remarks</Label>
+                <Label htmlFor=" Genereal Remarks">Remarks</Label>
                 <Input
                   type="text"
-                  id="clientName"
+                  id="remarks"
                   placeholder="remarks"
-                  value={rfqInfo?.remarks}
+                  value={rfqInfo?.remarks || ""}
                   className="mt-2"
                   disabled
                 />
@@ -247,17 +248,23 @@ function RFQInfoCard({
                   disabled
                 />
               </div>
-              <div className="flex flex-col">
-                <Label htmlFor="clientName">Upload</Label>
+              <div className="flex flex-col items-center">
+                {" "}
+                {/* Center the image and label */}
+                <Label htmlFor="upload">Uploaded Image</Label>{" "}
+                {/* More descriptive label */}
                 {rfqInfo?.upload ? (
-                  <Image
-                    height={100}
-                    width={100}
-                    src={getPublicUrl(rfqInfo.upload)}
-                    alt="Uploaded File"
-                  />
+                  <div className="relative w-32 h-32 mt-2 overflow-hidden rounded-md shadow-md">
+                    {/* Fixed square container with overflow hidden and styling */}
+                    <Image
+                      src={rfqInfo.upload}
+                      alt="Uploaded File"
+                      layout="fill" // Make the image fill the container
+                      objectFit="cover" // Maintain aspect ratio and cover the container
+                    />
+                  </div>
                 ) : (
-                  <p>No file uploaded</p>
+                  <p className="mt-2">No file uploaded</p>
                 )}
               </div>
             </div>
@@ -269,46 +276,65 @@ function RFQInfoCard({
 }
 
 // @ts-ignore
-function Item({ item, handleUpdateItem, errors }) {
-  const handleChange = (e:any) => {
+function Item({ index, item, handleUpdateItem, errors }) {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
     handleUpdateItem(item.id, name, value);
   };
-
   return (
     <>
       <TableRow>
-        <TableCell className="font-medium">{item.id}</TableCell>
-        <TableCell colSpan={3} rowSpan={4}>
+        <TableCell className="font-medium">{index + 1}</TableCell>{" "}
+        {/* Auto-incrementing Item Number */}
+        <TableCell colSpan={2}>
+          <div className="col-span-2 ">
+            <Input
+              type="text"
+              placeholder="impa_no"
+              value={item.impa_no}
+              name="impa_no"
+              disabled // Disabled
+            />
+            {errors.part_no && (
+              <p className="text-red-500 text-sm">{errors.part_no}</p>
+            )}
+          </div>{" "}
+          {/* Description spans two columns */}
+          <div className="col-span-1 mt-2">
+            <Textarea
+              placeholder="Item Description.."
+              value={item.description}
+              name="description"
+              disabled // Disabled
+            />
+            {errors.description && (
+              <p className="text-red-500 text-sm">{errors.description}</p>
+            )}
+          </div>
+        </TableCell>
+        <TableCell colSpan={5} rowSpan={3}>
           <div className="grid gap-2 grid-cols-4 items-center">
-            <div className="col-span-2 ">
+            <div className="col-span-2">
               <Input
                 type="text"
-                placeholder="Enter Part No."
+                placeholder="Part No."
                 value={item.item_part_no}
                 name="item_part_no"
-                //    onChange={(e) => {
-                //     handleChange(e);
-                //     setErrors({ ...errors, part_no: "" });
-                //   }}
-                onChange={handleChange}
+                disabled // Disabled
               />
               {errors.part_no && (
                 <p className="text-red-500 text-sm">{errors.part_no}</p>
               )}
             </div>
-            <div className="col-span-2 ">
+            <div className="col-span-2">
               <Input
                 type="text"
-                placeholder="Enter Position No."
+                placeholder="Position No."
                 value={item.item_position_no}
                 name="item_position_no"
-                //    onChange={(e) => {
-                //     handleChange(e);
-                //     setErrors({ ...errors, position_no: "" });
-                //   }}
-
-                onChange={handleChange}
+                disabled // Disabled
               />
               {errors.position_no && (
                 <p className="text-red-500 text-sm">{errors.position_no}</p>
@@ -317,10 +343,10 @@ function Item({ item, handleUpdateItem, errors }) {
             <div className="col-span-2">
               <Input
                 type="text"
-                placeholder="Enter Alternate Part No."
+                placeholder="Alternate Part No."
                 value={item.alternate_part_no}
                 name="alternate_part_no"
-                onChange={handleChange}
+                disabled // Disabled
               />
               {errors.alternative_part_no && (
                 <p className="text-red-500 text-sm">
@@ -328,92 +354,19 @@ function Item({ item, handleUpdateItem, errors }) {
                 </p>
               )}
             </div>
-            <div className="col-span-2 ">
+            <div className="col-span-2">
               <Input
-                type="text"
-                placeholder="Enter Alternate Position No."
-                value={item.impa_no}
-                id="impa_no"
-                name="impa_no"
-                //    onChange={(e) => {
-                //     handleChange(e);
-                //     setErrors({ ...errors, alternative_part_no: "" });
-                //   }}
-                onChange={handleChange}
+                type="number"
+                placeholder="Dimension"
+                value={item.dimensions}
+                name="dimension"
+                disabled // Disabled
               />
-              {errors.alternative_part_no && (
-                <p className="text-red-500 text-sm">
-                  {errors.alternative_part_no}
-                </p>
+              {errors.req_qty && (
+                <p className="text-red-500 text-sm">{errors.req_qty}</p>
               )}
             </div>
           </div>
-        </TableCell>
-        <TableCell>
-          <div className="col-span-1">
-            <Textarea
-              placeholder="Enter Item Description.."
-              value={item.description}
-              name="description"
-              //   onChange={(e) => {
-              //     const {name, value} = e.target;
-              //     handleUpdateItem(item.id, name, value);
-              //     // setErrors({ ...errors, description: "" });
-              //   }}
-              onChange={handleChange}
-            />
-            {errors.description && (
-              <p className="text-red-500 text-sm">{errors.description}</p>
-            )}
-          </div>
-        </TableCell>
-        <TableCell>
-          <Input
-            type="number"
-            placeholder="W"
-            value={item.width}
-            name="width"
-            // onChange={(e) => {
-            //     handleChange(e);
-            //     setErrors({ ...errors, req_qty: "" });
-            //   }}
-            onChange={handleChange}
-          />
-          {errors.req_qty && (
-            <p className="text-red-500 text-sm">{errors.req_qty}</p>
-          )}
-        </TableCell>
-        <TableCell>
-          <Input
-            type="number"
-            placeholder="B"
-            value={item.height}
-            name="height"
-            // onChange={(e) => {
-            //     handleChange(e);
-            //     setErrors({ ...errors, req_qty: "" });
-            //   }}
-            onChange={handleChange}
-          />
-          {errors.req_qty && (
-            <p className="text-red-500 text-sm">{errors.req_qty}</p>
-          )}
-        </TableCell>
-        <TableCell>
-          <Input
-            type="number"
-            placeholder="H"
-            value={item.beadth}
-            name="beadth"
-            // onChange={(e) => {
-            //     handleChange(e);
-            //     setErrors({ ...errors, req_qty: "" });
-            //   }}
-            onChange={handleChange}
-          />
-          {errors.req_qty && (
-            <p className="text-red-500 text-sm">{errors.req_qty}</p>
-          )}
         </TableCell>
         <TableCell>
           <Input
@@ -421,6 +374,7 @@ function Item({ item, handleUpdateItem, errors }) {
             placeholder="offered quanity"
             value={item.req_qty}
             name="req_qty"
+            disabled
             // onChange={(e) => {
             //     handleChange(e);
             //     setErrors({ ...errors, req_qty: "" });
@@ -438,6 +392,7 @@ function Item({ item, handleUpdateItem, errors }) {
             placeholder=""
             value={item.uom}
             name="uom"
+            disabled
             // onChange={(e) => {
             //     handleChange(e);
             //     setErrors({ ...errors, req_qty: "" });
@@ -456,7 +411,6 @@ function Item({ item, handleUpdateItem, errors }) {
           />
         </TableCell>
         <TableCell>
-          {/* <Input type="text" placeholder="Enter UOM..." value={item.uom} name="uom" onChange={} /> */}
           <Select
             name="uom_vendor"
             value={item.uom_vendor || ""}
@@ -479,15 +433,11 @@ function Item({ item, handleUpdateItem, errors }) {
         </TableCell>
         <TableCell className="text-right relative">
           <Input
-            placeholder=""
+            placeholder="Offered Price"
             value={item.offered_price}
             name="offer_price"
-            // onChange={(e) => {
-            //     handleChange(e);
-            //     setErrors({ ...errors, req_qty: "" });
-            //   }}
-            onChange={handleChange}
-            className="w-[60px]"
+            onChange={handleChange} // Enabled for editing
+            className="w-[80px]"
           />
         </TableCell>
       </TableRow>
@@ -568,6 +518,8 @@ export default function ViewRfq() {
           .select("*")
           .in("id", rfqIdsArray);
 
+        console.log("thitsd fsidfosindofsdhfo", rfqs);
+
         if (rfqsError) throw rfqsError;
 
         console.log("✅ RFQs for Vendor:", rfqs);
@@ -598,112 +550,112 @@ export default function ViewRfq() {
     setSuccessMessage(null);
 
     try {
-        // ✅ Step 1: Update rfq_items with base details
-        const updatePromises = items.map((item) =>
-            supabase
-                .from("rfq_items")
-                .update({
-                    item_part_no: item.item_part_no,
-                    item_position_no: item.item_position_no,
-                    alternate_part_no: item.alternate_part_no,
-                    description: item.description,
-                    req_qty: item.req_qty,
-                    uom: item.uom,
-                    width: item.width,
-                    height: item.height,
-                    beadth: item.beadth,
-                    impa_no: item.impa_no,
-                })
-                .eq("id", item.id)
-        );
+      // ✅ Step 1: Update rfq_items with base details
+      const updatePromises = items.map((item) =>
+        supabase
+          .from("rfq_items")
+          .update({
+            item_part_no: item.item_part_no,
+            item_position_no: item.item_position_no,
+            alternate_part_no: item.alternate_part_no,
+            description: item.description,
+            req_qty: item.req_qty,
+            uom: item.uom,
+            dimensions: item.dimensions,
+            impa_no: item.impa_no,
+            alternative_positon_number: item.alternative_positon_number,
+          })
+          .eq("id", item.id)
+      );
 
-        const updateResults = await Promise.all(updatePromises);
-        const failedUpdates = updateResults.filter((res) => res.error);
+      const updateResults = await Promise.all(updatePromises);
+      const failedUpdates = updateResults.filter((res) => res.error);
 
-        if (failedUpdates.length > 0) {
-            console.error("❌ Some RFQ items failed to update:", failedUpdates);
-            throw new Error("Failed to update some RFQ items.");
-        }
+      if (failedUpdates.length > 0) {
+        console.error("❌ Some RFQ items failed to update:", failedUpdates);
+        throw new Error("Failed to update some RFQ items.");
+      }
 
-        console.log("✅ RFQ items updated successfully!");
-        setSuccessMessage("RFQ items updated successfully!");
-        return true; // ✅ Proceed to next step
+      console.log("✅ RFQ items updated successfully!");
+      setSuccessMessage("RFQ items updated successfully!");
+      return true; // ✅ Proceed to next step
     } catch (error) {
-        console.error("❌ Error updating rfq_items:", error);
-        setErrorMessage("Failed to update RFQ items. Please try again.");
-        return false; // ❌ Stop process
+      console.error("❌ Error updating rfq_items:", error);
+      setErrorMessage("Failed to update RFQ items. Please try again.");
+      return false; // ❌ Stop process
     } finally {
-        setIsLoading(false);
+      setIsLoading(false);
     }
-};
+  };
 
-const submitVendorResponse = async () => {
+  const submitVendorResponse = async () => {
     setIsLoading(true);
     setErrorMessage(null);
     setSuccessMessage(null);
 
     try {
-        // ✅ Get the current logged-in vendor ID
-        const { data: user, error: userError } = await supabase.auth.getUser();
-        if (userError || !user?.user?.id) {
-            throw new Error("Failed to retrieve user.");
-        }
+      // ✅ Get the current logged-in vendor ID
+      const { data: user, error: userError } = await supabase.auth.getUser();
+      if (userError || !user?.user?.id) {
+        throw new Error("Failed to retrieve user.");
+      }
 
-        // ✅ Get Merchant ID using authenticated user
-        const { data: merchantData, error: merchantError } = await supabase
-            .from("merchant")
-            .select("id")
-            .eq("merchant_profile", user.user.id)
-            .single();
+      // ✅ Get Merchant ID using authenticated user
+      const { data: merchantData, error: merchantError } = await supabase
+        .from("merchant")
+        .select("id")
+        .eq("merchant_profile", user.user.id)
+        .single();
 
-        if (merchantError || !merchantData?.id) {
-            throw new Error("Merchant ID not found.");
-        }
+      if (merchantError || !merchantData?.id) {
+        throw new Error("Merchant ID not found.");
+      }
 
-        const vendorId = merchantData.id;
-        console.log("✅ Vendor ID Retrieved:", vendorId);
+      const vendorId = merchantData.id;
+      console.log("✅ Vendor ID Retrieved:", vendorId);
 
-        const responseData = items.map((item) => ({
-            rfq_id: item.rfq_id,
-            item_id: item.id,
-            vendor_id: vendorId, // ✅ Corrected vendor_id
-            offered_price: item.offer_price,
-            offer_quality: item.offer_quality,
-            uom: item.uom_vendor,
-            shipment_charges: item.shipment_charges || 0,
-            custom_charges: item.custom_charges || 0,
-            port_connectivity_charges: item.port_connectivity_charges || 0,
-            agent_charges: item.agent_charges || 0,
-            other_charges: item.other_charges || 0,
-            freight_charges :item.freight_charges || 0,
-            
-            remarks: item.remark_charges || "",
-        }));
+      const responseData = items.map((item) => ({
+        rfq_id: item.rfq_id,
+        item_id: item.id,
+        vendor_id: vendorId, // ✅ Corrected vendor_id
+        offered_price: item.offer_price,
+        offer_quality: item.offer_quality,
+        uom: item.uom_vendor,
+        shipment_charges: item.shipment_charges || 0,
+        custom_charges: item.custom_charges || 0,
+        port_connectivity_charges: item.port_connectivity_charges || 0,
+        agent_charges: item.agent_charges || 0,
+        other_charges: item.other_charges || 0,
+        freight_charges: item.freight_charges || 0,
 
-        const { error } = await supabase.from("rfq_response").insert(responseData);
-        if (error) throw error;
+        remarks: item.remark_charges || "",
+      }));
 
-        console.log("✅ Vendor responses inserted successfully!");
-        setSuccessMessage("Vendor responses submitted successfully!");
+      const { error } = await supabase
+        .from("rfq_response")
+        .insert(responseData);
+      if (error) throw error;
+
+      console.log("✅ Vendor responses inserted successfully!");
+      setSuccessMessage("Vendor responses submitted successfully!");
     } catch (error) {
-        console.error("❌ Error inserting vendor responses:", error);
-        setErrorMessage("Failed to submit vendor responses. Please try again.");
+      console.error("❌ Error inserting vendor responses:", error);
+      setErrorMessage("Failed to submit vendor responses. Please try again.");
     } finally {
-        setIsLoading(false);
+      setIsLoading(false);
     }
-};
+  };
 
-const handleSubmit = async () => {
+  const handleSubmit = async () => {
     setIsLoading(true);
     const isUpdated = await updateAllItems(); // ✅ Step 1: Update rfq_items
     if (!isUpdated) return; // ❌ Stop if update fails
     await submitVendorResponse(); // ✅ Step 2: Insert into rfq_response
-};
-
+  };
 
   console.log("RFQ ID:", id);
 
-  const handleChange = (e:any, itemId:any) => {
+  const handleChange = (e: any, itemId: any) => {
     const { name, value } = e.target;
     setItems((prevItems) =>
       prevItems.map((item) =>
@@ -736,7 +688,7 @@ const handleSubmit = async () => {
         </div>
 
         <main className="grid justify-self-center max-w-6xl w-full md:grid-cols-3 gap-4 mt-4">
-          <RFQInfoCard rfqInfo={selectedRfq}  setRfqInfo={setSelectedRfq} />
+          <RFQInfoCard rfqInfo={selectedRfq} setRfqInfo={setSelectedRfq} />
         </main>
 
         <div className="grid justify-self-center max-w-6xl w-full mt-8">
@@ -775,14 +727,20 @@ const handleSubmit = async () => {
                 </TableHeader>
 
                 <TableBody>
-                  {items.map((item: any, i: any) => (
-                    <Item
-                      key={i}
-                      item={item}
-                      handleUpdateItem={handleUpdateItem}
-                      errors={errors.items?.[i] || {}}
-                    />
-                  ))}
+                  {items.map(
+                    (
+                      item: any,
+                      i: number // Explicitly type 'i' as number for clarity
+                    ) => (
+                      <Item
+                        key={i}
+                        index={i} // Pass the index as the 'index' prop
+                        item={item}
+                        handleUpdateItem={handleUpdateItem}
+                        errors={errors.items?.[i] || {}}
+                      />
+                    )
+                  )}
                 </TableBody>
               </Table>
             </div>
@@ -808,7 +766,7 @@ const handleSubmit = async () => {
                     onChange={(e) => handleChange(e, item.id)}
                     name="freight_charges"
                     className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                    placeholder="John"
+                    placeholder="Freight Charges"
                     required
                   />
                 </div>
@@ -819,7 +777,6 @@ const handleSubmit = async () => {
                   >
                     Customs Charges
                   </label>
-
                   <input
                     type="text"
                     id="custom_charges"
@@ -827,7 +784,7 @@ const handleSubmit = async () => {
                     onChange={(e) => handleChange(e, item.id)}
                     name="custom_charges"
                     className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                    placeholder="John"
+                    placeholder="Customs Charges"
                     required
                   />
                 </div>
@@ -836,7 +793,7 @@ const handleSubmit = async () => {
                     htmlFor="shipment_charges"
                     className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
                   >
-                    Shipment CHarges
+                    Shipment Charges
                   </label>
                   <input
                     type="text"
@@ -845,7 +802,7 @@ const handleSubmit = async () => {
                     onChange={(e) => handleChange(e, item.id)}
                     name="shipment_charges"
                     className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                    placeholder="John"
+                    placeholder="Shipment Charges"
                     required
                   />
                 </div>
@@ -855,7 +812,7 @@ const handleSubmit = async () => {
                     htmlFor="port_connectivity_charges"
                     className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
                   >
-                    Port Connectivity CHarges
+                    Port Connectivity Charges
                   </label>
                   <input
                     type="text"
@@ -864,7 +821,7 @@ const handleSubmit = async () => {
                     onChange={(e) => handleChange(e, item.id)}
                     name="port_connectivity_charges"
                     className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                    placeholder="John"
+                    placeholder="Port Connectivity Charges"
                     required
                   />
                 </div>
@@ -882,7 +839,7 @@ const handleSubmit = async () => {
                     onChange={(e) => handleChange(e, item.id)}
                     name="agent_charges"
                     className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                    placeholder="John"
+                    placeholder="Agent Charges"
                     required
                   />
                 </div>
@@ -891,7 +848,7 @@ const handleSubmit = async () => {
                     htmlFor="other_charges"
                     className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
                   >
-                    Other CHarges
+                    Other Charges
                   </label>
                   <input
                     type="text"
@@ -900,7 +857,7 @@ const handleSubmit = async () => {
                     onChange={(e) => handleChange(e, item.id)}
                     name="other_charges"
                     className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                    placeholder="John"
+                    placeholder="Other Charges"
                     required
                   />
                 </div>
@@ -918,7 +875,7 @@ const handleSubmit = async () => {
                     onChange={(e) => handleChange(e, item.id)}
                     name="remark_charges"
                     className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                    placeholder="John"
+                    placeholder="Remark"
                     required
                   />
                 </div>
@@ -933,7 +890,7 @@ const handleSubmit = async () => {
             >
               {" "}
               {isloading ? <Loader2Icon className="animate-spin mr-2" /> : null}
-              {isloading ? "Sending for delivery" : "Send For delivery"}
+              {isloading ? "Sending Send Qutotaion" : "Send Qutotaion"}
             </Button>
             <Button className="bg-blue-600 mt-3 mx-2">Print Invoice</Button>
           </div>

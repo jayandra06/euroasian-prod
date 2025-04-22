@@ -6,8 +6,8 @@ export async function GET(req: NextRequest) {
 
   try {
     const { searchParams } = new URL(req.url);
-    const email = searchParams.get('email');
-    const userId = searchParams.get('id');
+    const email = searchParams.get("email");
+    const userId = searchParams.get("id");
 
     // 1️⃣ Get user role from profiles table
     const { data: profile, error: profileError } = await supabase
@@ -42,10 +42,11 @@ export async function GET(req: NextRequest) {
         );
       }
 
-      const { data: customerVessels, error: customerVesselError } = await supabase
-        .from("vessel_management")
-        .select("id, vessel_name")
-        .eq("customer_id", cust.id);
+      const { data: customerVessels, error: customerVesselError } =
+        await supabase
+          .from("vessel_management")
+          .select("id, vessel_name")
+          .eq("customer_id", cust.id);
 
       if (customerVesselError) {
         console.error("Error fetching customer vessels:", customerVesselError);
@@ -65,7 +66,7 @@ export async function GET(req: NextRequest) {
     }
 
     // 3️⃣ ADMIN
-    else if (role === "admin") {
+    else if (role === "branch_admin") {
       console.log("Admin role detected");
       const { data: branchAdmin, error: branchError } = await supabase
         .from("branch_admin")
@@ -92,13 +93,20 @@ export async function GET(req: NextRequest) {
 
     // 4️⃣ MANAGER
     else if (role === "manager") {
+      console.log("i am manager");
       const { data: manager, error: managerError } = await supabase
         .from("manager")
         .select("id")
-        .eq("email", email)
+        .eq("email", "s7uii@ptct.net")
         .single();
 
       if (managerError || !manager) {
+        console.error(
+          "Manager lookup failed. Error:",
+          managerError,
+          "Manager:",
+          manager
+        );
         return NextResponse.json(
           { message: "Manager not found" },
           { status: 404 }
@@ -110,13 +118,22 @@ export async function GET(req: NextRequest) {
         .select("vessel_id")
         .eq("manager_id", manager.id);
 
-      if (assignError) throw assignError;
+      if (assignError) {
+        console.error("❌ Error fetching manager assignments:", assignError);
+        throw assignError;
+      }
 
       vesselIds = assigned?.map((v) => v.vessel_id) || [];
     }
 
+    console.log("ar");
+
+    vesselIds.forEach((item) => {
+      console.log(item);
+    });
     // 5️⃣ Get vessels for admin/manager roles
     if (vesselIds.length === 0) {
+      console.log("mp")
       return NextResponse.json(
         { message: "No vessels assigned", data: [] },
         { status: 200 }
@@ -129,7 +146,6 @@ export async function GET(req: NextRequest) {
       .in("id", vesselIds);
 
     if (vesselError) throw vesselError;
-
 
     console.log("this is data", vessels);
 
