@@ -61,6 +61,7 @@ export async function POST(request: Request) {
             .insert({
                 branch: branch,
                 email: email,
+                customer_id: userId, // assuming you want to keep this linkage
             })
             .select()
             .single();
@@ -91,6 +92,7 @@ export async function POST(request: Request) {
             message: "User invited successfully. Invitation email sent!",
             member: memberData,
             branch_admin: adminData,
+
         }), {
             status: 200,
             headers: { "Content-Type": "application/json" },

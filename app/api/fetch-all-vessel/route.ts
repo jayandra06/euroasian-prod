@@ -6,7 +6,7 @@ export async function GET(req: NextRequest) {
 
   try {
     const { searchParams } = new URL(req.url);
-    const login_id = searchParams.get("login_id");  // actually your login_id
+    const login_id = searchParams.get("login_id"); // actually your login_id
 
     if (!login_id) {
       return NextResponse.json(
@@ -36,10 +36,9 @@ export async function GET(req: NextRequest) {
     const { data, error } = await supabase
       .from("vessel_management")
       .select("*")
-      .eq("customer_id", customer_id)
+      .eq("customer_id", customer_id);
 
-      console.log("Fetched vessels:", data);
-      
+    console.log("Fetched vessels:", data);
 
     if (error) {
       console.error("Fetch Error:", error);
