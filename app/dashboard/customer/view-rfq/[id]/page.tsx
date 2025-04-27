@@ -541,9 +541,11 @@ export default function ViewRfq() {
         // Enable Confirm Delivery when ALL roles have "requested"
         const allRequested = approvalFlow.every((role) =>
           approvalData?.some(
-            (entry) => entry.role === role && entry.status === "requested"
+            (entry) => entry.role === role && entry.status === "requested" || entry.status !== "approved"
           )
         );
+        console.log("All Requested:", approvalFlow.length);
+        console.log("All Requested:",approvalData.length );
 
         if (
           allRequested &&
@@ -737,7 +739,7 @@ export default function ViewRfq() {
       alert("Please select one vendor for approval.");
       return;
     }
-
+  
     let decisions: {
       rfq_id: string;
       vendor_id: string;
@@ -745,23 +747,23 @@ export default function ViewRfq() {
       reason: string;
       action_by: string;
     }[] = [];
-
+  
     if (userRole === "customer") {
       decisions = vendors
         .map(({ vendor_id }) => {
           const isSelected = vendor_id === approvedVendorId;
-
+  
           if (
             !isSelected &&
             (!rejectionReasons[vendor_id] ||
               rejectionReasons[vendor_id].trim() === "")
           ) {
             alert(`Please provide a rejection reason for vendor ${vendor_id}`);
-            return undefined; // <--- return undefined, NOT null
+            return undefined;
           }
-
+  
           return {
-            rfq_id: id as string, // <-- ensure id is string
+            rfq_id: id as string,
             vendor_id: vendor_id as string,
             status: isSelected ? "selected" : "rejected",
             reason: isSelected ? "" : rejectionReasons[vendor_id],
@@ -769,27 +771,25 @@ export default function ViewRfq() {
           };
         })
         .filter(
-          (
-            d
-          ): d is {
+          (d): d is {
             rfq_id: string;
             vendor_id: string;
             status: string;
             reason: string;
             action_by: string;
           } => Boolean(d)
-        ); // <--- proper type guard
+        );
     }
-
+  
     try {
       if (userRole === "customer") {
-        // Insert vendor decisions
+        // 1. Insert vendor decisions
         const { error: decisionError } = await supabase
           .from("rfq_decision")
           .insert(decisions);
         if (decisionError) throw decisionError;
-
-        // Insert approval flow
+  
+        // 2. Insert approval flow
         const { error: approvalError } = await supabase
           .from("rfq_approval_flow")
           .insert({
@@ -800,33 +800,44 @@ export default function ViewRfq() {
           });
         if (approvalError) throw approvalError;
       }
-
-      // Update RFQ status
+  
+      // 3. Update RFQ status
       const { error: rfqStatusError } = await supabase
         .from("rfq")
         .update({ status: "ordered" })
         .eq("id", id);
       if (rfqStatusError) throw rfqStatusError;
-
+  
+      // 4. Update rfq_supplier for the accepted vendor
+      if (approvedVendorId) {
+        const { error: supplierError } = await supabase
+          .from("rfq_supplier")
+          .update({ status: "ordered_confirm" })
+          .match({ rfq_id: id, vendor_id: approvedVendorId });
+        if (supplierError) throw supplierError;
+      }
+  
       alert("RFQ processed successfully.");
     } catch (err) {
       console.error("Error during RFQ processing:", err);
       alert("Something went wrong. Please try again.");
     }
   };
-
+  
+  
   const handleRequestForApproval = async () => {
     try {
       if (userRole === initiator_role) {
+        // Initiator: collect and insert vendor decisions
         if (!approvedVendorId) {
           toast.error("Please select one vendor for approval.");
           return;
         }
-
+  
         const decisions = vendors
           .map(({ vendor_id }) => {
             const isSelected = vendor_id === approvedVendorId;
-
+  
             if (
               !isSelected &&
               (!rejectionReasons[vendor_id] ||
@@ -837,7 +848,7 @@ export default function ViewRfq() {
               );
               return null;
             }
-
+  
             return {
               rfq_id: id,
               vendor_id,
@@ -846,19 +857,44 @@ export default function ViewRfq() {
               action_by: user?.id,
             };
           })
-          .filter(Boolean);
-
-        // Insert vendor decisions
+          .filter((d): d is {
+            rfq_id: string;
+            vendor_id: string;
+            status: string;
+            reason: string;
+            action_by: string;
+          } => Boolean(d));
+  
         const { error: decisionError } = await supabase
           .from("rfq_decision")
           .insert(decisions);
-
-        if (decisionError) {
-          throw decisionError;
+        if (decisionError) throw decisionError;
+  
+      } else {
+        // Non-initiator: fetch existing approval flows
+        const { data: flows, error: fetchError } = await supabase
+          .from("rfq_approval_flow")
+          .select("id, role, status, created_at")
+          .eq("rfq_id", id)
+          .order("created_at", { ascending: true });
+  
+        if (fetchError) throw fetchError;
+        if (!flows || flows.length === 0) {
+          toast.error("No approval flow found to update.");
+          return;
         }
+  
+        // Update the most recent flow’s status to “approved”
+        const lastFlow = flows[flows.length - 1];
+        const { error: updateError } = await supabase
+          .from("rfq_approval_flow")
+          .update({ status: "approved" })
+          .eq("id", lastFlow.id);
+  
+        if (updateError) throw updateError;
       }
-
-      // Insert approval flow
+  
+      // In both cases, insert a new “requested” flow for the current user
       const { error: approvalError } = await supabase
         .from("rfq_approval_flow")
         .insert({
@@ -867,19 +903,15 @@ export default function ViewRfq() {
           status: "requested",
           role: userRole,
         });
-
-      if (approvalError) {
-        throw approvalError;
-      }
-
-
-    
+      if (approvalError) throw approvalError;
+  
       toast.success("Request for approval sent successfully.");
     } catch (err) {
       console.error("Error during RFQ processing:", err);
       toast.error("Something went wrong. Please try again.");
     }
   };
+  
 
   const handleVendorClick = (vendorId: string, vendorNumber: number) => {
     setSelectedVendor(vendorId);
@@ -1159,11 +1191,7 @@ export default function ViewRfq() {
               {showRequestButton ? (
                 <button
                   className={`mt-4 px-4 py-2 rounded-md text-sm font-medium
-    ${
-      userRole === "customer"
-        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-        : "bg-blue-600 text-white hover:bg-blue-700"
-    }`}
+   `}
                   onClick={() => {
                     handleRequestForApproval();
                   }}
@@ -1171,6 +1199,8 @@ export default function ViewRfq() {
                   Request for Approval
                 </button>
               ) : null}
+
+             
 
               <Button className="bg-red-600 hover:bg-red-700 text-white font-medium px-4 py-2 rounded-md shadow">
                 Cancel
