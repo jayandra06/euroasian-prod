@@ -69,46 +69,28 @@ function RFQInfoCard({
           {/* RFQ Info Section */}
           <div className="w-full p-6">
             <div className="grid grid-cols-5 gap-6">
+             
               <div className="flex flex-col">
-                <Label htmlFor="leadDate">Lead Date</Label>
+                <Label htmlFor="vesselName">
+                  Vessel Name <span className="text-red-500">*</span>
+                </Label>
                 <Input
-                  type="date"
-                  className="mt-2"
-                  id="leadDate"
-                  value={rfqInfo?.lead_date?.split("T")[0] || ""}
+                  type="text"
+                  id="vessel_name"
+                  placeholder="vessel_name"
+                  value={rfqInfo?.vessel_name}
                   disabled
                 />
               </div>
               <div className="flex flex-col">
-                <Label htmlFor="supplyPort">
-                  Supply Port <span className="text-red-500">*</span>
+                <Label htmlFor="Vessel Ex Name">
+                  Vessel Ex Name<span className="text-red-500">*</span>
                 </Label>
                 <Input
                   type="text"
-                  id="supply_port"
-                  value={rfqInfo?.supply_port || ""}
-                  disabled
-                />
-              </div>
-              <div className="flex flex-col">
-                <Label htmlFor="expireDate">
-                  Valid Until <span className="text-red-500 ml-1">*</span>
-                </Label>
-                <Input
-                  type="text"
-                  id="date"
-                  value={
-                    rfqInfo?.created_at
-                      ? new Date(rfqInfo.created_at).toLocaleDateString(
-                          "en-GB",
-                          {
-                            day: "2-digit",
-                            month: "long",
-                            year: "numeric",
-                          }
-                        )
-                      : ""
-                  }
+                  id="vessel_ex_name"
+                  placeholder="vessel ex name"
+                  value={rfqInfo?.vessel_name}
                   disabled
                 />
               </div>
@@ -124,31 +106,22 @@ function RFQInfoCard({
                   disabled
                 />
               </div>
+              <div className="flex flex-col">
+                <Label htmlFor="supplyPort">
+                  Supply Port <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  type="text"
+                  id="supply_port"
+                  value={rfqInfo?.supply_port || ""}
+                  disabled
+                />
+              </div>
+             
+             
 
-              <div className="flex flex-col">
-                <Label htmlFor="vesselName">
-                  Vessel Name <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  type="text"
-                  id="vessel_name"
-                  placeholder="vessel_name"
-                  value={rfqInfo?.vessel_name}
-                  disabled
-                />
-              </div>
-              <div className="flex flex-col">
-                <Label htmlFor="imoNo">
-                  HULL No <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  type="text"
-                  id="imoNo"
-                  placeholder="Enter HULL No."
-                  value={rfqInfo?.hull_no}
-                  disabled
-                />
-              </div>
+             
+            
               <div className="flex flex-col">
                 <Label htmlFor="clientName">Equipment Tags</Label>
                 <Input
@@ -157,6 +130,18 @@ function RFQInfoCard({
                   placeholder="Enter Equipment Tags"
                   value={rfqInfo?.equipement_tag}
                   className="mt-2"
+                  disabled
+                />
+              </div>
+              <div className="flex flex-col">
+                <Label htmlFor="category">
+                  Category <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  type="text"
+                  id="category"
+                  placeholder="category"
+                  value={rfqInfo?.category}
                   disabled
                 />
               </div>
@@ -186,19 +171,20 @@ function RFQInfoCard({
                   disabled
                 />
               </div>
-
               <div className="flex flex-col">
-                <Label htmlFor="category">
-                  Category <span className="text-red-500">*</span>
+                <Label htmlFor="model">
+                  Hull Number <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   type="text"
-                  id="category"
-                  placeholder="category"
-                  value={rfqInfo?.category}
+                  id="hull_number"
+                  placeholder="hull_number"
+                  value={rfqInfo?.model}
                   disabled
                 />
               </div>
+
+          
 
               {/* drawing Number */}
               <div className="flex flex-col">
@@ -224,24 +210,59 @@ function RFQInfoCard({
                 />
               </div>
               <div className="flex flex-col">
-                <Label htmlFor=" Genereal Remarks">Remarks</Label>
-                <Input
-                  type="text"
-                  id="remarks"
-                  placeholder="remarks"
-                  value={rfqInfo?.remarks || ""}
-                  className="mt-2"
-                  disabled
-                />
-              </div>
-
-              <div className="flex flex-col">
                 <Label htmlFor="clientName">Offer Quality</Label>
                 <Input
                   type="text"
                   id="clientName"
                   placeholder="Enter General Remark"
                   value={rfqInfo?.offer_quality}
+                  className="mt-2"
+                  disabled
+                />
+              </div>
+             
+
+          
+              <div className="flex flex-col">
+                <Label htmlFor="leadDate">Lead Date</Label>
+                <Input
+                  type="date"
+                  className="mt-2"
+                  id="leadDate"
+                  value={rfqInfo?.lead_date?.split("T")[0] || ""}
+                  disabled
+                />
+              </div>
+             
+              <div className="flex flex-col">
+                <Label htmlFor="expireDate">
+                  Valid Until <span className="text-red-500 ml-1">*</span>
+                </Label>
+                <Input
+                  type="text"
+                  id="date"
+                  value={
+                    rfqInfo?.created_at
+                      ? new Date(rfqInfo.created_at).toLocaleDateString(
+                          "en-GB",
+                          {
+                            day: "2-digit",
+                            month: "long",
+                            year: "numeric",
+                          }
+                        )
+                      : ""
+                  }
+                  disabled
+                />
+              </div>
+              <div className="flex flex-col">
+                <Label htmlFor=" Genereal Remarks">General Remarks</Label>
+                <Input
+                  type="text"
+                  id="remarks"
+                  placeholder="remarks"
+                  value={rfqInfo?.remarks || ""}
                   className="mt-2"
                   disabled
                 />

@@ -41,6 +41,10 @@ export default function RFQsPage() {
   const supabase = createClient();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStatus, setSelectedStatus] = useState(""); // Default '' or a specific status
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(10);
+  const [totalCount, setTotalCount] = useState(0);
+  const totalPages = Math.ceil(totalCount / pageSize);
 
   const fetchRfqs = useCallback(async () => {
     try {
@@ -53,7 +57,29 @@ export default function RFQsPage() {
         return;
       }
 
-      let query = supabase.from("rfq").select("*").eq("requested_by", user.id); // Always filter by user
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("user_role") // <-- Adjust field name if needed
+        .eq("id", user.id) // Assuming 'id' is the primary key in 'profile'
+        .single(); // Only one record expected
+      if (profileError) {
+        console.error("Error fetching user role:", profileError.message);
+        return;
+      }
+      if (!profile?.user_role) {
+        console.error("User role not found.");
+        return;
+      }
+      setUserRole(profile.user_role); // Set user role in state
+
+      const from = (currentPage - 1) * pageSize;
+      const to = from + pageSize - 1;
+
+      let query = supabase
+        .from("rfq")
+        .select("*", { count: "exact" }) // Include count
+        .eq("requested_by", user.id)
+        .range(from, to);
 
       // Apply status filter if selected
       if (selectedStatus) {
@@ -67,7 +93,7 @@ export default function RFQsPage() {
         );
       }
 
-      const { data: rfqsData, error: rfqsError } = await query;
+      const { data: rfqsData, error: rfqsError, count } = await query;
 
       if (rfqsError) {
         console.error("Error fetching RFQs:", rfqsError);
@@ -75,10 +101,19 @@ export default function RFQsPage() {
       }
 
       setRfqs(rfqsData as RFQ[]);
+      setTotalCount(count || 0);
     } catch (e) {
       console.error("Unable to fetch RFQs:", e);
     }
-  }, [supabase, selectedStatus, searchTerm]);
+  }, [supabase, selectedStatus, searchTerm, currentPage, pageSize]);
+
+  useEffect(() => {
+    fetchRfqs();
+  }, [fetchRfqs]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedStatus, searchTerm]);
 
   const fetchRfqRequests = useCallback(async () => {
     const {
@@ -154,9 +189,6 @@ export default function RFQsPage() {
   return (
     <div className="p-6">
       <div className="mb-6">
-        <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-4">
-          Manage RFQs
-        </h2>
         <div className="flex border-b border-gray-200 dark:border-gray-700">
           <button
             onClick={() => setActiveTab("yourRfqs")}
@@ -168,16 +200,18 @@ export default function RFQsPage() {
           >
             Your RFQs
           </button>
-          <button
-            onClick={() => setActiveTab("waitingApproval")}
-            className={`px-4 py-2 -mb-px font-semibold ${
-              activeTab === "waitingApproval"
-                ? "border-b-2 border-indigo-600 text-indigo-600 dark:text-indigo-400"
-                : "text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400"
-            }`}
-          >
-            Waiting for Approval
-          </button>
+          {userRole !== "manager" && (
+            <button
+              onClick={() => setActiveTab("waitingApproval")}
+              className={`px-4 py-2 -mb-px font-semibold ${
+                activeTab === "waitingApproval"
+                  ? "border-b-2 border-indigo-600 text-indigo-600 dark:text-indigo-400"
+                  : "text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400"
+              }`}
+            >
+              Waiting for Approval
+            </button>
+          )}
         </div>
       </div>
 
@@ -197,26 +231,26 @@ export default function RFQsPage() {
               </Link>
             </Button>
           </div>
-            <div className="flex justify-between mb-4">
-              <select
+          <div className="flex justify-between mb-4">
+            <select
               value={selectedStatus}
               onChange={(e) => setSelectedStatus(e.target.value)}
               className="border rounded px-2 py-1 w-48"
-              >
+            >
               <option value="">All Statuses</option>
               <option value="sent">Sent</option>
               <option value="ordered">Ordered</option>
               <option value="quoted">Quoted</option>
               <option value="delivered">Delivered</option>
-              </select>
-              <input
+            </select>
+            <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search RFQs by Vessel Name, Supply Port, Brand, or Category"
               className="border rounded px-2 py-1 w-96"
-              />
-            </div>
+            />
+          </div>
 
           <div className="overflow-x-auto">
             <Table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
@@ -349,8 +383,22 @@ export default function RFQsPage() {
                       {rfq.brand || "-"}
                     </TableCell>
                     <TableCell className="px-6 py-4 whitespace-nowrap text-sm">
-                      <span className="inline-flex items-center rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100">
-                        {rfq.status || "Pending"}
+                      <span
+                      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                        rfq.status === "ordered"
+                        ? "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100"
+                        : rfq.status === "sent"
+                        ? "bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100"
+                        : rfq.status === "quoted"
+                        ? "bg-purple-100 text-purple-800 dark:bg-purple-800 dark:text-purple-100"
+                        : rfq.status === "delivered"
+                        ? "bg-teal-100 text-teal-800 dark:bg-teal-800 dark:text-teal-100"
+                        : rfq.status === "cancelled"
+                        ? "bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100"
+                        : "bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100"
+                      }`}
+                      >
+                      {rfq.status || "Pending"}
                       </span>
                     </TableCell>
                     <TableCell className="relative px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -380,6 +428,33 @@ export default function RFQsPage() {
           </div>
         </div>
       )}
+      <div className="flex justify-between items-center mt-4">
+        <button
+          onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+          disabled={currentPage === 1}
+          className={`px-4 py-2 rounded-md font-semibold ${
+        currentPage === 1
+          ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+          : "bg-indigo-600 text-white hover:bg-indigo-700"
+          }`}
+        >
+          Previous
+        </button>
+        <span className="text-gray-700 dark:text-gray-300">
+          Page {currentPage} of {totalPages}
+        </span>
+        <button
+          onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+          disabled={currentPage === totalPages}
+          className={`px-4 py-2 rounded-md font-semibold ${
+        currentPage === totalPages
+          ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+          : "bg-indigo-600 text-white hover:bg-indigo-700"
+          }`}
+        >
+          Next
+        </button>
+      </div>
     </div>
   );
 }

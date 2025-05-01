@@ -51,10 +51,12 @@ export default function VendorManagement() {
     country: "",
     searchTerm: "",
   });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(10);
+  const [totalCount, setTotalCount] = useState(0);
+  const totalPages = Math.ceil(totalCount / pageSize);
 
   const router = useRouter();
-
-  
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFilters((prev) => ({
@@ -78,7 +80,7 @@ export default function VendorManagement() {
   };
 
   const getVendors = useCallback(
-    async (filters: any) => {
+    async (filters: any, page = 1, pageSize = 10) => {
       try {
         const {
           data: { user },
@@ -92,11 +94,14 @@ export default function VendorManagement() {
 
         setuserId(userId);
 
+        const from = (page - 1) * pageSize;
+        const to = from + pageSize - 1;
+
         let query = supabase
           .from("merchant")
-          .select("*")
-          .eq("parent_id", userId);
-        console.log("filters", filters);
+          .select("*", { count: "exact" }) // important: fetch total count
+          .eq("parent_id", userId)
+          .range(from, to);
 
         if (filters.status) query = query.eq("status", filters.status);
         if (filters.vendorType)
@@ -109,8 +114,14 @@ export default function VendorManagement() {
           query = query.ilike("name", `%${filters.searchTerm}%`);
         }
 
-        const { data: directMerchants, error: directError } = await query;
+        const {
+          data: directMerchants,
+          error: directError,
+          count,
+        } = await query;
         if (directError) throw directError;
+
+        setTotalCount(count || 0);
 
         let accessQuery = supabase
           .from("vendor_access")
@@ -141,8 +152,8 @@ export default function VendorManagement() {
   );
 
   useEffect(() => {
-    getVendors(filters);
-  }, [filters, getVendors]);
+    getVendors(filters, currentPage, pageSize);
+  }, [filters, currentPage]);
 
   const type = "INTERNAL_VENDOR";
 
@@ -293,69 +304,66 @@ export default function VendorManagement() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+      </div>
+      <div className="flex flex-wrap items-center justify-between space-y-4 mb-6">
+        <div className="flex flex-col space-y-2 w-full sm:w-auto sm:mr-4">
+          <Label
+            htmlFor="status-filter"
+            className="text-sm font-medium text-gray-700 dark:text-gray-300"
+          >
+            Filter by Status
+          </Label>
+          <select
+            id="status-filter"
+            value={filters.status}
+            onChange={handleStatusChange}
+            className="border px-2 py-1 rounded dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100"
+          >
+            <option value="">All Statuses</option>
+            <option value="approved">Approved</option>
+            <option value="waiting">Pending</option>
+            <option value="rejected">Rejected</option>
+          </select>
         </div>
-<div className="flex flex-wrap items-center justify-between space-y-4 mb-6">
-  <div className="flex flex-col space-y-2 w-full sm:w-auto sm:mr-4">
-    <Label
-      htmlFor="status-filter"
-      className="text-sm font-medium text-gray-700 dark:text-gray-300"
-    >
-      Filter by Status
-    </Label>
-    <select
-      id="status-filter"
-      value={filters.status}
-      onChange={handleStatusChange}
-      className="border px-2 py-1 rounded dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100"
-    >
-      <option value="">All Statuses</option>
-      <option value="approved">Approved</option>
-      <option value="waiting">Pending</option>
-      <option value="rejected">Rejected</option>
-    </select>
-  </div>
 
-  <div className="flex flex-col space-y-2 w-full sm:w-auto sm:mr-4">
-    <Label
-      htmlFor="vendor-type-filter"
-      className="text-sm font-medium text-gray-700 dark:text-gray-300"
-    >
-      Filter by Vendor Type
-    </Label>
-    <select
-      id="vendor-type-filter"
-      value={filters.vendorType}
-      onChange={(e) =>
-        setFilters({ ...filters, vendorType: e.target.value })
-      }
-      className="border px-2 py-1 rounded dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100"
-    >
-      <option value="">All Vendor Types</option>
-      <option value="INTERNAL_VENDOR">Internal Vendor</option>
-      <option value="EXTERNAL_VENDOR">External Vendor</option>
-    </select>
-  </div>
+        <div className="flex flex-col space-y-2 w-full sm:w-auto sm:mr-4">
+          <Label
+            htmlFor="vendor-type-filter"
+            className="text-sm font-medium text-gray-700 dark:text-gray-300"
+          >
+            Filter by Vendor Type
+          </Label>
+          <select
+            id="vendor-type-filter"
+            value={filters.vendorType}
+            onChange={(e) =>
+              setFilters({ ...filters, vendorType: e.target.value })
+            }
+            className="border px-2 py-1 rounded dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100"
+          >
+            <option value="">All Vendor Types</option>
+            <option value="INTERNAL_VENDOR">Internal Vendor</option>
+            <option value="EXTERNAL_VENDOR">External Vendor</option>
+          </select>
+        </div>
 
-  <div className="flex flex-col space-y-2 w-full sm:w-auto sm:flex-1">
-    <Label
-      htmlFor="search-filter"
-      className="text-sm font-medium text-gray-700 dark:text-gray-300"
-    >
-      Search Vendors
-    </Label>
-    <Input
-      id="search-filter"
-      type="text"
-      placeholder="Search by vendor name, email, status, phone..."
-      value={searchTerm}
-      onChange={(e) => setSearchTerm(e.target.value)}
-      className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
-    />
-  </div>
-</div>
-
-       
-      
+        <div className="flex flex-col space-y-2 w-full sm:w-auto sm:flex-1">
+          <Label
+            htmlFor="search-filter"
+            className="text-sm font-medium text-gray-700 dark:text-gray-300"
+          >
+            Search Vendors
+          </Label>
+          <Input
+            id="search-filter"
+            type="text"
+            placeholder="Search by vendor name, email, status, phone..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+          />
+        </div>
+      </div>
 
       <div className="overflow-x-auto">
         <Table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
@@ -379,38 +387,38 @@ export default function VendorManagement() {
               </TableHead>
             </TableRow>
           </TableHeader>
-            <TableBody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
+          <TableBody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
             {filteredVendors.length > 0 ? (
               filteredVendors.map((vendor) => (
-              <TableRow key={vendor.id}>
-                <TableCell className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
-                {vendor.name}
-                </TableCell>
-                <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                {vendor.business_email}
-                </TableCell>
-                <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                {vendor.phone || "N/A"}
-                </TableCell>
-                <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                {vendor.vendor_type || "N/A"}
-                </TableCell>
-                <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                {vendor.status || "N/A"}
-                </TableCell>
-                <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                <div className="relative">
-                  <Button
-                  className="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-2 py-1 rounded-md"
-                  onClick={() =>
-                    window.location.href = `http://localhost:3000/dashboard/customer/view-vendor/${vendor.id}`
-                  }
-                  >
-                  View
-                  </Button>
-                </div>
-                </TableCell>
-              </TableRow>
+                <TableRow key={vendor.id}>
+                  <TableCell className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
+                    {vendor.name}
+                  </TableCell>
+                  <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                    {vendor.business_email}
+                  </TableCell>
+                  <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                    {vendor.phone || "N/A"}
+                  </TableCell>
+                  <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                    {vendor.vendor_type || "N/A"}
+                  </TableCell>
+                  <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                    {vendor.status || "N/A"}
+                  </TableCell>
+                  <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                    <div className="relative">
+                      <Button
+                        className="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-2 py-1 rounded-md"
+                        onClick={() =>
+                          (window.location.href = `http://localhost:3000/dashboard/customer/view-vendor/${vendor.id}`)
+                        }
+                      >
+                        View
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
               ))
             ) : (
               <TableRow>
@@ -424,6 +432,35 @@ export default function VendorManagement() {
             )}
           </TableBody>
         </Table>
+      </div>
+      <div className="flex justify-center gap-2 mt-4">
+        <button
+          onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+          disabled={currentPage === 1}
+          className={`px-4 py-2 rounded ${
+            currentPage === 1
+              ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+              : "bg-indigo-600 text-white hover:bg-indigo-700"
+          }`}
+        >
+          Previous
+        </button>
+        <span>
+          Page {currentPage} of {totalPages}
+        </span>
+        <button
+          onClick={() =>
+            setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+          }
+          disabled={currentPage === totalPages}
+          className={`px-4 py-2 rounded ${
+            currentPage === totalPages
+              ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+              : "bg-indigo-600 text-white hover:bg-indigo-700"
+          }`}
+        >
+          Next
+        </button>
       </div>
     </div>
   );

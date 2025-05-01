@@ -111,7 +111,6 @@ function ProfileRow({ profile, i }: { profile: Profile; i: number }) {
         <TableCell>{profile.primary_contact_person}</TableCell>
         <TableCell>{profile.number_of_vessels}</TableCell>
 
-      
         <TableCell className="text-center px-4 py-3 text-md">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -191,6 +190,7 @@ export default function CustomersPage() {
   const [filterStatus, setFilterStatus] = useState<"accepted" | "pending">(
     "accepted"
   );
+  const [searchTerm, setSearchTerm] = useState("");
 
   async function fetchProfiles() {
     try {
@@ -208,12 +208,11 @@ export default function CustomersPage() {
           status: filterStatus,
           from: startIndex,
           to: endIndex,
+          search: searchTerm.trim(),
         }),
       });
 
       const result = await res.json();
-
-      console.log("result", result);
 
       if (!res.ok || !result.success) {
         console.error("Error fetching profiles:", result.error);
@@ -232,7 +231,7 @@ export default function CustomersPage() {
 
   useEffect(() => {
     fetchProfiles();
-  }, [currentPage, filterStatus]);
+  }, [currentPage, filterStatus, searchTerm]);
 
   const totalPages = Math.ceil(totalCustomers / ITEMS_PER_PAGE);
 
@@ -300,6 +299,8 @@ export default function CustomersPage() {
         <div>
           <h1 className="text-xl font-bold">All Customers</h1>
         </div>
+        <div className="mb-4"></div>
+
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
             <Button className="bg-black shadow-md hover:bg-gray-800 text-white font-bold py-2 px-4 rounded">
@@ -385,27 +386,36 @@ export default function CustomersPage() {
           </DialogContent>
         </Dialog>
       </div>
+      <div className="flex justify-between items-center mb-4">
+        <div className="flex mb-4">
+          <Button
+            variant={filterStatus === "accepted" ? "default" : "outline"}
+            onClick={() => {
+              setCurrentPage(1);
+              setFilterStatus("accepted");
+            }}
+            className="mr-2"
+          >
+            Accepted
+          </Button>
+          <Button
+            variant={filterStatus === "pending" ? "default" : "outline"}
+            onClick={() => {
+              setCurrentPage(1);
+              setFilterStatus("pending");
+            }}
+          >
+            Pending
+          </Button>
+        </div>
 
-      <div className="flex mb-4">
-        <Button
-          variant={filterStatus === "accepted" ? "default" : "outline"}
-          onClick={() => {
-            setCurrentPage(1);
-            setFilterStatus("accepted");
-          }}
-          className="mr-2"
-        >
-          Accepted
-        </Button>
-        <Button
-          variant={filterStatus === "pending" ? "default" : "outline"}
-          onClick={() => {
-            setCurrentPage(1);
-            setFilterStatus("pending");
-          }}
-        >
-          Pending
-        </Button>
+        <input
+          type="text"
+          placeholder="Search customers..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="border px-3 py-2 rounded w-full max-w-md"
+        />
       </div>
 
       <div className="mt-8">

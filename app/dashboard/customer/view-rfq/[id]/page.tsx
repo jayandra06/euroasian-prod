@@ -811,6 +811,14 @@ export default function ViewRfq() {
         .eq("id", id);
       if (rfqStatusError) throw rfqStatusError;
 
+      // 4. Update remaining suppliers as canceled
+      const { error: remainingSuppliersError } = await supabase
+        .from("rfq_supplier")
+        .update({ status: "canceled" })
+        .match({ rfq_id: id })
+        .neq("vendor_id", approvedVendorId);
+      if (remainingSuppliersError) throw remainingSuppliersError;
+
       // 4. Update rfq_supplier for the accepted vendor
       if (approvedVendorId) {
         const { error: supplierError } = await supabase
@@ -845,9 +853,7 @@ export default function ViewRfq() {
               (!rejectionReasons[vendor_id] ||
                 rejectionReasons[vendor_id].trim() === "")
             ) {
-              toast.error(
-                `Please provide a rejection reason for vendor ${vendor_id}`
-              );
+             
               return null;
             }
 

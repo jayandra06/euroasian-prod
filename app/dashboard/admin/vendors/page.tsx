@@ -42,6 +42,10 @@ export default function InventoryMerchnats() {
     const [currentStatus, setCurrentStatus] = useState<MerchantStatus>("all");
     const [userId, setUserId] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
+    const [searchTerm, setSearchTerm] = useState("");
+    const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+    
+
     const supabase = createClient();
 
     useEffect(() => {
@@ -77,28 +81,51 @@ export default function InventoryMerchnats() {
     async function fetchMerchants() {
         const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
         const endIndex = startIndex + ITEMS_PER_PAGE - 1;
-
+      
         let query = supabase
-            .from("merchant")
-            .select("*", { count: "exact" })
-            .range(startIndex, endIndex);
-
+          .from("merchant")
+          .select("*", { count: "exact" })
+          .range(startIndex, endIndex);
+      
         if (currentStatus !== "all") {
-            query = query.eq(
-                "status",
-                currentStatus === "disabled" ? "rejected" : currentStatus
-            ); // Assuming 'rejected' is 'disabled' in your DB
+          query = query.eq(
+            "status",
+            currentStatus === "disabled" ? "rejected" : currentStatus
+          );
         }
-
+      
+        if (debouncedSearchTerm.trim()) {
+          // Add all searchable fields here
+          query = query.or(
+            `name.ilike.%${debouncedSearchTerm}%,business_email.ilike.%${debouncedSearchTerm}%,phone.ilike.%${debouncedSearchTerm}%`
+          );
+        }
+      
         const { data, error, count } = await query;
-
+      
         if (error) {
-            toast.error(`Failed to fetch merchants: ${error.message}`);
+          toast.error(`Failed to fetch merchants: ${error.message}`);
         } else {
-            setMerchants(data || []);
-            setTotalMerchants(count || 0);
+          setMerchants(data || []);
+          setTotalMerchants(count || 0);
         }
-    }
+      }
+      
+      
+
+      useEffect(() => {
+        fetchMerchants(); // or fetchCustomers(), depending on your function
+      }, [debouncedSearchTerm, currentPage, currentStatus]);
+      
+      useEffect(() => {
+        const handler = setTimeout(() => {
+          setDebouncedSearchTerm(searchTerm);
+        }, 500); // Wait 500ms after user stops typing
+      
+        return () => clearTimeout(handler);
+      }, [searchTerm]);
+      
+      
 
     const addVendor = async (e: any) => {
         e.preventDefault();
@@ -192,6 +219,11 @@ export default function InventoryMerchnats() {
         <main className="mt-8 p-4">
             <div className="flex justify-between items-center mb-4">
                 <h1 className="text-xl font-bold">All Merchants</h1>
+                <div className="mb-4">
+ 
+
+</div>
+
                 <Dialog>
                     <DialogTrigger asChild>
                         <Button variant={"outline"}>Add Vendor</Button>
@@ -228,7 +260,7 @@ export default function InventoryMerchnats() {
                     </DialogContent>
                 </Dialog>
             </div>
-
+<div className="flex justify-between items-center mb-4">
             <div className="flex space-x-2 mb-4">
                 <Button
                     variant={currentStatus === "all" ? "default" : "outline"}
@@ -262,6 +294,14 @@ export default function InventoryMerchnats() {
                 </Button>
                
             </div>
+            <input
+  type="text"
+  placeholder="Search by name, email, or company"
+  value={searchTerm}
+  onChange={(e) => setSearchTerm(e.target.value)}
+  className="border px-2 py-1 rounded w-full max-w-md"
+/>
+</div>
 
             <div className="mt-8">
                 <Table>

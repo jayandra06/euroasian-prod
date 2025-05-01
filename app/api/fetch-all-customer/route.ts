@@ -2,7 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 
 export async function POST(request: Request) {
   try {
-    const { status } = await request.json();
+    const { status, search, from = 0, to = 9 } = await request.json();
 
     if (!status) {
       return new Response(
@@ -26,13 +26,22 @@ export async function POST(request: Request) {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
-    // Fetch customers with dynamic status
-    const { data: customers, error } = await supabaseAdmin
+    let query = supabaseAdmin
       .from("customer_details")
       .select(
-        "shipping_company_name, primary_contact_person, official_email_address, mobile_phone_number, number_of_vessels,id,status"
+        "shipping_company_name, primary_contact_person, official_email_address, mobile_phone_number, number_of_vessels, id, status",
+        { count: "exact" }
       )
-      .eq("status", status);
+      .eq("status", status)
+      .range(from, to);
+
+    if (search && search.trim() !== "") {
+      query = query.or(
+        `shipping_company_name.ilike.%${search}%,primary_contact_person.ilike.%${search}%,official_email_address.ilike.%${search}%,mobile_phone_number.ilike.%${search}%`
+      );
+    }
+
+    const { data: customers, error, count } = await query;
 
     if (error) {
       console.error("Error fetching customer details:", error);
@@ -42,9 +51,10 @@ export async function POST(request: Request) {
       );
     }
 
-    return new Response(JSON.stringify({ success: true, customers }), {
-      status: 200,
-    });
+    return new Response(
+      JSON.stringify({ success: true, customers, total: count }),
+      { status: 200 }
+    );
   } catch (err: any) {
     console.error("Unexpected error:", err);
     return new Response(

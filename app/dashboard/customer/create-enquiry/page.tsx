@@ -150,6 +150,52 @@ function RFQInfoCard({
                   <p className="text-red-500 text-sm">{errors.vessel_name}</p>
                 )}
               </div>
+              <div className="flex flex-col">
+                <Label htmlFor="vesselExNumber">Vessel Ex Name</Label>
+                <Input
+                  type="text"
+                  id="vesselExNumber"
+                  placeholder="Vessel Ex Number"
+                  name="vessel_ex_name"
+                  value={createRfq.vessel_ex_name}
+                  onChange={(e) =>
+                    setcreateRfq({
+                      ...createRfq,
+                      vessel_ex_name: e.target.value,
+                    })
+                  }
+                  className={`border mt-2 ${
+                    errors.vessel_ex_name ? "border-red-500" : "border-gray-300"
+                  }`}
+                />
+                {errors.vessel_ex_name && (
+                  <p className="text-red-500 text-sm">
+                    {errors.vessel_ex_name}
+                  </p>
+                )}
+              </div>
+
+              <div className="flex flex-col">
+                <Label htmlFor="imoNo">
+                  IMO No <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  type="text"
+                  id="imoNo"
+                  placeholder="IMO No."
+                  name="imo_no"
+                  value={createRfq.imo_no}
+                  onChange={(e) =>
+                    setcreateRfq({ ...createRfq, imo_no: e.target.value })
+                  }
+                  className={`border mt-2 ${
+                    errors.imo_no ? "border-red-500" : "border-gray-300"
+                  }`}
+                />
+                {errors.imo_no && (
+                  <p className="text-red-500 text-sm">{errors.imo_no}</p>
+                )}
+              </div>
 
               <div className="flex flex-col">
                 <Label htmlFor="supplyPort">
@@ -183,85 +229,7 @@ function RFQInfoCard({
                   <p className="text-red-500 text-sm">{errors.supply_port}</p>
                 )}
               </div>
-              <div className="flex flex-col">
-                <Label htmlFor="createdDate">Created Date</Label>
-                <Input
-                  type="date"
-                  className="mt-2"
-                  id="createDate"
-                  value={new Date().toISOString().split("T")[0]}
-                  disabled
-                />
-              </div>
-              <div className="flex flex-col">
-                <Label htmlFor="leadDate">
-                  Lead Date <span className="text-red-500 ml-1">*</span>
-                </Label>
-                <Input
-                  type="date"
-                  id="lead_date"
-                  name="lead_date"
-                  placeholder="Lead date"
-                  value={createRfq.lead_date}
-                  onChange={(e) => {
-                    setcreateRfq({ ...createRfq, lead_date: e.target.value });
-                  }}
-                  className={`grid  mt-2 border ${
-                    errors.lead_date ? "border-red-500" : "border-gray-300"
-                  }`}
-                />
-                {errors.lead_date && (
-                  <p className="text-red-500 text-sm">{errors.lead_date}</p>
-                )}
-              </div>
 
-              <div className="flex flex-col">
-                <Label htmlFor="drawingNumber">Drawing Number</Label>
-                <Input
-                  type="text"
-                  id="drawingNumber"
-                  name="drawing_number"
-                  placeholder="Drawing Number"
-                  value={createRfq.drawing_number}
-                  onChange={(e) => {
-                    setcreateRfq({
-                      ...createRfq,
-                      drawing_number: e.target.value,
-                    });
-                    setErrors({ ...errors, drawing_number: "" });
-                  }}
-                  className={`grid  mt-2 border ${
-                    errors.drawing_number ? "border-red-500" : "border-gray-300"
-                  }`}
-                />
-                {errors.drawing_number && (
-                  <p className="text-red-500 text-sm">
-                    {errors.drawing_number}
-                  </p>
-                )}
-              </div>
-
-              <div className="flex flex-col">
-                <Label htmlFor="imoNo">
-                  IMO No <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  type="text"
-                  id="imoNo"
-                  placeholder="IMO No."
-                  name="imo_no"
-                  value={createRfq.imo_no}
-                  onChange={(e) =>
-                    setcreateRfq({ ...createRfq, imo_no: e.target.value })
-                  }
-                  className={`border mt-2 ${
-                    errors.imo_no ? "border-red-500" : "border-gray-300"
-                  }`}
-                />
-                {errors.imo_no && (
-                  <p className="text-red-500 text-sm">{errors.imo_no}</p>
-                )}
-              </div>
               <div className="flex flex-col">
                 <Label htmlFor="equipmentTag">Equipment Tags</Label>
                 <Input
@@ -285,6 +253,37 @@ function RFQInfoCard({
                   <p className="text-red-500 text-sm">
                     {errors.equipement_tag}
                   </p>
+                )}
+              </div>
+
+              <div className="flex flex-col">
+                <Label htmlFor="category">
+                  Category <span className="text-red-500">*</span>
+                </Label>
+                <Select
+                  name="category"
+                  onValueChange={(v) => {
+                    setcreateRfq({ ...createRfq, category: v });
+                    setErrors({ ...errors, category: "" });
+                  }}
+                >
+                  <SelectTrigger
+                    className={`border mt-2 ${
+                      errors.category ? "border-red-500" : "border-gray-300"
+                    }`}
+                  >
+                    <SelectValue placeholder="Select Category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {category.map((cat, i) => (
+                      <SelectItem value={cat.name} key={i}>
+                        {cat.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {errors.category && (
+                  <p className="text-red-500 text-sm">{errors.category}</p>
                 )}
               </div>
 
@@ -350,37 +349,6 @@ function RFQInfoCard({
                 )}
               </div>
 
-              <div className="flex flex-col">
-                <Label htmlFor="category">
-                  Category <span className="text-red-500">*</span>
-                </Label>
-                <Select
-                  name="category"
-                  onValueChange={(v) => {
-                    setcreateRfq({ ...createRfq, category: v });
-                    setErrors({ ...errors, category: "" });
-                  }}
-                >
-                  <SelectTrigger
-                    className={`border mt-2 ${
-                      errors.category ? "border-red-500" : "border-gray-300"
-                    }`}
-                  >
-                    <SelectValue placeholder="Select Category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {category.map((cat, i) => (
-                      <SelectItem value={cat.name} key={i}>
-                        {cat.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {errors.category && (
-                  <p className="text-red-500 text-sm">{errors.category}</p>
-                )}
-              </div>
-
               {/* drawing Number */}
               <div className="flex flex-col">
                 <Label htmlFor="imoNo">
@@ -403,6 +371,53 @@ function RFQInfoCard({
                   <p className="text-red-500 text-sm">{errors.hull_no}</p>
                 )}
               </div>
+
+              <div className="flex flex-col">
+                <Label htmlFor="drawingNumber">Drawing Number</Label>
+                <Input
+                  type="text"
+                  id="drawingNumber"
+                  name="drawing_number"
+                  placeholder="Drawing Number"
+                  value={createRfq.drawing_number}
+                  onChange={(e) => {
+                    setcreateRfq({
+                      ...createRfq,
+                      drawing_number: e.target.value,
+                    });
+                    setErrors({ ...errors, drawing_number: "" });
+                  }}
+                  className={`grid  mt-2 border ${
+                    errors.drawing_number ? "border-red-500" : "border-gray-300"
+                  }`}
+                />
+                {errors.drawing_number && (
+                  <p className="text-red-500 text-sm">
+                    {errors.drawing_number}
+                  </p>
+                )}
+              </div>
+
+              <div className="flex flex-col">
+                <Label htmlFor="serialNumber">Serial Number</Label>
+                <Input
+                  type="text"
+                  id="serialNumber"
+                  placeholder="Serial Number"
+                  name="serial_no"
+                  value={createRfq.serial_no}
+                  onChange={(e) =>
+                    setcreateRfq({ ...createRfq, serial_no: e.target.value })
+                  }
+                  className={`border mt-2 ${
+                    errors.serial_no ? "border-red-500" : "border-gray-300"
+                  }`}
+                />
+                {errors.serial_no && (
+                  <p className="text-red-500 text-sm">{errors.serial_no}</p>
+                )}
+              </div>
+
               <div className="flex flex-col">
                 <Label htmlFor="model">
                   Offered Quality <span className="text-red-500">*</span>
@@ -436,6 +451,38 @@ function RFQInfoCard({
                   <p className="text-red-500 text-sm">{errors.offer_quality}</p>
                 )}
               </div>
+
+              <div className="flex flex-col">
+                <Label htmlFor="createdDate">Created Date</Label>
+                <Input
+                  type="date"
+                  className="mt-2"
+                  id="createDate"
+                  value={new Date().toISOString().split("T")[0]}
+                  disabled
+                />
+              </div>
+              <div className="flex flex-col">
+                <Label htmlFor="leadDate">
+                  Lead Date <span className="text-red-500 ml-1">*</span>
+                </Label>
+                <Input
+                  type="date"
+                  id="lead_date"
+                  name="lead_date"
+                  placeholder="Lead date"
+                  value={createRfq.lead_date}
+                  onChange={(e) => {
+                    setcreateRfq({ ...createRfq, lead_date: e.target.value });
+                  }}
+                  className={`grid  mt-2 border ${
+                    errors.lead_date ? "border-red-500" : "border-gray-300"
+                  }`}
+                />
+                {errors.lead_date && (
+                  <p className="text-red-500 text-sm">{errors.lead_date}</p>
+                )}
+              </div>
               <div className="flex flex-col">
                 <Label htmlFor="general_remarks">General Remarks</Label>
                 <Input
@@ -462,49 +509,7 @@ function RFQInfoCard({
                   </p>
                 )}
               </div>
-              <div className="flex flex-col">
-                <Label htmlFor="serialNumber">Serial Number</Label>
-                <Input
-                  type="text"
-                  id="serialNumber"
-                  placeholder="Serial Number"
-                  name="serial_no"
-                  value={createRfq.serial_no}
-                  onChange={(e) =>
-                    setcreateRfq({ ...createRfq, serial_no: e.target.value })
-                  }
-                  className={`border mt-2 ${
-                    errors.serial_no ? "border-red-500" : "border-gray-300"
-                  }`}
-                />
-                {errors.serial_no && (
-                  <p className="text-red-500 text-sm">{errors.serial_no}</p>
-                )}
-              </div>
-              <div className="flex flex-col">
-                <Label htmlFor="vesselExNumber">Vessel Ex Name</Label>
-                <Input
-                  type="text"
-                  id="vesselExNumber"
-                  placeholder="Vessel Ex Number"
-                  name="vessel_ex_name"
-                  value={createRfq.vessel_ex_name}
-                  onChange={(e) =>
-                    setcreateRfq({
-                      ...createRfq,
-                      vessel_ex_name: e.target.value,
-                    })
-                  }
-                  className={`border mt-2 ${
-                    errors.vessel_ex_name ? "border-red-500" : "border-gray-300"
-                  }`}
-                />
-                {errors.vessel_ex_name && (
-                  <p className="text-red-500 text-sm">
-                    {errors.vessel_ex_name}
-                  </p>
-                )}
-              </div>
+
               <div className="flex flex-col">
                 <Label htmlFor="upload">Upload File</Label>
                 <Input
@@ -879,7 +884,8 @@ export default function CreateEnquiryPage() {
         return;
       }
 
-      const ADMIN_ID = process.env.ADMIN_MERCHANT_ID || 'cc331901-9a8f-4d07-a4c5-7605cfbbdb6f';
+      const ADMIN_ID =
+        process.env.ADMIN_MERCHANT_ID || "cc331901-9a8f-4d07-a4c5-7605cfbbdb6f";
       // Insert into rfq_supplier
       try {
         const vendorsToInsert = [
@@ -888,7 +894,6 @@ export default function CreateEnquiryPage() {
             .map((v) => ({ rfq_id: rfqData.id, vendor_id: v.vendorId })),
           { rfq_id: rfqData.id, vendor_id: ADMIN_ID }, // Always include admin
         ];
-        
 
         if (vendorsToInsert.length === 0) {
           console.warn("⚠️ No vendors selected. Skipping rfq_supplier.");
