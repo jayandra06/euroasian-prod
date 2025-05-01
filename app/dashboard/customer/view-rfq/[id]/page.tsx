@@ -445,9 +445,7 @@ export default function ViewRfq() {
     status: string;
     created_at: string;
   };
-  
- 
-  
+
   useEffect(() => {
     if (vendors.length > 0 && !selectedVendor) {
       setSelectedVendor(vendors[0].vendor_id);
@@ -491,7 +489,9 @@ export default function ViewRfq() {
 
         const { data: profileData } = profileResponse;
         const { data: rfqData } = rfqResponse;
-        const { data: approvalData } = approvalResponse as { data: ApprovalEntry[] };
+        const { data: approvalData } = approvalResponse as {
+          data: ApprovalEntry[];
+        };
 
         console.log("Profile Data:", profileData);
         console.log("RFQ Data:", rfqData);
@@ -515,7 +515,6 @@ export default function ViewRfq() {
         } else if (initiatorRole === "branch_admin") {
           approvalFlow.push("branch_admin", "customer");
         } else if (initiatorRole === "customer") {
-          approvalFlow.push("customer");
         }
 
         const approvedRoles = approvalData?.map((entry) => entry.role) || [];
@@ -541,11 +540,13 @@ export default function ViewRfq() {
         // Enable Confirm Delivery when ALL roles have "requested"
         const allRequested = approvalFlow.every((role) =>
           approvalData?.some(
-            (entry) => entry.role === role && entry.status === "requested" || entry.status !== "approved"
+            (entry) =>
+              (entry.role === role && entry.status === "requested") ||
+              entry.status !== "approved"
           )
         );
         console.log("All Requested:", approvalFlow.length);
-        console.log("All Requested:",approvalData.length );
+        console.log("All Requested:", approvalData.length);
 
         if (
           allRequested &&
@@ -736,10 +737,10 @@ export default function ViewRfq() {
 
   const handleConfirmDelivery = async (approvalStatus = "approved") => {
     if (userRole === "customer" && !approvedVendorId) {
-      alert("Please select one vendor for approval.");
+      toast.error("Please select one vendor for approval.");
       return;
     }
-  
+
     let decisions: {
       rfq_id: string;
       vendor_id: string;
@@ -747,21 +748,21 @@ export default function ViewRfq() {
       reason: string;
       action_by: string;
     }[] = [];
-  
+
     if (userRole === "customer") {
       decisions = vendors
         .map(({ vendor_id }) => {
           const isSelected = vendor_id === approvedVendorId;
-  
+
           if (
             !isSelected &&
             (!rejectionReasons[vendor_id] ||
               rejectionReasons[vendor_id].trim() === "")
           ) {
-            alert(`Please provide a rejection reason for vendor ${vendor_id}`);
+            toast(`Please provide a rejection reason for vendor ${vendor_id}`);
             return undefined;
           }
-  
+
           return {
             rfq_id: id as string,
             vendor_id: vendor_id as string,
@@ -771,7 +772,9 @@ export default function ViewRfq() {
           };
         })
         .filter(
-          (d): d is {
+          (
+            d
+          ): d is {
             rfq_id: string;
             vendor_id: string;
             status: string;
@@ -780,7 +783,7 @@ export default function ViewRfq() {
           } => Boolean(d)
         );
     }
-  
+
     try {
       if (userRole === "customer") {
         // 1. Insert vendor decisions
@@ -788,7 +791,7 @@ export default function ViewRfq() {
           .from("rfq_decision")
           .insert(decisions);
         if (decisionError) throw decisionError;
-  
+
         // 2. Insert approval flow
         const { error: approvalError } = await supabase
           .from("rfq_approval_flow")
@@ -800,14 +803,14 @@ export default function ViewRfq() {
           });
         if (approvalError) throw approvalError;
       }
-  
+
       // 3. Update RFQ status
       const { error: rfqStatusError } = await supabase
         .from("rfq")
         .update({ status: "ordered" })
         .eq("id", id);
       if (rfqStatusError) throw rfqStatusError;
-  
+
       // 4. Update rfq_supplier for the accepted vendor
       if (approvedVendorId) {
         const { error: supplierError } = await supabase
@@ -816,15 +819,14 @@ export default function ViewRfq() {
           .match({ rfq_id: id, vendor_id: approvedVendorId });
         if (supplierError) throw supplierError;
       }
-  
-      alert("RFQ processed successfully.");
+
+      toast.success("Delivery confirmed successfully.");
     } catch (err) {
       console.error("Error during RFQ processing:", err);
-      alert("Something went wrong. Please try again.");
+      toast.success("Something went wrong. Please try again.");
     }
   };
-  
-  
+
   const handleRequestForApproval = async () => {
     try {
       if (userRole === initiator_role) {
@@ -833,11 +835,11 @@ export default function ViewRfq() {
           toast.error("Please select one vendor for approval.");
           return;
         }
-  
+
         const decisions = vendors
           .map(({ vendor_id }) => {
             const isSelected = vendor_id === approvedVendorId;
-  
+
             if (
               !isSelected &&
               (!rejectionReasons[vendor_id] ||
@@ -848,7 +850,7 @@ export default function ViewRfq() {
               );
               return null;
             }
-  
+
             return {
               rfq_id: id,
               vendor_id,
@@ -857,19 +859,22 @@ export default function ViewRfq() {
               action_by: user?.id,
             };
           })
-          .filter((d): d is {
-            rfq_id: string;
-            vendor_id: string;
-            status: string;
-            reason: string;
-            action_by: string;
-          } => Boolean(d));
-  
+          .filter(
+            (
+              d
+            ): d is {
+              rfq_id: string;
+              vendor_id: string;
+              status: string;
+              reason: string;
+              action_by: string;
+            } => Boolean(d)
+          );
+
         const { error: decisionError } = await supabase
           .from("rfq_decision")
           .insert(decisions);
         if (decisionError) throw decisionError;
-  
       } else {
         // Non-initiator: fetch existing approval flows
         const { data: flows, error: fetchError } = await supabase
@@ -877,23 +882,23 @@ export default function ViewRfq() {
           .select("id, role, status, created_at")
           .eq("rfq_id", id)
           .order("created_at", { ascending: true });
-  
+
         if (fetchError) throw fetchError;
         if (!flows || flows.length === 0) {
           toast.error("No approval flow found to update.");
           return;
         }
-  
+
         // Update the most recent flow’s status to “approved”
         const lastFlow = flows[flows.length - 1];
         const { error: updateError } = await supabase
           .from("rfq_approval_flow")
           .update({ status: "approved" })
           .eq("id", lastFlow.id);
-  
+
         if (updateError) throw updateError;
       }
-  
+
       // In both cases, insert a new “requested” flow for the current user
       const { error: approvalError } = await supabase
         .from("rfq_approval_flow")
@@ -904,18 +909,22 @@ export default function ViewRfq() {
           role: userRole,
         });
       if (approvalError) throw approvalError;
-  
+
       toast.success("Request for approval sent successfully.");
     } catch (err) {
       console.error("Error during RFQ processing:", err);
       toast.error("Something went wrong. Please try again.");
     }
   };
-  
 
   const handleVendorClick = (vendorId: string, vendorNumber: number) => {
     setSelectedVendor(vendorId);
     setSelectedVendorNumber(vendorNumber);
+    console.log("charges array", charges);
+    console.log(
+      "match found:",
+      charges.some((charge) => charge.vendor_id === selectedVendor)
+    );
 
     console.log("selected vendor", vendorId, vendorNumber);
     // Filter RFQ items by selected vendor
@@ -974,91 +983,93 @@ export default function ViewRfq() {
         </div>
         <div className="relative flex justify-center max-w-5xl mx-auto mt-6 bg-white rounded-xl px-4 py-6 shadow-md border border-gray-200 mb-6">
           <div className="flex flex-wrap gap-6 items-start justify-center">
-            {vendors.map(({ vendor_id, name, hasResponded }, index) => {
-              const isSelected = selectedVendor === vendor_id;
-              const isApproved = approvedVendorId === vendor_id;
-              const isRejected =
-                approvedVendorId && approvedVendorId !== vendor_id;
+            {vendors
+              .filter((vendor) => {
+                const adminId =
+                  process.env.ADMIN_MERCHANT_ID ||
+                  "cc331901-9a8f-4d07-a4c5-7605cfbbdb6f";
+                return !(vendor.vendor_id === adminId && !vendor.hasResponded);
+              })
+              .map(({ vendor_id, name, hasResponded }, index) => {
+                const isSelected = selectedVendor === vendor_id;
+                const isApproved = approvedVendorId === vendor_id;
+                const isRejected =
+                  approvedVendorId && approvedVendorId !== vendor_id;
 
-              return (
-                <div
-                  key={vendor_id}
-                  className="flex flex-col items-center gap-2 p-4 border border-gray-200 rounded-xl shadow-sm w-64"
-                >
-                  {/* Vendor Button */}
-                  <button
-                    onClick={() =>
-                      rfqItems.length > 0 &&
-                      handleVendorClick(vendor_id, index + 1)
-                    }
-                    disabled={rfqItems.length === 0 && isViewMode}
-                    className={`w-full relative z-10 px-5 py-2 text-sm font-medium transition-all duration-300 ease-in-out rounded-full flex items-center justify-center gap-2
-                      ${
-                        isSelected
-                          ? "bg-blue-600 text-white shadow-md"
-                          : "bg-gray-100 text-gray-700 hover:bg-blue-50 hover:text-blue-700"
-                      }
-                          
-                      ${hasResponded ? "ring-2 ring-green-500" : ""}
-                      ${
-                        rfqItems.length === 0
-                          ? "opacity-50 cursor-not-allowed"
-                          : ""
-                      }
-                      border border-gray-300`}
+                return (
+                  <div
+                    key={vendor_id}
+                    className="flex flex-col items-center gap-2 p-4 border border-gray-200 rounded-xl shadow-sm w-64"
                   >
-                    <span>{name}</span>
-                    {hasResponded && (
-                      <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full font-semibold">
-                        Responded
-                      </span>
-                    )}
-                    {isSelected && (
-                      <motion.div
-                        layoutId="tab-indicator"
-                        className="absolute inset-0 rounded-full border-2 border-blue-700 shadow-inner z-[-1]"
-                        transition={{
-                          type: "spring",
-                          stiffness: 400,
-                          damping: 30,
-                        }}
+                    {/* Vendor Button */}
+                    <button
+                      onClick={() =>
+                        rfqItems.length > 0 &&
+                        handleVendorClick(vendor_id, index + 1)
+                      }
+                      disabled={rfqItems.length === 0 && isViewMode}
+                      className={`w-full relative z-10 px-5 py-2 text-sm font-medium transition-all duration-300 ease-in-out rounded-full flex items-center justify-center gap-2
+            ${
+              isSelected
+                ? "bg-blue-600 text-white shadow-md"
+                : "bg-gray-100 text-gray-700 hover:bg-blue-50 hover:text-blue-700"
+            }
+            ${hasResponded ? "ring-2 ring-green-500" : ""}
+            ${rfqItems.length === 0 ? "opacity-50 cursor-not-allowed" : ""}
+            border border-gray-300`}
+                    >
+                      <span>{name}</span>
+                      {hasResponded && (
+                        <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full font-semibold">
+                          Responded
+                        </span>
+                      )}
+                      {isSelected && (
+                        <motion.div
+                          layoutId="tab-indicator"
+                          className="absolute inset-0 rounded-full border-2 border-blue-700 shadow-inner z-[-1]"
+                          transition={{
+                            type: "spring",
+                            stiffness: 400,
+                            damping: 30,
+                          }}
+                        />
+                      )}
+                    </button>
+
+                    {/* Select for Approval */}
+                    <button
+                      disabled={isViewMode}
+                      onClick={() => setApprovedVendorId(vendor_id)}
+                      className={`text-sm mt-2 px-4 py-1.5 rounded-full  ${
+                        isViewMode ? "opacity-50 cursor-not-allowed" : ""
+                      } ${
+                        isApproved
+                          ? "bg-green-600 text-white"
+                          : "bg-gray-200 hover:bg-green-100"
+                      }`}
+                    >
+                      {isApproved ? "Approved" : "Select for Approval"}
+                    </button>
+
+                    {/* Rejection Reason */}
+                    {isRejected && (
+                      <textarea
+                        disabled={isViewMode}
+                        className="mt-2 w-full text-sm p-2 border border-red-300 rounded-md bg-red-50 text-red-800"
+                        placeholder="Reason for rejection"
+                        value={rejectionReasons[vendor_id] || ""}
+                        onChange={(e) =>
+                          setRejectionReasons((prev) => ({
+                            ...prev,
+                            [vendor_id]: e.target.value,
+                          }))
+                        }
                       />
                     )}
-                  </button>
-
-                  {/* Select for Approval */}
-                  <button
-                    disabled={isViewMode}
-                    onClick={() => setApprovedVendorId(vendor_id)}
-                    className={`text-sm mt-2 px-4 py-1.5 rounded-full  ${
-                      isViewMode ? "opacity-50 cursor-not-allowed" : ""
-                    } ${
-                      isApproved
-                        ? "bg-green-600 text-white"
-                        : "bg-gray-200 hover:bg-green-100"
-                    }`}
-                  >
-                    {isApproved ? "Approved" : "Select for Approval"}
-                  </button>
-
-                  {/* Rejection Reason */}
-                  {isRejected && (
-                    <textarea
-                      disabled={isViewMode}
-                      className="mt-2 w-full text-sm p-2 border border-red-300 rounded-md bg-red-50 text-red-800"
-                      placeholder="Reason for rejection"
-                      value={rejectionReasons[vendor_id] || ""}
-                      onChange={(e) =>
-                        setRejectionReasons((prev) => ({
-                          ...prev,
-                          [vendor_id]: e.target.value,
-                        }))
-                      }
-                    />
-                  )}
-                </div>
-              );
-            })}
+                  </div>
+                );
+              })}
           </div>
         </div>
         <div className="grid justify-self-center max-w-6xl w-full mt-8">
@@ -1190,8 +1201,7 @@ export default function ViewRfq() {
 
               {showRequestButton ? (
                 <button
-                  className={`mt-4 px-4 py-2 rounded-md text-sm font-medium
-   `}
+                  className={`mt-4 px-4 py-2 rounded-md text-sm font-medium bg-blue-600 text-white hover:bg-blue-700`}
                   onClick={() => {
                     handleRequestForApproval();
                   }}
@@ -1199,8 +1209,6 @@ export default function ViewRfq() {
                   Request for Approval
                 </button>
               ) : null}
-
-             
 
               <Button className="bg-red-600 hover:bg-red-700 text-white font-medium px-4 py-2 rounded-md shadow">
                 Cancel

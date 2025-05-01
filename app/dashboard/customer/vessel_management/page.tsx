@@ -52,7 +52,7 @@ function VesselCard({
   const [updating, setUpdating] = useState(false); // State for update loading
   const [deleting, setDeleting] = useState(false); // State for delete loading
   const [userId, setUserId] = useState<string | null>(null);
-
+ 
  
 
   async function handleDeleteVessel() {
@@ -305,6 +305,9 @@ const [filledVesselsCount, setFilledVesselsCount] = useState<number | null>(
 );
 const [vesselCountLoading, setVesselCountLoading] = useState(true);
 const [vesselCountError, setVesselCountError] = useState<string | null>(null);
+const [searchTerm, setSearchTerm] = useState("");
+
+
 
 useEffect(() => {
   async function fetchVesselCounts() {
@@ -563,33 +566,36 @@ const handleBulkUpload = async (file: File) => {
     }
   };
 
-  // Use useCallback to prevent infinite loop in useEffect
   const fetchDetails = useCallback(async () => {
     setLoading(true);
-
+  
     try {
       const {
         data: { user },
       } = await supabase.auth.getUser();
-
+  
       if (!user) {
         console.error("User not logged in.");
         setLoading(false);
         return;
       }
-
+  
       const customerId = user.id;
-
-      const res = await fetch(`/api/fetch-all-vessel?login_id=${customerId}`);
-
+  
+      // Create the query parameter dynamically based on the search term
+  const queryParams = `?search=${searchTerm}&login_id=${customerId}`
+      // Fetch data with the queryParams
+      const res = await fetch(`/api/fetch-all-vessel${queryParams}`);
+  
       if (!res.ok) {
         const errorData = await res.json();
         console.error("Error fetching vessels:", errorData);
       } else {
         const response = await res.json(); // Changed variable name to 'response' for clarity
         console.log("API Response:", response); // Log the entire response
-
+  
         if (response && response.data && Array.isArray(response.data)) {
+          // Map the response data to the expected format
           const formattedVessels: Vessel[] = response.data.map((v: any) => ({
             id: String(v.id),
             imoNumber: v.imo_number,
@@ -603,14 +609,15 @@ const handleBulkUpload = async (file: File) => {
           console.error("Unexpected API response format:", response);
           setVessels([]);
         }
-        setCurrentPage(1);
+        setCurrentPage(1); // Reset to the first page
       }
     } catch (e) {
       console.error("Unable to Fetch Vessels, ", e);
     } finally {
       setLoading(false);
     }
-  }, [supabase]);
+  }, [supabase, searchTerm]); // Include searchTerm as a dependency
+  
 
   useEffect(() => {
     fetchDetails();
@@ -619,7 +626,12 @@ const handleBulkUpload = async (file: File) => {
   return (
     <main className="grid max-w-6xl w-full justify-self-center">
       <div className="py-4 sm:flex justify-between">
+ 
+ 
+ 
         <div>Vessel Management</div>
+
+       
         <div className="flex gap-2">
           <Dialog
             open={isAddVesselDialogOpen}
@@ -818,6 +830,19 @@ const handleBulkUpload = async (file: File) => {
           {filledVesselsCount}
         </span>{" "}
         / {assignedVesselsCount}
+      </div>
+      <div className="flex my-4 justify-end">
+        
+      <div className="search-bar w-full sm:w-1/2">
+          <input
+            type="text"
+            placeholder="Search by IMO Number, Vessel Name, or Vessel Type"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="search-input w-full px-4 py-2 border border-gray-300 rounded-md"
+          />
+        </div>
+        
       </div>
       <div className="mt-4 overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">

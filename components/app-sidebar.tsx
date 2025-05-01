@@ -1,25 +1,19 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { NavMain } from "@/components/nav-main"
-import { NavUser } from "@/components/nav-user"
-import { TeamSwitcher } from "@/components/team-switcher"
+import * as React from "react";
+import { NavMain } from "@/components/nav-main";
+import { NavUser } from "@/components/nav-user";
+import { TeamSwitcher } from "@/components/team-switcher";
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
   SidebarRail,
-} from "@/components/ui/sidebar"
+} from "@/components/ui/sidebar";
 
-
-import {
-  BookOpen,
-  Bot,
-  SquareTerminal,
-} from "lucide-react"
-import { title } from "process"
-
+import { BookOpen, Bot, SquareTerminal } from "lucide-react";
+import { title } from "process";
 
 // This is sample data.
 const adminData = {
@@ -27,7 +21,7 @@ const adminData = {
     name: "shadcn",
     email: "m@example.com",
     avatar: "/avatars/shadcn.jpg",
-    role: "admin"
+    role: "admin",
   },
   navMain: [
     {
@@ -95,16 +89,13 @@ const adminData = {
   ],
 };
 
-
-
-
 // This is sample data.
 const vendorData = {
   user: {
     name: "shadcn",
     email: "m@example.com",
     avatar: "/avatars/shadcn.jpg",
-    role: "Vendor"
+    role: "Vendor",
   },
   navMain: [
     {
@@ -117,11 +108,17 @@ const vendorData = {
           title: "Dashboard",
           url: "/dashboard/vendor",
         },
-        
+
         {
           title: "RFQs",
           url: "/dashboard/vendor/rfqs",
         },
+        {
+          title: "Categories",
+          url: "/dashboard/vendor/categories",
+        },
+        { title: "Brands", url: "/dashboard/vendor/brands" },
+
         {
           title: "Orders",
           url: "/dashboard/vendor/orders",
@@ -130,24 +127,23 @@ const vendorData = {
           title: "Details",
           url: "/dashboard/vendor/details",
         },
-        
       ],
     },
-  {
-    title:"Vessel Management",
-    url:"#",
-    icon: SquareTerminal,
-    items:[
-      {
-        title: "Vessel Management",
-        url: "/dashboard/vendor/vessel-management",
-      },
-      {
-        title: "Vessel Details",
-        url: "/dashboard/vendor/vessel-details",
-      },
-    ]
-  },
+    {
+      title: "Vessel Management",
+      url: "#",
+      icon: SquareTerminal,
+      items: [
+        {
+          title: "Vessel Management",
+          url: "/dashboard/vendor/vessel-management",
+        },
+        {
+          title: "Vessel Details",
+          url: "/dashboard/vendor/vessel-details",
+        },
+      ],
+    },
     {
       title: "Catalog",
       url: "#",
@@ -157,7 +153,6 @@ const vendorData = {
           title: "Catalog Management",
           url: "/dashboard/vendor/inventory",
         },
-       
       ],
     },
     {
@@ -176,12 +171,11 @@ const vendorData = {
         {
           title: "Privacy Policy",
           url: "#",
-        }
+        },
       ],
     },
   ],
 };
-
 
 // This is sample data.
 const customerData = {
@@ -189,21 +183,18 @@ const customerData = {
     name: "shadcn",
     email: "m@example.com",
     avatar: "/avatars/shadcn.jpg",
-    role: "customer"
+    role: "customer",
   },
   navMain: [
-    
     {
       title: "Fleet Overview",
       url: "/dashboard/customer",
-      
-      
     },
     {
       title: "Financial & Procurement",
       url: "/dashboard/customer",
       isActive: false,
-      items:[
+      items: [
         {
           title: "RFQs",
           url: "/dashboard/customer/rfqs",
@@ -212,61 +203,45 @@ const customerData = {
           title: "Vendor Management",
           url: "/dashboard/customer/vendorManagement",
         },
-      ]
-      
-      
+      ],
     },
     {
       title: "Fleet performance & Maintainece",
       url: "/dashboard/customer",
-      
-      
     },
     {
       title: "Vessel Finder & Route Opimization ",
       url: "/dashboard/customer",
-      
-      
     },
     {
       title: "Complaince & Certifcation",
       url: "/dashboard/customer",
-      
-      
     },
     {
       title: "Crew Management",
       url: "/dashboard/customer/crew-management",
-      
-      
     },
     {
       title: "Risk & Incident Management",
       url: "/dashboard/customer",
-      
-      
     },
     {
       title: "Sustuabinability & ESG Reporting",
       url: "/dashboard/customer",
-      
-      
     },
-{
-title:"Vessel Management",
-url:"/dashboard/customer/vessel_management",
-},
-    
+    {
+      title: "Vessel Management",
+      url: "/dashboard/customer/vessel_management",
+    },
+
     {
       title: "Branch",
       url: "/dashboard/customer/branch",
-     
-      
     },
     {
       title: "Support",
       url: "#",
-      
+
       items: [
         {
           title: "Become a Seller",
@@ -283,12 +258,11 @@ url:"/dashboard/customer/vessel_management",
         {
           title: "Privacy Policy",
           url: "#",
-        }
+        },
       ],
     },
   ],
 };
-
 
 type SidebarWithDataProps = React.ComponentProps<typeof Sidebar> & {
   data: string; // Replace `any` with a specific type if you know the structure of `data`
@@ -298,18 +272,26 @@ export function AppSidebar({ ...props }: SidebarWithDataProps) {
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <TeamSwitcher user={props.data === "admin"
-          ? adminData.user
-          : props.data === "customer"
-            ? customerData.user
-            : vendorData.user} />
+        <TeamSwitcher
+          user={
+            props.data === "admin"
+              ? adminData.user
+              : props.data === "customer"
+              ? customerData.user
+              : vendorData.user
+          }
+        />
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={props.data === "admin"
-          ? adminData.navMain
-          : props.data === "customer"
-            ? customerData.navMain
-            : vendorData.navMain} />
+        <NavMain
+          items={
+            props.data === "admin"
+              ? adminData.navMain
+              : props.data === "customer"
+              ? customerData.navMain
+              : vendorData.navMain
+          }
+        />
         {/* <NavProjects projects={data.projects} /> */}
       </SidebarContent>
       <SidebarFooter>
@@ -317,5 +299,5 @@ export function AppSidebar({ ...props }: SidebarWithDataProps) {
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>
-  )
+  );
 }

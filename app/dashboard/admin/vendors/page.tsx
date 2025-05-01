@@ -260,13 +260,7 @@ export default function InventoryMerchnats() {
                 >
                     Disabled
                 </Button>
-                <div className="ml-auto"> {/* Move "View Disabled" button to the right */}
-                    <Link href={"/dashboard/admin/rejected-vendor"}>
-                        <Button variant="secondary" className="text-white bg-blue-600 hover:bg-blue-700">
-                            View Disabled Vendors
-                        </Button>
-                    </Link>
-                </div>
+               
             </div>
 
             <div className="mt-8">
@@ -329,7 +323,7 @@ export default function InventoryMerchnats() {
                                             )}
                                             <div className="my-1 border-t" />
                                             <DropdownMenuItem asChild>
-                                                <Link href={`/dashboard/admin/vendors/${merchant.id}`}>
+                                                <Link href={`/dashboard/admin/view-vendor/${merchant.id}`}>
                                                     View Details
                                                 </Link>
                                             </DropdownMenuItem>

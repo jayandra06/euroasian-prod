@@ -1,125 +1,317 @@
 "use client";
-import Link from "next/link";
-import { createClient } from "@/utils/supabase/client";
-import { useEffect, useState } from "react";
+
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import React from "react";
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardFooter,
+    CardHeader,
+    CardTitle,
+} from "@/components/ui/card";
+import { createClient } from "@/utils/supabase/client";
+import Link from "next/link";
+import React, { useEffect, useState } from "react";
+import { motion } from "framer-motion";
+import { useToast } from "@/hooks/use-toast";
+import { Loader2, ChevronLeft, ChevronRight } from "lucide-react";
+
+const tabs = [
+    { id: "all", label: "All", color: "bg-white text-gray-800" },
+    { id: "received", label: "RFQ Received", color: "bg-blue-500 text-white" },
+    { id: "sent", label: "Quote Sent", color: "bg-green-500 text-white" },
+    { id: "confirmed", label: "Order Confirmed", color: "bg-emerald-500 text-white" },
+    { id: "cancelled", label: "Order Cancelled", color: "bg-red-500 text-white" },
+    { id: "completed", label: "Order Completed", color: "bg-gray-500 text-white" },
+];
+
+interface Rfq {
+    id: string;
+    created_at: string;
+    supply_port: string | null;
+    vessel_name: string | null;
+    brand: string | null;
+    status: string; // supplier_status
+    rfq_status: string; // original rfq status
+}
+
+interface RfqSupplier {
+    rfq: Rfq;
+    status: string; // Supplier's status
+}
 
 export default function RFQsPage() {
-  const [rfqs, setRfqs] = useState<any[]>([]);
-  const [expandedRow, setExpandedRow] = useState<number | null>(null);
-  const [rfqItems, setRfqItems] = useState<{ [key: number]: any[] }>({});
+    const [rfqs, setRfqs] = useState<Rfq[]>([])
+    const [activeTab, setActiveTab] = useState<string>("all");
+    const [loading, setLoading] = useState(true);
+    const { toast } = useToast();
+    const [searchTerm, setSearchTerm] = useState("");
+    const supabase = createClient();
 
-  const supabase = createClient();
-
-  const toggleRow = async (index: number, rfqId: number) => {
-    if (expandedRow === index) {
-      setExpandedRow(null);
-      return;
-    }
-
-    if (!rfqItems[rfqId]) {
-      try {
-        const { data: items, error } = await supabase
-          .from("rfq_items")
-          .select("*")
-          .eq("rfq_id", rfqId);
-
-        if (error) throw error;
-        setRfqItems((prev) => ({ ...prev, [rfqId]: items || [] }));
-      } catch (err) {
-        console.error("Error fetching RFQ items:", err);
+    async function fetchRfqs(tabFilter: string = "all", searchTerm: string = "") {
+        setLoading(true);
+        try {
+          const {
+            data: { user },
+            error: authError,
+          } = await supabase.auth.getUser();
+      
+          const userId = user?.id;
+          if (!userId) {
+            setLoading(false);
+            return;
+          }
+      
+          let query = supabase
+            .from("merchant")
+            .select(
+              `
+                id,
+                merchant_profile,
+                rfq_supplier (
+                  status,
+                  rfq (
+                    id,
+                    created_at,
+                    supply_port,
+                    vessel_name,
+                    brand,
+                    status
+                  )
+                )
+              `
+            )
+            .eq("merchant_profile", userId);
+      
+          if (tabFilter !== "all") {
+            const supabaseStatus = getSupabaseStatus(tabFilter);
+            console.log(`Supabase status for ${tabFilter}:`, supabaseStatus);
+            if (supabaseStatus) {
+              query = query.filter("rfq_supplier.status", "eq", supabaseStatus);
+            }
+          }
+      
+          const { data: merchants, error: merchantError } = await query;
+      
+          if (merchantError) {
+            console.error("Error fetching merchant:", merchantError);
+            toast({
+              title: "Error fetching data",
+              description: "Unable to retrieve merchant information.",
+              variant: "destructive",
+            });
+            setLoading(false);
+            return;
+          }
+      
+          if (!merchants) {
+            setRfqs([]);
+            setLoading(false);
+            return;
+          }
+      
+          let fetchedRfqs: Rfq[] = merchants.flatMap((merchant) =>
+            merchant.rfq_supplier.map((rs: any) => ({
+              id: rs.rfq.id,
+              created_at: rs.rfq.created_at,
+              supply_port: rs.rfq.supply_port,
+              vessel_name: rs.rfq.vessel_name,
+              brand: rs.rfq.brand,
+              rfq_status: rs.rfq.status, // RFQ's status
+              status: rs.status, // Supplier's status
+            }))
+          );
+      
+          // 🔍 Search filtering (client-side)
+          if (searchTerm.trim() !== "") {
+            const lowerSearch = searchTerm.toLowerCase();
+            fetchedRfqs = fetchedRfqs.filter(
+              (rfq) =>
+                rfq.vessel_name?.toLowerCase().includes(lowerSearch) ||
+                rfq.brand?.toLowerCase().includes(lowerSearch) ||
+                rfq.supply_port?.toLowerCase().includes(lowerSearch)
+            );
+          }
+      
+          console.log(`Fetched RFQs (tab: ${tabFilter}, search: ${searchTerm}):`, fetchedRfqs);
+          setRfqs(fetchedRfqs);
+        } catch (error: any) {
+          console.error("Unable to fetch RFQs:", error);
+          toast({
+            title: "Error fetching RFQs",
+            description: error.message || "An unexpected error occurred while fetching RFQs.",
+            variant: "destructive",
+          });
+        } finally {
+          setLoading(false);
+        }
       }
-    }
+      
 
-    setExpandedRow(index);
-  };
+    
 
-  async function fetchRfqs() {
-    try {
-      const { data: { user }, error: authError } = await supabase.auth.getUser();
-      if (authError) throw authError;
 
-      // Fetch all RFQs (Admin Access)
-      const { data: allRfqs, error } = await supabase.from("rfq").select("*");
+    useEffect(() => {
+        fetchRfqs(activeTab,searchTerm);
+    }, [activeTab,searchTerm]);
 
-      if (error) throw error;
+    const getSupabaseStatus = (frontendStatus: string): string | null => {
+        switch (frontendStatus) {
+            case "received":
+                return "received";
+            case "sent":
+                return "quoted";
+            case "confirmed":
+                return "order_confirm";
+            case "cancelled":
+                return "cancelled";
+            case "completed":
+                return "completed";
+            default:
+                return null; // For "all" or unknown tabs
+        }
+    };
 
-      setRfqs(allRfqs || []);
-    } catch (e) {
-      console.error("Unable to fetch RFQs:", e);
-    }
-  }
+    const getStatusColor = (status: string) => {
+        switch (status) {
+            case "RFQ Received":
+                return "bg-blue-500";
+            case "Quote Sent":
+                return "bg-green-500";
+            case "Order Confirmed":
+                return "bg-emerald-500";
+            case "Order Cancelled":
+                return "bg-red-500";
+            case "Order Completed":
+                return "bg-gray-500";
+            default:
+                return "bg-gray-300";
+        }
+    };
 
-  useEffect(() => {
-    fetchRfqs();
-  }, []);
+    const handleTabChange = (tabId: string) => {
+        setActiveTab(tabId);
+    };
 
-  return (
-    <>
-      <div className="pt-4 flex justify-between">
-        <h1 className="text-3xl font-bold">All RFQs (Admin)</h1>
-      </div>
 
-      <table className="mt-4 w-full max-w-7xl border-collapse border border-gray-300">
-        <thead>
-          <tr className="bg-gray-100">
-            <th className="border border-gray-300 px-4 py-2 text-left">Ref ID</th>
-            <th className="border border-gray-300 px-4 py-2 text-left">Lead Date</th>
-            <th className="border border-gray-300 px-4 py-2 text-left">Supply Port</th>
-            <th className="border border-gray-300 px-4 py-2 text-left">Vessel Name</th>
-            <th className="border border-gray-300 px-4 py-2 text-left">Brand</th>
-            <th className="border border-gray-300 px-4 py-2 text-left">Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rfqs.map((rfq, i) => (
-            <React.Fragment key={rfq.id}>
-              <tr onClick={() => toggleRow(i, rfq.id)} className="border cursor-pointer border-gray-300">
-                <td className="border border-gray-300 px-4 py-2">{` EA${new Date().getFullYear()}${rfq.id}`.slice(1, 14)}</td>
-                <td className="border border-gray-300 px-4 py-2">{new Date(rfq.created_at).toLocaleString('en-US', { year: 'numeric', month: 'short', day: '2-digit'})}</td>
-                <td className="border border-gray-300 px-4 py-2">{rfq.supply_port || "-"}</td>
-                <td className="border border-gray-300 px-4 py-2">{rfq.vessel_name || "-"}</td>
-                <td className="border border-gray-300 px-4 py-2">{rfq.brand || "-"}</td>
-                <td className="border border-gray-300 px-4 py-2">{rfq.status || "-"}</td>
-              </tr>
-              {expandedRow === i && (
-                <tr className="bg-gray-50">
-                  <td colSpan={5} className="px-4 py-2">
-                    <div className="p-2">
-                      <strong>Items:</strong>
-                      {rfqItems[rfq.id] ? (
-                        rfqItems[rfq.id].length > 0 ? (
-                          <ul className="list-disc pl-4">
-                            {rfqItems[rfq.id].map((item) => (
-                              <li key={item.id}>
-                                <strong>Description:</strong> {item.description || "N/A"} <br />
-                                <strong>Req. Qty.:</strong> {item.quantity || "N/A"} <br />
-                                <strong>UOM:</strong> {item.uom || "N/A"}
-                              </li>
-                            ))}
-                          </ul>
+    return (
+        <div className="container mx-auto py-8">
+            <div className="mb-6">
+                <h1 className="text-3xl font-semibold text-gray-800 text-center">
+                    Request for Quotes
+                </h1>
+            </div>
+            <div className="flex justify-end my-4">
+            <input
+      type="text"
+      placeholder="Search by vessel name, brand, or supply port"
+      value={searchTerm}
+      onChange={(e) => setSearchTerm(e.target.value)}
+      className="border px-3 py-2 rounded w-full max-w-md"
+    />
+
+            </div>
+    
+            {/* Styled Tab Navigation */}
+            <div className="bg-gray-100 rounded-lg overflow-hidden mb-6">
+                <nav className="relative flex space-x-1 bg-gray-100 p-2 rounded-lg">
+                    {tabs.map((tab) => (
+                        <button
+                            key={tab.id}
+                            onClick={() => handleTabChange(tab.id)}
+                            className={`relative z-10 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                                activeTab === tab.id ? tab.color : "text-gray-600 hover:bg-gray-200"
+                            }`}
+                            aria-label={`View ${tab.label} RFQs`}
+                        >
+                            {tab.label}
+                            {activeTab === tab.id && (
+                                <motion.div
+                                    layoutId="tab-indicator"
+                                    className="absolute inset-0 bg-indigo-500 rounded-md z-[-1]"
+                                    transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                                />
+                            )}
+                        </button>
+                    ))}
+                </nav>
+            </div>
+
+            {/* Styled Table (No Shadow) */}
+            <div className="overflow-x-auto rounded-lg">
+                <table className="min-w-full divide-y divide-gray-200 bg-white">
+                    <thead className="bg-gray-50">
+                        <tr>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                #
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                RFQ Date
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Supply Port
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Vessel Name
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Brand
+                            </th>
+                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Status
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                        {loading ? (
+                            <tr>
+                                <td colSpan={6} className="px-6 py-4 whitespace-nowrap text-center text-gray-500">
+                                    <div className="flex justify-center items-center">
+                                        <Loader2 className="animate-spin w-5 h-5 mr-2" />
+                                        Loading RFQs...
+                                    </div>
+                                </td>
+                            </tr>
+                        ) : rfqs.length === 0 ? (
+                            <tr>
+                                <td colSpan={6} className="px-6 py-4 whitespace-nowrap text-center text-gray-500">
+                                    No RFQs available for the selected filter.
+                                </td>
+                            </tr>
                         ) : (
-                          <p>No items found</p>
-                        )
-                      ) : (
-                        <p>Loading...</p>
-                      )}
-                    </div>
-                  </td>
-                  <td>
-                    <Button>
-                      <Link href={`/dashboard/admin/view-rfq/${rfq.id}`} className="text-center text-white py-2 text-xs font-semibold grid w-full rounded-lg bg-black dark:text-black dark:bg-white">
-                        View RFQ
-                      </Link>
-                    </Button>
-                  </td>
-                </tr>
-              )}
-            </React.Fragment>
-          ))}
-        </tbody>
-      </table>
-    </>
-  );
+                            rfqs.map((rfq, index) => (
+                                <tr
+                                    key={rfq.id}
+                                    className="hover:bg-gray-50 cursor-pointer transition-colors duration-200"
+                                    onClick={() =>
+                                        (window.location.href = `/dashboard/vendor/vendorRfq/${rfq.id}`)
+                                    }
+                                >
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{index + 1}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                                        {rfq.created_at ? new Date(rfq.created_at).toLocaleDateString() : "-"}
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                                        {rfq.supply_port || "-"}
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                                        {rfq.vessel_name || "-"}
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                                        {rfq.brand || "-"}
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                                        <Badge className={`${getStatusColor(rfq.status)} text-white rounded-full px-3 py-1 text-xs font-semibold`}>
+                                            {rfq.status}
+                                        </Badge>
+                                    </td>
+                                </tr>
+                            ))
+                        )}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    );
 }

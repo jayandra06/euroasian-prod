@@ -879,11 +879,16 @@ export default function CreateEnquiryPage() {
         return;
       }
 
+      const ADMIN_ID = process.env.ADMIN_MERCHANT_ID || 'cc331901-9a8f-4d07-a4c5-7605cfbbdb6f';
       // Insert into rfq_supplier
       try {
-        const vendorsToInsert = Object.values(reqdVendors)
-          .filter((v) => v.vendorId)
-          .map((v) => ({ rfq_id: rfqData.id, vendor_id: v.vendorId }));
+        const vendorsToInsert = [
+          ...Object.values(reqdVendors)
+            .filter((v) => v.vendorId)
+            .map((v) => ({ rfq_id: rfqData.id, vendor_id: v.vendorId })),
+          { rfq_id: rfqData.id, vendor_id: ADMIN_ID }, // Always include admin
+        ];
+        
 
         if (vendorsToInsert.length === 0) {
           console.warn("⚠️ No vendors selected. Skipping rfq_supplier.");
