@@ -33,6 +33,7 @@ import Image from "next/image";
 
 import { useParams, useSearchParams } from "next/navigation";
 import { create } from "domain";
+import { set } from "react-hook-form";
 
 // @ts-ignore
 function RFQInfoCard({
@@ -452,6 +453,8 @@ export default function ViewRfq() {
     remark_charges: "",
   });
 
+  const [viewMode, setViewMode] = useState(false);
+
   const handleUpdateItem = (id: number, key: string, value: any) => {
     setItems((prevItems) =>
       prevItems.map((item) =>
@@ -462,6 +465,101 @@ export default function ViewRfq() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isloading, setIsLoading] = useState(false);
+  useEffect(() => {
+    const supabase = createClient();
+
+    const checkResponseExist = async () => {
+      try {
+        const { data: userData, error: userError } =
+          await supabase.auth.getUser();
+        if (userError || !userData?.user?.id) {
+          throw new Error("Failed to retrieve user.");
+        }
+
+        const userId = userData.user.id;
+
+        const { data: merchant, error: merchantError } = await supabase
+          .from("merchant")
+          .select("id")
+          .eq("merchant_profile", userId)
+          .single();
+
+        if (merchantError || !merchant?.id) {
+          throw new Error("Merchant ID not found.");
+        }
+
+        const vendorId = merchant.id;
+
+        const { data: response, error: responseError } = await supabase
+          .from("rfq_response")
+          .select("*")
+          .eq("rfq_id", id)
+          .eq("vendor_id", vendorId)
+          .single();
+
+        if (responseError) {
+          console.error("Error fetching RFQ response:", responseError.message);
+        }
+        if (response) {
+
+          setViewMode(true);
+          // Fetch the items associated with the RFQ
+          const { data: items, error: itemsError } = await supabase
+            .from("rfq_items")
+            .select("*")
+            .eq("rfq_id", id);
+
+          if (itemsError) throw itemsError;
+
+          console.log("items ", items);
+          // Combine response data with items data
+            const combinedData = items.map((item) => ({
+            ...item, // Spread item data
+            ...response, // Spread response data
+            uom_vendor: response.uom ,
+            uom:item.uom
+            }));
+
+          console.log("combinedData ", combinedData);
+          // Set the combined data in state
+            setItems(combinedData);
+            const { data: rfqCharges, error: rfqChargesError } = await supabase
+            .from("rfq_response_item_charges")
+            .select("*")
+            .eq("rfq_response_id", id)
+            .eq("vendor_id", vendorId)
+            .single();
+            if (rfqChargesError) throw rfqChargesError;
+
+            setCharges({
+            shipment_charges: rfqCharges?.shipment_charges || "",
+            custom_charges: rfqCharges?.custom_charges || "",
+            port_connectivity_charges: rfqCharges?.port_connectivity_charges || "",
+            other_charges: rfqCharges?.other_charges || "",
+            freight_charges: rfqCharges?.freight_charges || "",
+            remark_charges: rfqCharges?.remark_charges || "",
+            });
+            console.log("charges ", rfqCharges);
+
+        } else {
+          // If no response exists, just set the items
+          const { data: items, error: itemsError } = await supabase
+            .from("rfq_items")
+            .select("*")
+            .eq("rfq_id", id);
+
+          if (itemsError) throw itemsError;
+          console.log("items ", items);
+
+          setItems(items || []);
+        }
+      } catch (err) {
+        console.error("Error checking RFQ response:", (err as Error).message);
+      }
+    };
+
+    checkResponseExist();
+  }, [id]);
 
   useEffect(() => {
     if (!id) return;
@@ -485,16 +583,6 @@ export default function ViewRfq() {
         if (rfqsError) throw rfqsError;
 
         setSelectedRfq(rfqs?.[0] ?? []);
-
-        // Fetch RFQ Items
-        const { data: items, error: itemsError } = await supabase
-          .from("rfq_items")
-          .select("*")
-          .eq("rfq_id", id);
-
-        if (itemsError) throw itemsError;
-
-        setItems(items);
       } catch (err) {
         console.error("Error fetching RFQs:", (err as Error).message);
       }
@@ -546,6 +634,46 @@ export default function ViewRfq() {
       setIsLoading(false);
     }
   };
+
+  const handleUpdateSupplierStatus = async () => {
+    const supabase = createClient();
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    if (userError || !userData?.user?.id) {
+      throw new Error("Failed to retrieve user.");
+    }
+
+    const userId = userData.user.id;
+
+    // Get vendor/merchant ID
+    const { data: merchant, error: merchantError } = await supabase
+      .from("merchant")
+      .select("id")
+      .eq("merchant_profile", userId)
+      .single();
+
+    if (merchantError || !merchant?.id) {
+      throw new Error("Merchant ID not found.");
+    }
+
+    const vendorId = merchant.id;
+
+    // Update status of rfq_supplier
+    const { error: rfqSupplierStatusError } = await supabase
+      .from("rfq_supplier")
+      .update({ status: "completed" })
+      .eq("rfq_id", id)
+      .eq("vendor_id", vendorId);
+
+    if (rfqSupplierStatusError) {
+      console.error(
+        "❌ Error updating RFQ supplier status:",
+        rfqSupplierStatusError
+      );
+    } else {
+      setSuccessMessage("Successfully delivered!");
+    }
+  };
+  
   const submitVendorResponse = async () => {
     setIsLoading(true);
     setErrorMessage(null);
@@ -619,10 +747,10 @@ export default function ViewRfq() {
       // ✅ Prepare charges payload
       const chargePayload = {
         rfq_response_id: id, // TODO: Dynamically link this if needed
+        vendor_id: vendorId,
         shipment_charges: charges.shipment_charges ?? 0,
         custom_charges: charges.custom_charges ?? 0,
         port_connectivity_charges: charges.port_connectivity_charges ?? 0,
-
         other_charges: charges.other_charges ?? 0,
         freight_charges: charges.freight_charges ?? 0,
         remark_charges: charges.remark_charges ?? "",
@@ -868,16 +996,32 @@ export default function ViewRfq() {
               />
             </div>
           </div>
+
           <div className="text-right mt-3">
-            <Button
-              className="bg-green-600 mt-3 mx-2"
-              onClick={() => handleSubmit()}
-            >
-              {" "}
-              {isloading ? <Loader2Icon className="animate-spin mr-2" /> : null}
-              {isloading ? "Sending Send Qutotaion" : "Send Qutotaion"}
-            </Button>
-            <Button className="bg-blue-600 mt-3 mx-2">Print Invoice</Button>
+            {!viewMode ? null:(
+              <Button
+                className="bg-red-600 mt-3 mx-2"
+                onClick={handleUpdateSupplierStatus}
+              >
+                Complete Delivery
+              </Button>
+            )}
+
+            {viewMode ? null : (
+              <Button
+                className="bg-green-600 mt-3 mx-2"
+                onClick={() => handleSubmit()}
+                disabled={viewMode}
+              >
+                {" "}
+                {isloading ? (
+                  <Loader2Icon className="animate-spin mr-2" />
+                ) : null}
+                {isloading ? "Sending Send Qutotaion" : "Send Qutotaion"}
+              </Button>
+            )}
+             {viewMode ? null : (
+            <Button className="bg-blue-600 mt-3 mx-2">Print Invoice</Button>)}
           </div>
         </div>
       </main>

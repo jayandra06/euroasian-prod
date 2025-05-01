@@ -6,7 +6,8 @@ export async function GET(req: NextRequest) {
 
   try {
     const { searchParams } = new URL(req.url);
-    const login_id = searchParams.get("login_id"); // actually your login_id
+    const login_id = searchParams.get("login_id"); // Get login_id from query params
+    const searchTerm = searchParams.get("search"); // Get search term from query params
 
     if (!login_id) {
       return NextResponse.json(
@@ -32,11 +33,20 @@ export async function GET(req: NextRequest) {
 
     const customer_id = cust.id;
 
-    // 2️⃣ Fetch all vessels for that customer_id
-    const { data, error } = await supabase
+    // 2️⃣ Build query to fetch vessels with optional search term
+    let query = supabase
       .from("vessel_management")
       .select("*")
-      .eq("customer_id", customer_id);
+      .eq("customer_id", customer_id); // Filter by customer_id
+
+    if (searchTerm) {
+      // If search term is provided, apply filtering based on search term
+      query = query.or(
+        `vessel_name.ilike.%${searchTerm}%,imo_number.ilike.%${searchTerm}%,vessel_type.ilike.%${searchTerm}%`
+      );
+    }
+
+    const { data, error } = await query;
 
     console.log("Fetched vessels:", data);
 

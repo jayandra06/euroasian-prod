@@ -26,6 +26,7 @@ interface RFQ {
   supply_port: string | null;
   vessel_name: string | null;
   brand: string | null;
+  category: string | null;
   status: string | null;
 }
 
@@ -36,8 +37,10 @@ export default function RFQsPage() {
   );
   const [activeTab, setActiveTab] = useState("yourRfqs");
   const [user, setUser] = useState(null); // State to hold user data
-  const [userRole, setUserRole] = useState(null); // State to hold user role 
+  const [userRole, setUserRole] = useState(null); // State to hold user role
   const supabase = createClient();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedStatus, setSelectedStatus] = useState(""); // Default '' or a specific status
 
   const fetchRfqs = useCallback(async () => {
     try {
@@ -50,10 +53,21 @@ export default function RFQsPage() {
         return;
       }
 
-      const { data: rfqsData, error: rfqsError } = await supabase
-        .from("rfq")
-        .select("*")
-        .eq("requested_by", user.id); // <- search where requested_by = user.id
+      let query = supabase.from("rfq").select("*").eq("requested_by", user.id); // Always filter by user
+
+      // Apply status filter if selected
+      if (selectedStatus) {
+        query = query.eq("status", selectedStatus);
+      }
+
+      // Apply search filter
+      if (searchTerm) {
+        query = query.or(
+          `vessel_name.ilike.%${searchTerm}%,supply_port.ilike.%${searchTerm}%,brand.ilike.%${searchTerm}%,category.ilike.%${searchTerm}%`
+        );
+      }
+
+      const { data: rfqsData, error: rfqsError } = await query;
 
       if (rfqsError) {
         console.error("Error fetching RFQs:", rfqsError);
@@ -64,7 +78,7 @@ export default function RFQsPage() {
     } catch (e) {
       console.error("Unable to fetch RFQs:", e);
     }
-  }, [supabase]);
+  }, [supabase, selectedStatus, searchTerm]);
 
   const fetchRfqRequests = useCallback(async () => {
     const {
@@ -79,10 +93,10 @@ export default function RFQsPage() {
     try {
       // 🛠 Step 1: Fetch user role from `profile` table
       const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('user_role') // <-- Adjust field name if needed
-        .eq('id', user.id)     // Assuming 'id' is the primary key in 'profile'
-        .single();             // Only one record expected
+        .from("profiles")
+        .select("user_role") // <-- Adjust field name if needed
+        .eq("id", user.id) // Assuming 'id' is the primary key in 'profile'
+        .single(); // Only one record expected
 
       if (profileError) {
         console.error("Error fetching user role:", profileError.message);
@@ -103,8 +117,8 @@ export default function RFQsPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          userRole: userRole,     // <- Now correct
-          customerId: user.id,   // <- From supabase user
+          userRole: userRole, // <- Now correct
+          customerId: user.id, // <- From supabase user
         }),
       });
 
@@ -122,7 +136,6 @@ export default function RFQsPage() {
       console.error("Unable to fetch RFQs:", e);
     }
   }, [supabase]);
-
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -184,6 +197,26 @@ export default function RFQsPage() {
               </Link>
             </Button>
           </div>
+            <div className="flex justify-between mb-4">
+              <select
+              value={selectedStatus}
+              onChange={(e) => setSelectedStatus(e.target.value)}
+              className="border rounded px-2 py-1 w-48"
+              >
+              <option value="">All Statuses</option>
+              <option value="sent">Sent</option>
+              <option value="ordered">Ordered</option>
+              <option value="quoted">Quoted</option>
+              <option value="delivered">Delivered</option>
+              </select>
+              <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search RFQs by Vessel Name, Supply Port, Brand, or Category"
+              className="border rounded px-2 py-1 w-96"
+              />
+            </div>
 
           <div className="overflow-x-auto">
             <Table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
@@ -200,6 +233,9 @@ export default function RFQsPage() {
                   </TableHead>
                   <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Brand
+                  </TableHead>
+                  <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    Category
                   </TableHead>
                   <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Status
@@ -227,6 +263,9 @@ export default function RFQsPage() {
                     </TableCell>
                     <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                       {rfq.brand || "-"}
+                    </TableCell>
+                    <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                      {rfq.category || "-"}
                     </TableCell>
                     <TableCell className="px-6 py-4 whitespace-nowrap text-sm">
                       <span className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-800 dark:text-blue-100">
