@@ -256,6 +256,11 @@ const customerData = {
 title:"Vessel Management",
 url:"/dashboard/customer/vessel_management",
 },
+{
+  title:"Role Management",
+  url:"/dashboard/customer/role_management",
+  
+  },
     
     {
       title: "Branch",
