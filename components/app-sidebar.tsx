@@ -229,7 +229,7 @@ const customerData = {
       title: "Sustuabinability & ESG Reporting",
       url: "/dashboard/customer",
     },
-<<<<<<< HEAD
+
 {
 title:"Vessel Management",
 url:"/dashboard/customer/vessel_management",
@@ -240,13 +240,12 @@ url:"/dashboard/customer/vessel_management",
   
   },
     
-=======
+
     {
       title: "Vessel Management",
       url: "/dashboard/customer/vessel_management",
     },
 
->>>>>>> e9ec24b352bb3ac297aa17ae876dfb3671ca68d9
     {
       title: "Branch",
       url: "/dashboard/customer/branch",
