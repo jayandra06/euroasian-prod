@@ -26,17 +26,9 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
-
-import { Loader, Loader2, Trash2 } from "lucide-react";
-
+import { Loader2 } from "lucide-react";
 import { useParams } from "next/navigation";
-import { set } from "react-hook-form";
-
-const tabs = [
-  { id: "Vendor 1", label: "Vendor 1", color: "bg-white", text: "text-black" },
-  { id: "Vendor 2", label: "Vendor 2", color: "bg-blue-500" },
-  { id: "Vendor 3", label: "Vendor 3", color: "bg-green-400" },
-];
+import { toast } from "react-hot-toast";
 
 interface RfqData {
   supply_port: string;
@@ -54,9 +46,7 @@ interface RfqData {
   currentTag: string;
   offer_quality: string;
   remarks: string;
-
-  // Add all other properties you expect to use
-  [key: string]: any; // This allows for additional properties if needed
+  [key: string]: any;
 }
 
 // @ts-ignore
@@ -391,82 +381,284 @@ function Item({ item, index }: { item: any; index: number }) {
 
 interface Approval {
   vendor_key: string;
-  status: "approved" | "pending" | "rejected" | "pending_approval"; // More specific if possible
+  status: "approved" | "pending" | "rejected" | "requested"; // More specific if possible
 }
 export default function ViewRfq() {
   const params = useParams();
   const id = params.id;
-
   const supabase = createClient();
-
   const [rfqData, setRfqData] = useState<any>(null);
   const [rfqItems, setRfqItems] = useState<any[]>([]);
-  console.log("RFQ Data:", rfqData);
-  console.log("RFQ Items:", rfqItems);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedVendor, setSelectedVendor] = useState<string | null>(null);
   const [filteredItems, setFilteredItems] = useState<any[]>([]);
-  // Add to your state
-  const [currentUserRole, setCurrentUserRole] = useState<string | null>(null);
-  const [isCreator, setIsCreator] = useState(false);
-  const [approvalStatus, setApprovalStatus] = useState(
-    rfqData?.status || "draft"
-  );
+
   const [vendors, setVendors] = useState<any[]>([]);
+
   const [vendorApprovalStatus, setVendorApprovalStatus] = useState<
     Record<string, Approval>
   >({});
-
   const [selectedVendorNumber, setSelectedVendorNumber] = useState<
     number | null
   >(null);
-
+  const [currentVendorCharges, setCurrentVendorCharges] =
+    useState<ChargeData | null>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
-
-  console.log("filtered items", filteredItems);
-
   const [isMem, setIsMem] = useState(true);
-
   const [user, setUser] = useState<any>(null);
+  const [charges, setCharges] = useState<ChargeData[] | []>([]);
+  const [approvedVendorId, setApprovedVendorId] = useState<string | null>(null);
+  const [rejectionReasons, setRejectionReasons] = useState<{
+    [vendorId: string]: string;
+  }>({});
+  const [rfqDecision, setRfqDecision] = useState<RfqDecision[]>([]);
+  const [enableConfirmDelivery, setEnableConfirmDelivery] = useState(false);
+  const [isViewMode, setIsViewMode] = useState(false);
+  const [showRequestButton, setShowRequestButton] = useState(false);
+  const [initiator_role, setInitiatorRole] = useState<string | null>(null);
+
+  interface ChargeData {
+    vendor_id: string;
+    freight_charges: string;
+    custom_charges: string;
+    shipment_charges: string;
+    port_connectivity_charges: string;
+    other_charges: string;
+    remark_charges: string;
+    [key: string]: string;
+  }
+
+  interface RfqDecision {
+    rfq_id: string | string[] | undefined;
+    vendor_id: string;
+    status: "selected" | "rejected";
+    reason: string;
+  }
+
+  interface RfqItem {
+    vendor_id: string;
+    // Add other fields as necessary
+  }
+  type ApprovalEntry = {
+    role: string;
+    status: string;
+    created_at: string;
+  };
 
   useEffect(() => {
-    const getUser = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      setUser(user);
+    if (vendors.length > 0 && !selectedVendor) {
+      setSelectedVendor(vendors[0].vendor_id);
+    }
+  }, [vendors]);
 
-      const id = user?.id;
+  useEffect(() => {
+    const checkApprovalStatus = async () => {
+      try {
+        const {
+          data: { user },
+          error: userError,
+        } = await supabase.auth.getUser();
+        if (userError) {
+          console.error("Failed to fetch user", userError);
+          return;
+        }
 
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("user_role")
-        .eq("id", id)
-        .single();
+        setUser(user);
 
-      if (error) {
-        console.error("Error fetching user role:", error);
-      } else {
-        setUserRole(data?.user_role || null);
+        const userId = user?.id;
+        if (!userId) {
+          console.error("User ID not found");
+          return;
+        }
+
+        const [profileResponse, rfqResponse, approvalResponse] =
+          await Promise.all([
+            supabase
+              .from("profiles")
+              .select("user_role")
+              .eq("id", userId)
+              .single(),
+            supabase.from("rfq").select("initiator_role").eq("id", id).single(),
+            supabase
+              .from("rfq_approval_flow")
+              .select("role, status, created_at")
+              .eq("rfq_id", id)
+              .order("created_at", { ascending: true }),
+          ]);
+
+        const { data: profileData } = profileResponse;
+        const { data: rfqData } = rfqResponse;
+        const { data: approvalData } = approvalResponse as {
+          data: ApprovalEntry[];
+        };
+
+        console.log("Profile Data:", profileData);
+        console.log("RFQ Data:", rfqData);
+        console.log("Approval Data:", approvalData);
+
+        const currentUserRole = profileData?.user_role || null;
+        const initiatorRole = rfqData?.initiator_role || null;
+
+        setInitiatorRole(initiatorRole);
+
+        if (!initiatorRole) {
+          console.error("Initiator role not found");
+          return;
+        }
+
+        setUserRole(currentUserRole);
+
+        const approvalFlow = [];
+        if (initiatorRole === "manager") {
+          approvalFlow.push("manager", "branch_admin", "customer");
+        } else if (initiatorRole === "branch_admin") {
+          approvalFlow.push("branch_admin", "customer");
+        } else if (initiatorRole === "customer") {
+        }
+
+        const approvedRoles = approvalData?.map((entry) => entry.role) || [];
+
+        // Determine next role to approve
+        let nextRole = null;
+        for (const role of approvalFlow) {
+          if (!approvedRoles.includes(role)) {
+            nextRole = role;
+            break;
+          }
+        }
+
+        console.log("Next Role to Approve:", nextRole);
+
+        // Show "Request for Approval" button
+        if (currentUserRole === nextRole) {
+          setShowRequestButton(true);
+        } else {
+          setShowRequestButton(false);
+        }
+
+        // Enable Confirm Delivery when ALL roles have "requested"
+        const allRequested = approvalFlow.every((role) =>
+          approvalData?.some(
+            (entry) =>
+              (entry.role === role && entry.status === "requested") ||
+              entry.status !== "approved"
+          )
+        );
+        console.log("All Requested:", approvalFlow.length);
+        console.log("All Requested:", approvalData.length);
+
+        if (
+          allRequested &&
+          approvalFlow.length === approvalData.length &&
+          currentUserRole === initiatorRole
+        ) {
+          setEnableConfirmDelivery(true);
+        } else {
+          setEnableConfirmDelivery(false);
+        }
+      } catch (error) {
+        console.error("An unexpected error occurred", error);
       }
     };
-    getUser();
-  }, []);
+
+    if (id) {
+      checkApprovalStatus();
+    }
+  }, [id]);
 
   useEffect(() => {
-    const fetchVendor = async () => {
+    const fetchRfqDecision = async () => {
+      const { data, error } = await supabase
+        .from("rfq_decision")
+        .select("*")
+        .eq("rfq_id", id); // rfqId from params
+
+      if (error) {
+        console.error("Error fetching RFQ decision:", error);
+        return;
+      }
+
+      const approved = data.find((d) => d.status === "selected");
+      if (approved) setApprovedVendorId(approved.vendor_id);
+
+      const rejections = data.filter((d) => d.status === "rejected");
+      const reasonsMap: Record<string, string> = {};
+      rejections.forEach((d) => {
+        reasonsMap[d.vendor_id] = d.reason || "";
+      });
+      setRejectionReasons(reasonsMap);
+    };
+
+    fetchRfqDecision();
+  }, [id]);
+
+  useEffect(() => {
+    const fetchVendorsWithStatus = async () => {
+      // Step 1: Get vendor_ids from rfq_supplier
       const { data: rfqSuppliers, error: rfqSupplierError } = await supabase
         .from("rfq_supplier")
         .select("vendor_id")
         .eq("rfq_id", id);
 
-      if (rfqSupplierError) throw rfqSupplierError;
+      if (rfqSupplierError) {
+        console.error("Error fetching RFQ suppliers:", rfqSupplierError);
+        return;
+      }
 
-      setVendors(rfqSuppliers.map((r) => r.vendor_id));
+      const vendorIds = rfqSuppliers.map((r) => r.vendor_id);
+
+      // Step 2: Fetch merchants
+      const { data: merchants, error: merchantError } = await supabase
+        .from("merchant")
+        .select("id, name")
+        .in("id", vendorIds);
+
+      if (merchantError) {
+        console.error("Error fetching merchants:", merchantError);
+        return;
+      }
+
+      // Step 3: Fetch responses
+      const { data: responses, error: responseError } = await supabase
+        .from("rfq_response")
+        .select("vendor_id")
+        .eq("rfq_id", id);
+
+      if (responseError) {
+        console.error("Error fetching RFQ responses:", responseError);
+        return;
+      }
+
+      const respondedVendorIds = responses.map((r) => r.vendor_id);
+
+      // Step 4: Set vendor info
+      const vendorDetails = merchants.map((m) => ({
+        vendor_id: m.id,
+        name: m.name,
+        hasResponded: respondedVendorIds.includes(m.id),
+      }));
+
+      setVendors(vendorDetails);
+
+      // Step 5: Fetch charges and set separately
+      const { data: chargeData, error: chargeError } = await supabase
+        .from("rfq_response_item_charges")
+        .select("*")
+        .eq("rfq_response_id", id);
+
+      if (chargeError) {
+        console.error("Error fetching charges:", chargeError);
+        return;
+      }
+
+      setCharges(chargeData ?? []);
+
+      console.log("chargeData", chargeData);
     };
-    fetchVendor();
-  }, []);
+
+    fetchVendorsWithStatus();
+  }, [id]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -518,60 +710,6 @@ export default function ViewRfq() {
     if (id) fetchData();
   }, [id]);
 
-  function handleConfirmDelivery() {}
-
-  function handleGiveForApproval() {}
-  const handleVendorClick = (vendorId: string, vendorNumber: number) => {
-    setSelectedVendor(vendorId);
-    setSelectedVendorNumber(vendorNumber);
-
-    const vendorResponses = rfqItems.filter(
-      (item) => item.vendor_id === vendorId
-    );
-    setFilteredItems(vendorResponses);
-  };
-
-  console.log("geetting rfqitems", rfqItems);
-
-  useEffect(() => {
-    const fetchUserData = async () => {
-      if (!id) return;
-
-      try {
-        // Get current user
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-        if (!user) return;
-
-        // Fetch member role
-        const { data: member, error: memberError } = await supabase
-          .from("member")
-          .select("member_role")
-          .eq("member_profile", user.id)
-          .single();
-        if (memberError) throw memberError;
-
-        setCurrentUserRole(member?.member_role);
-
-        // Check if current user is the creator
-        const { data: rfq, error: rfqError } = await supabase
-          .from("rfq")
-          .select("requested_by, status")
-          .eq("id", id)
-          .single();
-        if (rfqError) throw rfqError;
-
-        setIsCreator(rfq?.requested_by === user.id);
-        setApprovalStatus(rfq?.status || "draft");
-      } catch (err) {
-        console.error("Error fetching user data:", err);
-      }
-    };
-
-    fetchUserData();
-  }, [id]);
-
   useEffect(() => {
     const fetchApprovalStatus = async () => {
       const { data: approvals, error } = await supabase
@@ -597,105 +735,217 @@ export default function ViewRfq() {
     if (id) fetchApprovalStatus();
   }, [id]);
 
-  const handleSendVendorForApproval = async () => {
-    if (!selectedVendor || !selectedVendorNumber) return;
-
-    try {
-      const vendorKey = `vendor${selectedVendorNumber}`;
-
-      // Update approval status in database
-      const { error } = await supabase.from("rfq_approvals").upsert({
-        rfq_id: id,
-        vendor_key: vendorKey,
-        status: "pending_approval",
-        decided_by: user?.id,
-        decided_at: new Date().toISOString(),
-      });
-
-      if (error) throw error;
-
-      // Update local state
-      setVendorApprovalStatus((prev) => ({
-        ...prev,
-        [vendorKey]: {
-          vendor_key: vendorKey,
-          status: "pending",
-        },
-      }));
-
-      alert(`Vendor  sent for approval successfully!`);
-    } catch (err) {
-      console.error("Error sending for approval:", err);
-      alert("Failed to send for approval");
-    }
-  };
-
-  const handleVendorApproveReject = async (action: "approve" | "reject") => {
-    if (!selectedVendor || !selectedVendorNumber || !user) {
-      alert("Please select a vendor and ensure you're logged in");
+  const handleConfirmDelivery = async (approvalStatus = "approved") => {
+    if (userRole === "customer" && !approvedVendorId) {
+      toast.error("Please select one vendor for approval.");
       return;
     }
 
+    let decisions: {
+      rfq_id: string;
+      vendor_id: string;
+      status: string;
+      reason: string;
+      action_by: string;
+    }[] = [];
+
+    if (userRole === "customer") {
+      decisions = vendors
+        .map(({ vendor_id }) => {
+          const isSelected = vendor_id === approvedVendorId;
+
+          if (
+            !isSelected &&
+            (!rejectionReasons[vendor_id] ||
+              rejectionReasons[vendor_id].trim() === "")
+          ) {
+            toast(`Please provide a rejection reason for vendor ${vendor_id}`);
+            return undefined;
+          }
+
+          return {
+            rfq_id: id as string,
+            vendor_id: vendor_id as string,
+            status: isSelected ? "selected" : "rejected",
+            reason: isSelected ? "" : rejectionReasons[vendor_id],
+            action_by: user?.id as string,
+          };
+        })
+        .filter(
+          (
+            d
+          ): d is {
+            rfq_id: string;
+            vendor_id: string;
+            status: string;
+            reason: string;
+            action_by: string;
+          } => Boolean(d)
+        );
+    }
+
     try {
-      const vendorKey = `vendor${selectedVendorNumber}`;
-      const newStatus = action === "approve" ? "approved" : "rejected";
+      if (userRole === "customer") {
+        // 1. Insert vendor decisions
+        const { error: decisionError } = await supabase
+          .from("rfq_decision")
+          .insert(decisions);
+        if (decisionError) throw decisionError;
 
-      // Start a transaction to update both tables
-      const { error: approvalError } = await supabase
-        .from("rfq_approvals")
-        .upsert({
-          rfq_id: id,
-          vendor_key: vendorKey,
-          status: newStatus,
-          decided_by: user.id,
-        });
-
-      if (approvalError) throw approvalError;
-
-      // Update the main RFQ status if all vendors are approved
-      if (action === "approve") {
-        // Check if all vendors are approved
-        const { data: approvals, error: fetchError } = await supabase
-          .from("rfq_approvals")
-          .select("status , vendor_key")
-          .eq("rfq_id", id);
-
-        if (fetchError) throw fetchError;
-
-        const allApproved = vendors.every((_, index) => {
-          const vendorNum = index + 1;
-          return approvals.some(
-            (a) =>
-              a.vendor_key === `vendor${vendorNum}` && a.status === "approved"
-          );
-        });
-
-        if (allApproved) {
-          const { error: rfqError } = await supabase
-            .from("rfq")
-            .update({ status: "approved" })
-            .eq("id", id);
-
-          if (rfqError) throw rfqError;
-          setApprovalStatus("approved");
-        }
+        // 2. Insert approval flow
+        const { error: approvalError } = await supabase
+          .from("rfq_approval_flow")
+          .insert({
+            rfq_id: id,
+            action_by: user?.id,
+            status: approvalStatus,
+            role: "customer",
+          });
+        if (approvalError) throw approvalError;
       }
 
-      // Update local state
-      setVendorApprovalStatus((prev) => ({
-        ...prev,
-        [vendorKey]: {
-          vendor_key: vendorKey,
-          status: newStatus,
-        },
-      }));
+      // 3. Update RFQ status
+      const { error: rfqStatusError } = await supabase
+        .from("rfq")
+        .update({ status: "ordered" })
+        .eq("id", id);
+      if (rfqStatusError) throw rfqStatusError;
 
-      alert(`Vendor ${selectedVendorNumber} ${newStatus} successfully!`);
+      // 4. Update rfq_supplier for the accepted vendor
+      if (approvedVendorId) {
+        const { error: supplierError } = await supabase
+          .from("rfq_supplier")
+          .update({ status: "ordered_confirm" })
+          .match({ rfq_id: id, vendor_id: approvedVendorId });
+        if (supplierError) throw supplierError;
+      }
+
+      toast.success("Delivery confirmed successfully.");
     } catch (err) {
-      console.error(`Error ${action}ing vendor:`, err);
-      alert(`Failed to ${action} vendor`);
+      console.error("Error during RFQ processing:", err);
+      toast.success("Something went wrong. Please try again.");
     }
   };
+
+  const handleRequestForApproval = async () => {
+    try {
+      if (userRole === initiator_role) {
+        // Initiator: collect and insert vendor decisions
+        if (!approvedVendorId) {
+          toast.error("Please select one vendor for approval.");
+          return;
+        }
+
+        const decisions = vendors
+          .map(({ vendor_id }) => {
+            const isSelected = vendor_id === approvedVendorId;
+
+            if (
+              !isSelected &&
+              (!rejectionReasons[vendor_id] ||
+                rejectionReasons[vendor_id].trim() === "")
+            ) {
+              toast.error(
+                `Please provide a rejection reason for vendor ${vendor_id}`
+              );
+              return null;
+            }
+
+            return {
+              rfq_id: id,
+              vendor_id,
+              status: isSelected ? "selected" : "rejected",
+              reason: isSelected ? "" : rejectionReasons[vendor_id],
+              action_by: user?.id,
+            };
+          })
+          .filter(
+            (
+              d
+            ): d is {
+              rfq_id: string;
+              vendor_id: string;
+              status: string;
+              reason: string;
+              action_by: string;
+            } => Boolean(d)
+          );
+
+        const { error: decisionError } = await supabase
+          .from("rfq_decision")
+          .insert(decisions);
+        if (decisionError) throw decisionError;
+      } else {
+        // Non-initiator: fetch existing approval flows
+        const { data: flows, error: fetchError } = await supabase
+          .from("rfq_approval_flow")
+          .select("id, role, status, created_at")
+          .eq("rfq_id", id)
+          .order("created_at", { ascending: true });
+
+        if (fetchError) throw fetchError;
+        if (!flows || flows.length === 0) {
+          toast.error("No approval flow found to update.");
+          return;
+        }
+
+        // Update the most recent flow’s status to “approved”
+        const lastFlow = flows[flows.length - 1];
+        const { error: updateError } = await supabase
+          .from("rfq_approval_flow")
+          .update({ status: "approved" })
+          .eq("id", lastFlow.id);
+
+        if (updateError) throw updateError;
+      }
+
+      // In both cases, insert a new “requested” flow for the current user
+      const { error: approvalError } = await supabase
+        .from("rfq_approval_flow")
+        .insert({
+          rfq_id: id,
+          action_by: user?.id,
+          status: "requested",
+          role: userRole,
+        });
+      if (approvalError) throw approvalError;
+
+      toast.success("Request for approval sent successfully.");
+    } catch (err) {
+      console.error("Error during RFQ processing:", err);
+      toast.error("Something went wrong. Please try again.");
+    }
+  };
+
+  const handleVendorClick = (vendorId: string, vendorNumber: number) => {
+    setSelectedVendor(vendorId);
+    setSelectedVendorNumber(vendorNumber);
+    console.log("charges array", charges);
+    console.log(
+      "match found:",
+      charges.some((charge) => charge.vendor_id === selectedVendor)
+    );
+
+    console.log("selected vendor", vendorId, vendorNumber);
+    // Filter RFQ items by selected vendor
+    const vendorResponses = rfqItems.filter(
+      (item: RfqItem) => item.vendor_id === vendorId
+    );
+    setFilteredItems(vendorResponses);
+
+    const vendorCharge = charges.find(
+      (charge) => charge.vendor_id === vendorId
+    );
+
+    if (vendorCharge) {
+      setCurrentVendorCharges(vendorCharge);
+      // Set the current vendor's charges
+    } else {
+      setCurrentVendorCharges(null); // If no charges found for the vendor
+    }
+  };
+
+  console.log("geetting rfqitems", rfqItems);
 
   if (loading) {
     return (
@@ -718,60 +968,110 @@ export default function ViewRfq() {
 
   return (
     <>
-      <main className="grid">
+      <main className="grid pb-20">
+        {" "}
+        {/* Added padding-bottom to prevent overlap */}
         <div className="pt-4 max-w-6xl w-full grid justify-self-center">
           <h1 className="text-3xl font-bold">View RFQ</h1>
           <h3 className="mt-2"></h3>
         </div>
-
         <main className="grid justify-self-center max-w-6xl w-full md:grid-cols-3 gap-4 mt-4">
           <RFQInfoCard rfqData={rfqData} />
         </main>
-
         <div className="flex w-full max-w-6xl justify-self-center items-center mt-8">
           <h1 className="text-xl font-bold">Choose vendors</h1>
         </div>
-        <div className="relative flex justify-center max-w-5xl mx-auto mt-4  bg-gray-100 rounded-full p-2 shadow-xl mb-4">
-          <div className="relative flex gap-4">
-            {vendors.map((vendorId, index) => {
-              const vendorNumber = index + 1;
-              const vendorKey = `vendor${vendorNumber}`;
-              const status = vendorApprovalStatus[vendorKey]?.status || "draft";
+        <div className="relative flex justify-center max-w-5xl mx-auto mt-6 bg-white rounded-xl px-4 py-6 shadow-md border border-gray-200 mb-6">
+          <div className="flex flex-wrap gap-6 items-start justify-center">
+            {vendors
+              .filter((vendor) => {
+                const adminId =
+                  process.env.ADMIN_MERCHANT_ID ||
+                  "cc331901-9a8f-4d07-a4c5-7605cfbbdb6f";
+                return !(vendor.vendor_id === adminId && !vendor.hasResponded);
+              })
+              .map(({ vendor_id, name, hasResponded }, index) => {
+                const isSelected = selectedVendor === vendor_id;
+                const isApproved = approvedVendorId === vendor_id;
+                const isRejected =
+                  approvedVendorId && approvedVendorId !== vendor_id;
 
-              return (
-                <button
-                  key={vendorId}
-                  onClick={() =>
-                    rfqItems.length > 0 &&
-                    handleVendorClick(vendorId, vendorNumber)
-                  }
-                  disabled={rfqItems.length === 0}
-                  className={`relative z-10 px-4 py-2 text-sm font-medium transition ${
-                    selectedVendor === vendorId
-                      ? "text-black font-bold bg-gray-200"
-                      : "text-gray-700"
-                  } ${
-                    rfqItems.length === 0 ? "opacity-50 cursor-not-allowed" : ""
-                  }`}
-                >
-                  Vendor {vendorNumber}
-                  {selectedVendor === vendorId && (
-                    <motion.div
-                      layoutId="tab-indicator"
-                      className="absolute inset-0 shadow-2xl rounded-full z-[-1]"
-                      transition={{
-                        type: "spring",
-                        stiffness: 300,
-                        damping: 20,
-                      }}
-                    />
-                  )}
-                </button>
-              );
-            })}
+                return (
+                  <div
+                    key={vendor_id}
+                    className="flex flex-col items-center gap-2 p-4 border border-gray-200 rounded-xl shadow-sm w-64"
+                  >
+                    {/* Vendor Button */}
+                    <button
+                      onClick={() =>
+                        rfqItems.length > 0 &&
+                        handleVendorClick(vendor_id, index + 1)
+                      }
+                      disabled={rfqItems.length === 0 && isViewMode}
+                      className={`w-full relative z-10 px-5 py-2 text-sm font-medium transition-all duration-300 ease-in-out rounded-full flex items-center justify-center gap-2
+            ${
+              isSelected
+                ? "bg-blue-600 text-white shadow-md"
+                : "bg-gray-100 text-gray-700 hover:bg-blue-50 hover:text-blue-700"
+            }
+            ${hasResponded ? "ring-2 ring-green-500" : ""}
+            ${rfqItems.length === 0 ? "opacity-50 cursor-not-allowed" : ""}
+            border border-gray-300`}
+                    >
+                      <span>{name}</span>
+                      {hasResponded && (
+                        <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full font-semibold">
+                          Responded
+                        </span>
+                      )}
+                      {isSelected && (
+                        <motion.div
+                          layoutId="tab-indicator"
+                          className="absolute inset-0 rounded-full border-2 border-blue-700 shadow-inner z-[-1]"
+                          transition={{
+                            type: "spring",
+                            stiffness: 400,
+                            damping: 30,
+                          }}
+                        />
+                      )}
+                    </button>
+
+                    {/* Select for Approval */}
+                    <button
+                      disabled={isViewMode}
+                      onClick={() => setApprovedVendorId(vendor_id)}
+                      className={`text-sm mt-2 px-4 py-1.5 rounded-full  ${
+                        isViewMode ? "opacity-50 cursor-not-allowed" : ""
+                      } ${
+                        isApproved
+                          ? "bg-green-600 text-white"
+                          : "bg-gray-200 hover:bg-green-100"
+                      }`}
+                    >
+                      {isApproved ? "Approved" : "Select for Approval"}
+                    </button>
+
+                    {/* Rejection Reason */}
+                    {isRejected && (
+                      <textarea
+                        disabled={isViewMode}
+                        className="mt-2 w-full text-sm p-2 border border-red-300 rounded-md bg-red-50 text-red-800"
+                        placeholder="Reason for rejection"
+                        value={rejectionReasons[vendor_id] || ""}
+                        onChange={(e) =>
+                          setRejectionReasons((prev) => ({
+                            ...prev,
+                            [vendor_id]: e.target.value,
+                          }))
+                        }
+                      />
+                    )}
+                  </div>
+                );
+              })}
           </div>
         </div>
-
         <div className="grid justify-self-center max-w-6xl w-full mt-8">
           <div className="flex justify-between items-center">
             <h1 className="text-xl font-bold">Items</h1>
@@ -824,327 +1124,96 @@ export default function ViewRfq() {
           </div>
           <Separator />
 
-          {selectedVendor ? (
-            filteredItems.length > 0 ? (
-              filteredItems.map((item, i) => (
-                <div
-                  key={item.id}
-                  className="flex gap-4 items-center mx-auto mt-10"
-                >
-                  <div>
-                    <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-                      Freight Charges
-                    </label>
-                    <input
-                      type="text"
-                      disabled
-                      value={item.freight_charges}
-                      className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                    />
-                  </div>
-                  {/* Repeat for other charge fields */}
-                  <div>
-                    <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-                      Customs Charges
-                    </label>
-                    <input
-                      type="text"
-                      disabled
-                      value={item.custom_charges}
-                      className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label
-                      htmlFor="first_name"
-                      className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                    >
-                      Shipment CHarges
-                    </label>
-                    <input
-                      type="text"
-                      id="first_name"
-                      value={item.shipment_charges}
-                      disabled
-                      className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                      placeholder="John"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label
-                      htmlFor="first_name"
-                      className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                    >
-                      Port Connectivity CHarges
-                    </label>
-                    <input
-                      type="text"
-                      id="first_name"
-                      value={item.port_connectivity_charges}
-                      disabled
-                      className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                      placeholder="John"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label
-                      htmlFor="first_name"
-                      className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                    >
-                      Agent Charges
-                    </label>
-                    <input
-                      type="text"
-                      id="first_name"
-                      value={item.agent_charges}
-                      disabled
-                      className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                      placeholder="John"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label
-                      htmlFor="first_name"
-                      className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                    >
-                      Other CHarges
-                    </label>
-                    <input
-                      type="text"
-                      id="first_name"
-                      value={item.other_charges}
-                      disabled
-                      className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                      placeholder="John"
-                      required
-                    />
-                  </div>
-
-                  {/* Add remaining charge fields here */}
-                  <div>
-                    <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-                      Remark
-                    </label>
-                    <input
-                      type="text"
-                      disabled
-                      value={item.remarks}
-                      className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                    />
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="text-center py-4">No items found</div>
-            )
-          ) : (
-            rfqItems.map((item, i) => (
-              <div
-                key={item.id}
-                className="flex gap-4 items-center mx-auto mt-10"
-              >
-                {/* Same charge fields as above */}
-                <div>
-                  <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-                    Freight Charges
-                  </label>
-                  <input
-                    type="text"
-                    disabled
-                    value={item.freight_charges}
-                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                  />
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="first_name"
-                    className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                  >
-                    Customs Charges
-                  </label>
-
-                  <input
-                    type="text"
-                    id="first_name"
-                    value={item.custom_charges}
-                    disabled
-                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                    placeholder="John"
-                    required
-                  />
-                </div>
-                <div>
-                  <label
-                    htmlFor="first_name"
-                    className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                  >
-                    Shipment CHarges
-                  </label>
-                  <input
-                    type="text"
-                    id="first_name"
-                    value={item.shipment_charges}
-                    disabled
-                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                    placeholder="John"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="first_name"
-                    className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                  >
-                    Port Connectivity CHarges
-                  </label>
-                  <input
-                    type="text"
-                    id="first_name"
-                    value={item.port_connectivity_charges}
-                    disabled
-                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                    placeholder="John"
-                    required
-                  />
-                </div>
-                <div>
-                  <label
-                    htmlFor="first_name"
-                    className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                  >
-                    Agent Charges
-                  </label>
-                  <input
-                    type="text"
-                    id="first_name"
-                    value={item.agent_charges}
-                    disabled
-                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                    placeholder="John"
-                    required
-                  />
-                </div>
-                <div>
-                  <label
-                    htmlFor="first_name"
-                    className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                  >
-                    Other CHarges
-                  </label>
-                  <input
-                    type="text"
-                    id="first_name"
-                    value={item.other_charges}
-                    disabled
-                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                    placeholder="John"
-                    required
-                  />
-                </div>
-                <div>
-                  <label
-                    htmlFor="first_name"
-                    className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                  >
-                    Remark
-                  </label>
-                  <input
-                    type="text"
-                    id="first_name"
-                    value={item.remarks}
-                    disabled
-                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                    placeholder="John"
-                    required
-                  />
-                </div>
-                {/* Repeat for other charge fields */}
-              </div>
-            ))
-          )}
-
-          <div className="text-right mt-3">
-            <Button
-              className="bg-blue-500 mt-3"
-              onClick={() => {
-                if (userRole !== "admin" && userRole !== "customer") {
-                  // Call function for Confirm Delivery
-                  handleConfirmDelivery();
-                } else {
-                  // Call function for Give for Approval
-                  handleGiveForApproval();
-                }
-              }}
-            >
-              {userRole !== "admin" && userRole !== "customer"
-                ? "Give for Approval"
-                : "Confirm Delivery"}
-            </Button>
-
-            {/* Employee sees Send for Approval for selected vendor */}
-            {currentUserRole === "employee" &&
-              selectedVendorNumber &&
-              vendorApprovalStatus[`vendor${selectedVendorNumber}`]?.status !==
-                "pending_approval" &&
-              vendorApprovalStatus[`vendor${selectedVendorNumber}`]?.status !==
-                "approved" &&
-              vendorApprovalStatus[`vendor${selectedVendorNumber}`]?.status !==
-                "rejected" && (
-                <Button
-                  className="bg-green-600 mt-3 mx-2"
-                  onClick={handleSendVendorForApproval}
-                >
-                  Send for Delivery
-                </Button>
-              )}
-
-            {/* Creator sees Approve/Reject for selected vendor */}
-            {isCreator &&
-              selectedVendorNumber &&
-              vendorApprovalStatus[`vendor${selectedVendorNumber}`]?.status ===
-                "pending_approval" && (
+          <div className="flex gap-4 items-center mx-auto mt-10 mb-4">
+            {/* Check if selectedVendor exists in the charges array */}
+            {selectedVendor &&
+              charges.some((charge) => charge.vendor_id === selectedVendor) && (
                 <>
-                  <Button
-                    className="bg-green-600 mt-3 mx-2"
-                    onClick={() => handleVendorApproveReject("approve")}
-                  >
-                    Approve Vendor
-                  </Button>
-                  <Button
-                    className="bg-red-600 mt-3 mx-2"
-                    onClick={() => handleVendorApproveReject("reject")}
-                  >
-                    Reject Vendor
-                  </Button>
+                  {[
+                    { label: "Freight Charges", key: "freight_charges" },
+                    { label: "Customs Charges", key: "custom_charges" },
+                    { label: "Shipment Charges", key: "shipment_charges" },
+                    {
+                      label: "Port Connectivity Charges",
+                      key: "port_connectivity_charges",
+                    },
+                    { label: "Other Charges", key: "other_charges" },
+                    { label: "Remark", key: "remark_charges" },
+                  ].map(({ label, key }) => {
+                    // Find the charge data for the selected vendor
+                    const vendorCharge = charges.find(
+                      (c) => c.vendor_id === selectedVendor
+                    );
+
+                    return (
+                      <div key={key}>
+                        <label
+                          htmlFor={key}
+                          className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                        >
+                          {label}
+                        </label>
+                        <input
+                          disabled
+                          type="text"
+                          id={key}
+                          value={
+                            vendorCharge
+                              ? vendorCharge[key as keyof ChargeData] || ""
+                              : ""
+                          }
+                          onChange={(e) => {
+                            const updatedCharges = charges.map((c) =>
+                              c.vendor_id === selectedVendor
+                                ? { ...c, [key]: e.target.value }
+                                : c
+                            );
+                            setCharges(updatedCharges);
+                          }}
+                          name={key}
+                          className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                          placeholder={label}
+                          required
+                        />
+                      </div>
+                    );
+                  })}
                 </>
               )}
+          </div>
 
-            {/* Status indicators */}
-            {selectedVendorNumber &&
-              vendorApprovalStatus[`vendor${selectedVendorNumber}`]?.status ===
-                "approved" && (
-                <span className="text-green-600 font-bold mt-3 mx-2">
-                  Vendor Approved ✓
-                </span>
-              )}
+          <div className="border-t border-gray-300 pt-4 fixed bottom-0 left-[calc(250px)] right-0 bg-white shadow-lg shadow-blue-500/50 px-6 z-50">
+            <div className="text-right mt-3 space-x-4">
+              {enableConfirmDelivery ? (
+                <button
+                  className={`px-4 py-2 rounded-md ${
+                    enableConfirmDelivery
+                      ? "bg-green-600 text-white"
+                      : "bg-gray-400 text-gray-200"
+                  }`}
+                  onClick={() => {
+                    handleConfirmDelivery("approved");
+                  }}
+                >
+                  Confirm Delivery
+                </button>
+              ) : null}
 
-            {selectedVendorNumber &&
-              vendorApprovalStatus[`vendor${selectedVendorNumber}`]?.status ===
-                "rejected" && (
-                <span className="text-red-600 font-bold mt-3 mx-2">
-                  Vendor Rejected ✗
-                </span>
-              )}
+              {showRequestButton ? (
+                <button
+                  className={`mt-4 px-4 py-2 rounded-md text-sm font-medium bg-blue-600 text-white hover:bg-blue-700`}
+                  onClick={() => {
+                    handleRequestForApproval();
+                  }}
+                >
+                  Request for Approval
+                </button>
+              ) : null}
 
-            <Button className="bg-pink-500 mt-3 mx-2">Print RFQ</Button>
-            <Button className="bg-red-600 mt-3 mx-2">Cancel</Button>
+              <Button className="bg-red-600 hover:bg-red-700 text-white font-medium px-4 py-2 rounded-md shadow">
+                Cancel
+              </Button>
+            </div>
           </div>
         </div>
       </main>

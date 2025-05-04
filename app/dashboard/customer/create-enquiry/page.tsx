@@ -34,7 +34,7 @@ import {
 import { Loader, Trash2 } from "lucide-react";
 import ErrorToast from "@/components/ui/errorToast";
 import SuccessToast from "@/components/ui/successToast";
-
+import { equal } from "assert";
 
 function RFQInfoCard({
   createRfq,
@@ -69,40 +69,39 @@ function RFQInfoCard({
   const fetchVessels = async () => {
     try {
       const supabase = createClient();
-  
+
       // --- get current user ---
       const {
         data: { user },
         error: userError,
       } = await supabase.auth.getUser();
-  
+
       if (userError || !user) {
         console.error("User not found or error:", userError);
         return;
       }
-  
+
       // Properly structure the GET request with query params or use POST for body
-      const res = await axios.get('/api/fetch-vessel-role-wise', {
+      const res = await axios.get("/api/fetch-vessel-role-wise", {
         params: {
           email: user.email,
           id: user.id,
         },
       });
-      
-  
+
       if (res.data && res.data.data && Array.isArray(res.data.data)) {
         setVessels(res.data.data);
       } else {
-        console.error('Error: API response does not contain an array in the "data" property.');
+        console.error(
+          'Error: API response does not contain an array in the "data" property.'
+        );
         setVessels([]);
       }
     } catch (error) {
-      console.error('Error fetching vessels:', error);
+      console.error("Error fetching vessels:", error);
       setVessels([]);
     }
   };
-  
-  
 
   useEffect(() => {
     fetchVessels();
@@ -446,14 +445,21 @@ function RFQInfoCard({
                   name="general_remarks"
                   value={createRfq.general_remarks}
                   onChange={(e) =>
-                    setcreateRfq({ ...createRfq, general_remarks: e.target.value })
+                    setcreateRfq({
+                      ...createRfq,
+                      general_remarks: e.target.value,
+                    })
                   }
                   className={`border mt-2 ${
-                    errors.general_remarks ? "border-red-500" : "border-gray-300"
+                    errors.general_remarks
+                      ? "border-red-500"
+                      : "border-gray-300"
                   }`}
                 />
                 {errors.general_remarks && (
-                  <p className="text-red-500 text-sm">{errors.general_remarks}</p>
+                  <p className="text-red-500 text-sm">
+                    {errors.general_remarks}
+                  </p>
                 )}
               </div>
               <div className="flex flex-col">
@@ -728,7 +734,7 @@ export default function CreateEnquiryPage() {
     category: "",
     hull_no: "",
     offer_quality: "",
-    remark: "",
+    remarks: "",
     serial_no: "",
     vessel_ex_name: "",
     upload: "",
@@ -749,12 +755,12 @@ export default function CreateEnquiryPage() {
       dimensions: "",
       height: "",
       general_remarks: "",
-
     },
   ]);
   console.log("Items", items);
 
   const [isMem, setIsMem] = useState(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
   const [errors, setErrors] = useState({ supply_port: "", items: [] });
   const handleUpdateItem = (id: number, key: any, value: any) => {
     setItems((prevItems: any) =>
@@ -774,27 +780,28 @@ export default function CreateEnquiryPage() {
       setIsLoading(true);
       setErrorMessage("");
       setSuccessMessage("");
-  
+
       let fileUrl = "";
-  
+
       if (!selectedFile) {
         console.warn("⚠️ No file selected. Skipping file upload.");
       } else {
         try {
           console.log("📁 Uploading selected file...");
-  
+
           const fileExt = selectedFile.name.split(".").pop();
           const fileName = `${Math.random()}.${fileExt}`;
-          const { data: uploadData, error: uploadError } = await supabase.storage
-            .from("rfq-image")
-            .upload(`uploads/${fileName}`, selectedFile);
-  
+          const { data: uploadData, error: uploadError } =
+            await supabase.storage
+              .from("rfq-image")
+              .upload(`uploads/${fileName}`, selectedFile);
+
           if (uploadError) throw uploadError;
-  
+
           const { data: publicUrlData } = supabase.storage
             .from("rfq-image")
             .getPublicUrl(uploadData.path);
-  
+
           fileUrl = publicUrlData.publicUrl;
           console.log("✅ File uploaded. Public URL:", fileUrl);
         } catch (uploadErr) {
@@ -804,21 +811,23 @@ export default function CreateEnquiryPage() {
           return;
         }
       }
-  
-      let user, branchValues = [];
+
+      let user,
+        branchValues = [];
       try {
         console.log("👤 Fetching current user...");
-        const { data: userData, error: userError } = await supabase.auth.getUser();
+        const { data: userData, error: userError } =
+          await supabase.auth.getUser();
         if (userError) throw userError;
         user = userData.user;
-  
+
         const { data: memberData, error: memberError } = await supabase
           .from("member")
           .select("branch")
           .eq("member_profile", user.id);
-  
+
         if (memberError) throw memberError;
-  
+
         branchValues = memberData?.map((m) => m.branch) ?? [];
         console.log("✅ User & branch fetched:", user.id, branchValues);
       } catch (userErr) {
@@ -827,7 +836,7 @@ export default function CreateEnquiryPage() {
         setIsLoading(false);
         return;
       }
-  
+
       // Insert into `rfq` table
       let rfqData;
       try {
@@ -846,24 +855,20 @@ export default function CreateEnquiryPage() {
               category: createRfq.category,
               hull_no: createRfq.hull_no,
               offer_quality: createRfq.offer_quality,
-              remarks: createRfq.remark,
+              remarks: createRfq.remarks,
               serial_no: createRfq.serial_no,
               vessel_ex_name: createRfq.vessel_ex_name,
               upload: fileUrl,
               requested_by: user.id,
-              suppliers: Object.values(reqdVendors)
-                .filter((v) => v.vendorId)
-                .map((v) => v.vendorId),
               created_at: new Date().toISOString(),
               branch: branchValues[0] ?? null,
-              status: Object.values(reqdVendors).some((v) => v.vendorId)
-                ? "sent"
-                : "draft",
+              status: "sent",
+              initiator_role: userRole,
             },
           ])
           .select("*")
           .single();
-  
+
         if (error) throw error;
         rfqData = data;
         console.log("✅ RFQ inserted:", rfqData);
@@ -873,34 +878,42 @@ export default function CreateEnquiryPage() {
         setIsLoading(false);
         return;
       }
-  
+
+      const ADMIN_ID = process.env.ADMIN_MERCHANT_ID || 'cc331901-9a8f-4d07-a4c5-7605cfbbdb6f';
       // Insert into rfq_supplier
       try {
-        const vendorsToInsert = Object.values(reqdVendors)
-          .filter((v) => v.vendorId)
-          .map((v) => ({ rfq_id: rfqData.id, vendor_id: v.vendorId }));
-  
+        const vendorsToInsert = [
+          ...Object.values(reqdVendors)
+            .filter((v) => v.vendorId)
+            .map((v) => ({ rfq_id: rfqData.id, vendor_id: v.vendorId })),
+          { rfq_id: rfqData.id, vendor_id: ADMIN_ID }, // Always include admin
+        ];
+        
+
         if (vendorsToInsert.length === 0) {
           console.warn("⚠️ No vendors selected. Skipping rfq_supplier.");
         } else {
           const { data: validMerchants, error: merchantError } = await supabase
             .from("merchant")
             .select("id")
-            .in("id", vendorsToInsert.map((v) => v.vendor_id));
-  
+            .in(
+              "id",
+              vendorsToInsert.map((v) => v.vendor_id)
+            );
+
           if (merchantError) throw merchantError;
-  
+
           const validVendorIds = validMerchants?.map((m) => m.id) ?? [];
-          const filteredVendorsToInsert = vendorsToInsert.filter((v) =>
-            validVendorIds.includes(v.vendor_id)
-          );
-  
+          const filteredVendorsToInsert = vendorsToInsert
+            .filter((v) => validVendorIds.includes(v.vendor_id))
+            .map((v) => ({ ...v, status: "received" }));
+
           if (filteredVendorsToInsert.length > 0) {
             const { data, error } = await supabase
               .from("rfq_supplier")
               .insert(filteredVendorsToInsert)
               .select("*");
-  
+
             if (error) throw error;
             console.log("✅ rfq_supplier inserted:", data);
           } else {
@@ -912,8 +925,8 @@ export default function CreateEnquiryPage() {
         setErrorMessage("Some suppliers couldn't be linked.");
       }
 
-      items.forEach((item: any) => console.log(item))
-  
+      items.forEach((item: any) => console.log(item));
+
       // Insert items
       for (let i = 0; i < items.length; i++) {
         try {
@@ -932,20 +945,19 @@ export default function CreateEnquiryPage() {
                 req_qty: item.req_qty,
                 uom: item.uom,
                 general_remarks: item.general_remarks,
-                dimensions:item.dimensions
-               
+                dimensions: item.dimensions,
               },
             ])
             .select("*")
             .single();
-  
+
           if (error) throw error;
           console.log(`✅ RFQ item ${i + 1} inserted:`, data);
         } catch (itemErr) {
           console.error(`❌ Error inserting item ${i + 1}:`, itemErr);
         }
       }
-  
+
       setSuccessMessage("RFQ Successfully Created!");
       console.log("🎉 All done!");
     } catch (finalError) {
@@ -955,7 +967,6 @@ export default function CreateEnquiryPage() {
       setIsLoading(false);
     }
   };
-  
 
   const selectedVendors = [
     reqdVendors.vendor1?.name,
@@ -973,50 +984,124 @@ export default function CreateEnquiryPage() {
     setItems([...filteredItem]);
   }
 
-
   async function fetchDetails() {
     const supabase = createClient();
-  
+
     // --- get current user ---
     const {
       data: { user },
       error: userError,
     } = await supabase.auth.getUser();
+
     if (userError || !user) {
       console.error("User not found or error:", userError);
       return;
     }
-  
+
+    // --- get user role ---
+    const { data: userData, error: roleError } = await supabase
+      .from("profiles")
+      .select("user_role")
+      .eq("id", user.id)
+      .single();
+
+    if (roleError || !userData) {
+      console.error("User role fetch error:", roleError);
+      return;
+    }
+
+    const userRole = userData.user_role;
+
+    setUserRole(userRole);
+
+    let customerId = user.id; // default
+
+    if (userRole !== "customer") {
+      let branchId: string | null = null;
+
+      if (userRole === "admin" || userRole === "branch_admin") {
+        // --- get branch_id from branch_admin table ---
+        const { data: baData, error: baError } = await supabase
+          .from("branch_admin")
+          .select("branch")
+          .eq("customer_id", user.id)
+          .single();
+
+        if (baError || !baData) {
+          console.error("Branch admin fetch error:", baError);
+          return;
+        }
+
+        branchId = baData.branch;
+      } else if (userRole === "manager") {
+        // --- get branch_id from manager table ---
+        const { data: managerData, error: managerError } = await supabase
+          .from("manager")
+          .select("branch_id")
+          .eq("customer_id", user.id)
+          .single();
+
+        if (managerError || !managerData) {
+          console.error("Manager fetch error:", managerError);
+          return;
+        }
+
+        branchId = managerData.branch_id;
+      }
+
+      if (!branchId) {
+        console.error("Branch ID not found for user");
+        return;
+      }
+
+      // --- now get customer_id from branch table using branch_id ---
+      const { data: branchData, error: branchError } = await supabase
+        .from("branch")
+        .select("customer_id")
+        .eq("id", branchId)
+        .single();
+
+      if (branchError || !branchData) {
+        console.error("Branch fetch error:", branchError);
+        return;
+      }
+
+      customerId = branchData.customer_id;
+      console.log("Customer ID:", customerId);
+    }
+
     // --- 1) Direct vendors ---
     const { data: dv, error: directError } = await supabase
       .from("merchant")
       .select("*")
-      .eq("parent_id", user.id);
+      .eq("parent_id", customerId);
+
     if (directError) console.error("Direct vendor fetch error:", directError);
-  
-    // default to [] so we can iterate
+
     const directVendors = dv ?? [];
-  
+
     // --- 2) Associated vendors ---
     const { data: ar, error: accessError } = await supabase
       .from("vendor_access")
       .select("merchant:vendor_id(*)")
-      .eq("customer_id", user.id);
-    if (accessError) console.error("Associated vendor fetch error:", accessError);
-  
-    // default to [] and extract
+      .eq("customer_id", customerId);
+
+    if (accessError)
+      console.error("Associated vendor fetch error:", accessError);
+
     const accessRows = ar ?? [];
     const associatedVendors = accessRows
       .map((r: any) => r.merchant)
       .filter((m: any) => m !== null);
-  
+
     // --- 3) Merge & dedupe ---
     const vendorMap = new Map<string, any>();
     for (const v of [...directVendors, ...associatedVendors]) {
       if (v && v.id) vendorMap.set(v.id, v);
     }
+
     updateVendors(Array.from(vendorMap.values()));
-  
+
     // --- the rest of your logic unchanged ---
     const { data: brands, error: brandError } = await supabase
       .from("brand")
@@ -1024,21 +1109,21 @@ export default function CreateEnquiryPage() {
       .eq("is_active", true);
     if (brandError) console.error("Brand fetch error:", brandError);
     else setBrands(brands ?? []);
-  
+
     const { data: models, error: modelError } = await supabase
       .from("model")
       .select("*")
       .eq("is_active", true);
     if (modelError) console.error("Model fetch error:", modelError);
     else setModels(models ?? []);
-  
+
     const { data: categories, error: categoryError } = await supabase
       .from("category")
       .select("*")
       .eq("is_active", true);
     if (categoryError) console.error("Category fetch error:", categoryError);
     else setCategory(categories ?? []);
-  
+
     const { data: member, error: memberError } = await supabase
       .from("member")
       .select("*")
@@ -1046,8 +1131,7 @@ export default function CreateEnquiryPage() {
     if (memberError) console.error("Member fetch error:", memberError);
     else if ((member ?? []).length) setIsMem(true);
   }
-  
-  
+
   useEffect(() => {
     void fetchDetails();
   }, []);
@@ -1168,9 +1252,10 @@ export default function CreateEnquiryPage() {
                       Description<span className="text-red-500 ml-1">*</span>
                     </TableHead>
                     <TableHead>
-                      Required Quantity<span className="text-red-500 ml-1">*</span>
+                      Required Quantity
+                      <span className="text-red-500 ml-1">*</span>
                     </TableHead>
-    
+
                     <TableHead>
                       UOM<span className="text-red-500 ml-1">*</span>
                     </TableHead>
@@ -1232,9 +1317,8 @@ export default function CreateEnquiryPage() {
             <Button
               onClick={handleAddQuote}
               className="flex items-center justify-center gap-2"
-              
             >
-              Get Quote 
+              Get Quote
             </Button>
           </div>
         </div>

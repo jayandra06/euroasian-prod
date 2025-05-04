@@ -21,8 +21,9 @@ import {
     TableBody,
     TableCell,
 } from "@/components/ui/table";
-import { Pencil, Trash, MoreVertical } from "lucide-react";
+import { Pencil, Trash, MoreVertical, Check } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { toast } from 'sonner';
 
 interface Brand {
     id: string;
@@ -30,72 +31,91 @@ interface Brand {
     description: string | null;
     is_active: boolean;
     created_at: string;
-  }
-  
+}
+
 export default function BrandsPage() {
     const [brands, setBrands] = useState<Brand[]>([]);
     const [newBrand, setNewBrand] = useState({ name: "", description: "" });
+    const [addBrandDialogOpen, setAddBrandDialogOpen] = useState(false);
     const [editBrandDialogOpen, setEditBrandDialogOpen] = useState(false);
     const [editBrand, setEditBrand] = useState<Brand | null>(null);
     const [deleteBrandDialogOpen, setDeleteBrandDialogOpen] = useState(false);
     const [brandToDelete, setBrandToDelete] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState("active");
+    const [activeTab, setActiveTab] = useState("active"); // Default to active for admin view
 
     const filteredBrands = brands.filter((brand) =>
         activeTab === "active" ? brand.is_active : !brand.is_active
     );
 
-    async function fetchBrands() {
+    async function fetchBrands(isActive: boolean | null = null) {
         setLoading(true);
         const supabase = createClient();
-        const { data, error } = await supabase
-            .from("brand")
-            .select("*")
-            .order("created_at", { ascending: false });
+        let query = supabase.from("brand").select("*").order("created_at", { ascending: false });
+        if (isActive !== null) {
+            query = query.eq("is_active", isActive);
+        }
+        const { data, error } = await query;
 
         if (error) {
             console.error("Error fetching brands:", error);
-            alert("Error fetching brands. Please check the console.");
+            toast.error("Error fetching brands. Please check the console.");
         } else if (data) {
             setBrands(data);
         }
         setLoading(false);
     }
 
-    async function addBrand() {
+    async function requestAddBrand() {
         const supabase = createClient();
         const { error } = await supabase
             .from("brand")
-            .insert({ ...newBrand, is_active: false, created_at: new Date().toISOString() }); // Default to pending
+            .insert({ ...newBrand, is_active: false, created_at: new Date().toISOString() }); // Submitted as pending
 
         if (error) {
-            console.error("Error adding brand:", error);
-            alert("Failed to add the new brand. Please check the console.");
+            console.error("Error requesting brand:", error);
+            toast.error("Failed to request the new brand. Please check the console.");
         } else {
-            alert(`${newBrand.name} has been successfully added and is pending approval.`);
+            toast.success(`${newBrand.name} has been submitted for approval.`);
             setNewBrand({ name: "", description: "" });
-            fetchBrands();
+            setAddBrandDialogOpen(false);
+            fetchBrands(false); // Refresh pending brands
         }
     }
 
-    async function updateBrand() {
+    async function requestUpdateBrand() {
         if (!editBrand) return;
 
         const supabase = createClient();
         const { error } = await supabase
             .from("brand")
-            .update({ name: editBrand.name, description: editBrand.description })
+            .update({ name: editBrand.name, description: editBrand.description, is_active: false }) // Resubmitted as pending
             .eq("id", editBrand.id);
 
         if (error) {
             console.error("Error updating brand:", error);
-            alert("Failed to update the brand details. Please check the console.");
+            toast.error("Failed to request update for the brand details. Please check the console.");
         } else {
-            alert(`${editBrand.name} has been successfully updated.`);
+            toast.success(`${editBrand.name} update has been submitted for approval.`);
             setEditBrandDialogOpen(false);
             setEditBrand(null);
-            fetchBrands();
+            fetchBrands(false); // Refresh pending brands
+        }
+    }
+
+    async function approveBrand(id: string) {
+        const supabase = createClient();
+        const { error } = await supabase
+            .from("brand")
+            .update({ is_active: true })
+            .eq("id", id);
+
+        if (error) {
+            console.error("Error approving brand:", error);
+            toast.error("Failed to approve the brand. Please check the console.");
+        } else {
+            toast.success("Brand has been approved.");
+            fetchBrands(activeTab === "active"); // Refresh current tab
         }
     }
 
@@ -107,14 +127,18 @@ export default function BrandsPage() {
 
         if (error) {
             console.error("Error deleting brand:", error);
-            alert("Failed to delete the brand. Please check the console.");
+            toast.error("Failed to delete the brand. Please check the console.");
         } else {
-            alert("The brand has been successfully deleted.");
+            toast.success("The brand has been successfully deleted.");
             setDeleteBrandDialogOpen(false);
             setBrandToDelete(null);
-            fetchBrands();
+            fetchBrands(activeTab === "active"); // Refresh current tab
         }
     }
+
+    const handleAddDialogOpen = () => {
+        setAddBrandDialogOpen(true);
+    };
 
     const handleEditDialogOpen = (brand: Brand) => {
         setEditBrand(brand);
@@ -123,19 +147,18 @@ export default function BrandsPage() {
 
     const handleEditInputChange = (
         e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-      ) => {
+    ) => {
         const { name, value } = e.target;
-      
+
         setEditBrand((prevBrand) => {
-          if (!prevBrand) return prevBrand; // safeguard for null
-      
-          return {
-            ...prevBrand,
-            [name]: value,
-          };
+            if (!prevBrand) return prevBrand;
+
+            return {
+                ...prevBrand,
+                [name]: value,
+            };
         });
-      };
-      
+    };
 
     const handleDeleteDialogOpen = (id: string) => {
         setBrandToDelete(id);
@@ -144,10 +167,11 @@ export default function BrandsPage() {
 
     const handleTabChange = (tab: "active" | "pending") => {
         setActiveTab(tab);
+        fetchBrands(tab === "active");
     };
 
     useEffect(() => {
-        fetchBrands();
+        fetchBrands(true); // Initially load active brands for admin view
     }, []);
 
     if (loading) {
@@ -157,17 +181,17 @@ export default function BrandsPage() {
     return (
         <>
             <div className="mt-8 p-4 flex justify-between items-center">
-                <h1 className="text-2xl font-bold">All Brands</h1>
+                <h1 className="text-2xl font-bold">Manage Brands</h1>
                 <div className="flex gap-2 justify-end">
-                    <Dialog>
+                    <Dialog open={addBrandDialogOpen} onOpenChange={setAddBrandDialogOpen}>
                         <DialogTrigger asChild>
-                            <Button>Add Brand</Button>
+                            <Button onClick={handleAddDialogOpen}>Add Brand</Button>
                         </DialogTrigger>
                         <DialogContent>
                             <DialogHeader>
-                                <DialogTitle>Add New Brand</DialogTitle>
+                                <DialogTitle>Request New Brand</DialogTitle>
                                 <DialogDescription>
-                                    Enter the details for the new brand.
+                                    Enter the details for the new brand. This will be submitted for approval.
                                 </DialogDescription>
                             </DialogHeader>
                             <div className="grid gap-4 py-4">
@@ -196,8 +220,11 @@ export default function BrandsPage() {
                                 </div>
                             </div>
                             <DialogFooter>
-                                <Button type="button" onClick={addBrand}>
-                                    Add Brand
+                                <Button type="button" onClick={() => setAddBrandDialogOpen(false)}>
+                                    Cancel
+                                </Button>
+                                <Button type="button" onClick={requestAddBrand}>
+                                    Request Add Brand
                                 </Button>
                             </DialogFooter>
                         </DialogContent>
@@ -217,7 +244,7 @@ export default function BrandsPage() {
                         variant={activeTab === "pending" ? "default" : "outline"}
                         onClick={() => handleTabChange("pending")}
                     >
-                        Pending
+                        Pending Approval
                     </Button>
                 </div>
 
@@ -235,9 +262,7 @@ export default function BrandsPage() {
                             <TableRow key={brand.id}>
                                 <TableCell>{brand.name}</TableCell>
                                 <TableCell>{brand.description || "-"}</TableCell>
-                                <TableCell>
-                                    {brand.is_active ? "Active" : "Pending"}
-                                </TableCell>
+                                <TableCell>{brand.is_active ? "Active" : "Pending"}</TableCell>
                                 <TableCell className="text-right">
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
@@ -250,8 +275,14 @@ export default function BrandsPage() {
                                                 <Pencil className="h-4 w-4 mr-2" />
                                                 Edit
                                             </DropdownMenuItem>
+                                            {!brand.is_active && (
+                                                <DropdownMenuItem onClick={() => approveBrand(brand.id)}>
+                                                    <Check className="h-4 w-4 mr-2 text-green-500" />
+                                                    Approve
+                                                </DropdownMenuItem>
+                                            )}
                                             <DropdownMenuItem onClick={() => handleDeleteDialogOpen(brand.id)}>
-                                                <Trash className="h-4 w-4 mr-2" />
+                                                <Trash className="h-4 w-4 mr-2 text-red-500" />
                                                 Delete
                                             </DropdownMenuItem>
                                         </DropdownMenuContent>
@@ -274,9 +305,9 @@ export default function BrandsPage() {
             <Dialog open={editBrandDialogOpen} onOpenChange={setEditBrandDialogOpen}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Edit Brand</DialogTitle>
+                        <DialogTitle>Request Edit Brand</DialogTitle>
                         <DialogDescription>
-                            Update the details for the selected brand.
+                            Update the details for the selected brand. This will be submitted for approval.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
@@ -303,8 +334,8 @@ export default function BrandsPage() {
                         <Button type="button" onClick={() => setEditBrandDialogOpen(false)}>
                             Cancel
                         </Button>
-                        <Button type="button" onClick={updateBrand}>
-                            Save Changes
+                        <Button type="button" onClick={requestUpdateBrand}>
+                            Request Update
                         </Button>
                     </DialogFooter>
                 </DialogContent>

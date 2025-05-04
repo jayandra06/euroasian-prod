@@ -34,6 +34,8 @@ interface Vendor {
   business_email: string;
   phone: string;
   is_active: boolean;
+  status: string;
+  vendor_type: string;
 }
 
 export default function VendorManagement() {
@@ -42,80 +44,119 @@ export default function VendorManagement() {
   const [loading, setLoading] = useState(false);
   const supabase = createClient();
   const [userId, setuserId] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filters, setFilters] = useState({
+    status: "",
+    vendorType: "",
+    country: "",
+    searchTerm: "",
+  });
+
   const router = useRouter();
 
-  const getVendors = useCallback(async () => {
-    try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-  
-      const userId = user?.id;
-      if (!userId) {
-        toast.error("User not found.");
-        return;
-      }
-  
-      setuserId(userId);
-  
-      // Fetch merchants where user is the parent
-      const { data: directMerchants, error: directError } = await supabase
-        .from("merchant")
-        .select("*")
-        .eq("parent_id", userId);
-  
-      if (directError) throw directError;
-  
-      // Fetch merchants associated via vendor_access
-      const { data: accessMerchants, error: accessError } = await supabase
-        .from("vendor_access")
-        .select("merchant:vendor_id(*)") // Get vendor info from merchant table
-        .eq("customer_id", userId);
-  
-      if (accessError) throw accessError;
-  
-      // Extract nested merchant data from vendor_access
-      const associatedMerchants = accessMerchants
-        .map((item: any) => item.merchant)
-        .filter((m: any) => m !== null); // In case of null joins
-  
-      // Combine both sets, remove duplicates by merchant id
-      const allMerchantsMap = new Map();
-      [...directMerchants, ...associatedMerchants].forEach((merchant: any) => {
-        if (merchant && merchant.id) {
-          allMerchantsMap.set(merchant.id, merchant);
-        }
-      });
-  
-      const combinedMerchants = Array.from(allMerchantsMap.values());
-  
-      setVendors(combinedMerchants as Vendor[]);
-    } catch (error) {
-      console.error("Error fetching vendors:", error);
-      toast.error("Failed to load vendors.");
-    }
-  }, [supabase]);
-  
-  
   
 
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFilters((prev) => ({
+      ...prev,
+      searchTerm: e.target.value,
+    }));
+  };
+
+  const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setFilters((prev) => ({
+      ...prev,
+      status: e.target.value,
+    }));
+  };
+
+  const handleVendorTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setFilters((prev) => ({
+      ...prev,
+      vendorType: e.target.value,
+    }));
+  };
+
+  const getVendors = useCallback(
+    async (filters: any) => {
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+
+        const userId = user?.id;
+        if (!userId) {
+          toast.error("User not found.");
+          return;
+        }
+
+        setuserId(userId);
+
+        let query = supabase
+          .from("merchant")
+          .select("*")
+          .eq("parent_id", userId);
+        console.log("filters", filters);
+
+        if (filters.status) query = query.eq("status", filters.status);
+        if (filters.vendorType)
+          query = query.eq("vendor_type", filters.vendorType);
+        if (filters.country)
+          query = query.eq("vendor_country", filters.country);
+
+        // If there's a search term, apply it to filter vendor name
+        if (filters.searchTerm) {
+          query = query.ilike("name", `%${filters.searchTerm}%`);
+        }
+
+        const { data: directMerchants, error: directError } = await query;
+        if (directError) throw directError;
+
+        let accessQuery = supabase
+          .from("vendor_access")
+          .select("merchant:vendor_id(*)")
+          .eq("customer_id", userId);
+
+        const { data: accessMerchants, error: accessError } = await accessQuery;
+        if (accessError) throw accessError;
+
+        const associatedMerchants = accessMerchants
+          .map((item) => item.merchant)
+          .filter((m) => m !== null);
+
+        const allMerchantsMap = new Map();
+        [...directMerchants, ...associatedMerchants].forEach((merchant) => {
+          if (merchant?.id) {
+            allMerchantsMap.set(merchant.id, merchant);
+          }
+        });
+
+        setVendors(Array.from(allMerchantsMap.values()));
+      } catch (error) {
+        console.error("Error fetching vendors:", error);
+        toast.error("Failed to load vendors.");
+      }
+    },
+    [supabase]
+  );
+
   useEffect(() => {
-    getVendors();
-  }, [getVendors]);
+    getVendors(filters);
+  }, [filters, getVendors]);
 
   const type = "INTERNAL_VENDOR";
 
   const handleInviteVendor = async () => {
     setLoading(true);
-  
+
     const trimmedEmail = inviteEmail.trim();
-  
+
     if (!trimmedEmail) {
       toast.error("Please enter an email to invite.");
       setLoading(false);
       return;
     }
-  
+
     try {
       // Step 1: Check if email exists and is already linked
       const checkRes = await fetch("/api/check-user-exist", {
@@ -129,9 +170,9 @@ export default function VendorManagement() {
           type,
         }),
       });
-  
+
       const checkData = await checkRes.json();
-  
+
       if (checkRes.ok) {
         // Handle case where the user exists but is already linked
         if (checkData.exists && checkData.linked) {
@@ -139,10 +180,12 @@ export default function VendorManagement() {
           setLoading(false);
           return;
         }
-  
+
         // Handle case where user exists but is not linked (you may want to take specific action here)
         if (checkData.exists && !checkData.linked) {
-          toast.error("This vendor exists but is not yet linked. You can proceed with linking.");
+          toast.error(
+            "This vendor exists but is not yet linked. You can proceed with linking."
+          );
         }
       } else {
         // Handle any error in the check API (e.g., failed request)
@@ -150,7 +193,7 @@ export default function VendorManagement() {
         setLoading(false);
         return;
       }
-  
+
       // Step 2: Proceed with sending invite
       const inviteRes = await fetch("/api/invite-vendor", {
         method: "POST",
@@ -163,16 +206,17 @@ export default function VendorManagement() {
           type,
         }),
       });
-  
+
       const inviteData = await inviteRes.json();
-  
+
       if (inviteRes.ok) {
         toast.success("Vendor invite sent successfully!");
-        setInviteEmail("");  // Clear email input after success
+        setInviteEmail(""); // Clear email input after success
       } else {
-        toast.error(`Failed to send invite: ${inviteData?.message || "Unknown error"}`);
+        toast.error(
+          `Failed to send invite: ${inviteData?.message || "Unknown error"}`
+        );
       }
-  
     } catch (error: any) {
       console.error("Error sending invite:", error);
       toast.error("Something went wrong. Please try again later.");
@@ -180,30 +224,16 @@ export default function VendorManagement() {
       setLoading(false);
     }
   };
-  
-  
 
-  const handleStatusChange = async (vendorId: string, isActive: boolean) => {
-    const { error } = await supabase
-      .from("merchant")
-      .update({ is_active: isActive })
-      .eq("id", vendorId);
-
-    if (error) {
-      console.error("Error updating vendor status:", error);
-      toast.error("Failed to update vendor status.");
-    } else {
-      // Optimistically update the UI
-      setVendors((prevVendors) =>
-        prevVendors.map((vendor) =>
-          vendor.id === vendorId ? { ...vendor, is_active: isActive } : vendor
-        )
-      );
-      toast.success(
-        `Vendor status updated to ${isActive ? "Enabled" : "Disabled"}`
-      );
-    }
-  };
+  const filteredVendors = vendors.filter((vendor) => {
+    const search = searchTerm.toLowerCase();
+    return (
+      vendor.name?.toLowerCase().includes(search) ||
+      vendor.status?.toLowerCase().includes(search) ||
+      vendor.business_email?.toLowerCase().includes(search) ||
+      vendor.phone?.toLowerCase().includes(search)
+    );
+  });
 
   return (
     <div className="p-6">
@@ -263,7 +293,69 @@ export default function VendorManagement() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-      </div>
+        </div>
+<div className="flex flex-wrap items-center justify-between space-y-4 mb-6">
+  <div className="flex flex-col space-y-2 w-full sm:w-auto sm:mr-4">
+    <Label
+      htmlFor="status-filter"
+      className="text-sm font-medium text-gray-700 dark:text-gray-300"
+    >
+      Filter by Status
+    </Label>
+    <select
+      id="status-filter"
+      value={filters.status}
+      onChange={handleStatusChange}
+      className="border px-2 py-1 rounded dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100"
+    >
+      <option value="">All Statuses</option>
+      <option value="approved">Approved</option>
+      <option value="waiting">Pending</option>
+      <option value="rejected">Rejected</option>
+    </select>
+  </div>
+
+  <div className="flex flex-col space-y-2 w-full sm:w-auto sm:mr-4">
+    <Label
+      htmlFor="vendor-type-filter"
+      className="text-sm font-medium text-gray-700 dark:text-gray-300"
+    >
+      Filter by Vendor Type
+    </Label>
+    <select
+      id="vendor-type-filter"
+      value={filters.vendorType}
+      onChange={(e) =>
+        setFilters({ ...filters, vendorType: e.target.value })
+      }
+      className="border px-2 py-1 rounded dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100"
+    >
+      <option value="">All Vendor Types</option>
+      <option value="INTERNAL_VENDOR">Internal Vendor</option>
+      <option value="EXTERNAL_VENDOR">External Vendor</option>
+    </select>
+  </div>
+
+  <div className="flex flex-col space-y-2 w-full sm:w-auto sm:flex-1">
+    <Label
+      htmlFor="search-filter"
+      className="text-sm font-medium text-gray-700 dark:text-gray-300"
+    >
+      Search Vendors
+    </Label>
+    <Input
+      id="search-filter"
+      type="text"
+      placeholder="Search by vendor name, email, status, phone..."
+      value={searchTerm}
+      onChange={(e) => setSearchTerm(e.target.value)}
+      className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+    />
+  </div>
+</div>
+
+       
+      
 
       <div className="overflow-x-auto">
         <Table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
@@ -279,33 +371,46 @@ export default function VendorManagement() {
                 Contact No.
               </TableHead>
               <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                Vendor Type
+              </TableHead>
+
+              <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 Status
               </TableHead>
             </TableRow>
           </TableHeader>
-          <TableBody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
-            {vendors.length > 0 ? (
-              vendors.map((vendor) => (
-                <TableRow key={vendor.id}>
-                  <TableCell className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
-                    {vendor.name}
-                  </TableCell>
-                  <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                    {vendor.business_email}
-                  </TableCell>
-                  <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                    {vendor.phone || "N/A"}
-                  </TableCell>
-                  <TableCell className="px-6 py-4 whitespace-nowrap text-sm">
-                    <Switch
-                      id={`vendor-status-${vendor.id}`}
-                      checked={vendor.is_active}
-                      onCheckedChange={(checked) =>
-                        handleStatusChange(vendor.id, checked)
-                      }
-                    />
-                  </TableCell>
-                </TableRow>
+            <TableBody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
+            {filteredVendors.length > 0 ? (
+              filteredVendors.map((vendor) => (
+              <TableRow key={vendor.id}>
+                <TableCell className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
+                {vendor.name}
+                </TableCell>
+                <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                {vendor.business_email}
+                </TableCell>
+                <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                {vendor.phone || "N/A"}
+                </TableCell>
+                <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                {vendor.vendor_type || "N/A"}
+                </TableCell>
+                <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                {vendor.status || "N/A"}
+                </TableCell>
+                <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                <div className="relative">
+                  <Button
+                  className="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-2 py-1 rounded-md"
+                  onClick={() =>
+                    window.location.href = `http://localhost:3000/dashboard/customer/view-vendor/${vendor.id}`
+                  }
+                  >
+                  View
+                  </Button>
+                </div>
+                </TableCell>
+              </TableRow>
               ))
             ) : (
               <TableRow>

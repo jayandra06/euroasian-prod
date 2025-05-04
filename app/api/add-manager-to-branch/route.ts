@@ -74,6 +74,7 @@ export async function POST(request: Request) {
       .insert({
         branch_id: branch,
         email: email,
+        customer_id: userId
       })
       .select()
       .single();

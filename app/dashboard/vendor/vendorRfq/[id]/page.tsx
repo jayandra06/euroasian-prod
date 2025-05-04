@@ -33,6 +33,7 @@ import Image from "next/image";
 
 import { useParams, useSearchParams } from "next/navigation";
 import { create } from "domain";
+import { set } from "react-hook-form";
 
 // @ts-ignore
 function RFQInfoCard({
@@ -44,9 +45,6 @@ function RFQInfoCard({
 
   setRfqInfo: any;
 }) {
-  console.log("efq", rfqInfo);
-
-  console.log("rrrr", rfqInfo);
   const supabase = createClient();
 
   const getPublicUrl = (path: string) => {
@@ -283,6 +281,7 @@ function Item({ index, item, handleUpdateItem, errors }) {
     const { name, value } = e.target;
     handleUpdateItem(item.id, name, value);
   };
+
   return (
     <>
       <TableRow>
@@ -314,7 +313,9 @@ function Item({ index, item, handleUpdateItem, errors }) {
             )}
           </div>
         </TableCell>
-        <TableCell colSpan={5} rowSpan={3}>
+        <TableCell colSpan={5}>
+          {" "}
+          {/* Removed rowSpan */}
           <div className="grid gap-2 grid-cols-4 items-center">
             <div className="col-span-2">
               <Input
@@ -375,10 +376,6 @@ function Item({ index, item, handleUpdateItem, errors }) {
             value={item.req_qty}
             name="req_qty"
             disabled
-            // onChange={(e) => {
-            //     handleChange(e);
-            //     setErrors({ ...errors, req_qty: "" });
-            //   }}
             onChange={handleChange}
           />
           {errors.req_qty && (
@@ -386,17 +383,12 @@ function Item({ index, item, handleUpdateItem, errors }) {
           )}
         </TableCell>
         <TableCell>
-          {/* <Input type="text" placeholder="Enter UOM..." value={item.uom} name="uom" onChange={} /> */}
           <Input
             type="text"
             placeholder=""
             value={item.uom}
             name="uom"
             disabled
-            // onChange={(e) => {
-            //     handleChange(e);
-            //     setErrors({ ...errors, req_qty: "" });
-            //   }}
             onChange={handleChange}
           />
           {errors.uom && <p className="text-red-500 text-sm">{errors.uom}</p>}
@@ -448,13 +440,21 @@ function Item({ index, item, handleUpdateItem, errors }) {
 export default function ViewRfq() {
   const params = useParams();
   const id = params.id; // Extract the dynamic ID
-
   const [selectedRfq, setSelectedRfq] = useState<any>(null);
-
   const [items, setItems] = useState<any[]>([]);
-
   const [isMem, setIsMem] = useState(true);
   const [errors, setErrors] = useState({ supply_port: "", items: [] });
+  const [charges, setCharges] = useState({
+    freight_charges: "",
+    custom_charges: "",
+    shipment_charges: "",
+    port_connectivity_charges: "",
+    other_charges: "",
+    remark_charges: "",
+  });
+
+  const [viewMode, setViewMode] = useState(false);
+
   const handleUpdateItem = (id: number, key: string, value: any) => {
     setItems((prevItems) =>
       prevItems.map((item) =>
@@ -465,8 +465,101 @@ export default function ViewRfq() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isloading, setIsLoading] = useState(false);
+  useEffect(() => {
+    const supabase = createClient();
 
-  console.log(errors);
+    const checkResponseExist = async () => {
+      try {
+        const { data: userData, error: userError } =
+          await supabase.auth.getUser();
+        if (userError || !userData?.user?.id) {
+          throw new Error("Failed to retrieve user.");
+        }
+
+        const userId = userData.user.id;
+
+        const { data: merchant, error: merchantError } = await supabase
+          .from("merchant")
+          .select("id")
+          .eq("merchant_profile", userId)
+          .single();
+
+        if (merchantError || !merchant?.id) {
+          throw new Error("Merchant ID not found.");
+        }
+
+        const vendorId = merchant.id;
+
+        const { data: response, error: responseError } = await supabase
+          .from("rfq_response")
+          .select("*")
+          .eq("rfq_id", id)
+          .eq("vendor_id", vendorId)
+          .single();
+
+        if (responseError) {
+          console.error("Error fetching RFQ response:", responseError.message);
+        }
+        if (response) {
+
+          setViewMode(true);
+          // Fetch the items associated with the RFQ
+          const { data: items, error: itemsError } = await supabase
+            .from("rfq_items")
+            .select("*")
+            .eq("rfq_id", id);
+
+          if (itemsError) throw itemsError;
+
+          console.log("items ", items);
+          // Combine response data with items data
+            const combinedData = items.map((item) => ({
+            ...item, // Spread item data
+            ...response, // Spread response data
+            uom_vendor: response.uom ,
+            uom:item.uom
+            }));
+
+          console.log("combinedData ", combinedData);
+          // Set the combined data in state
+            setItems(combinedData);
+            const { data: rfqCharges, error: rfqChargesError } = await supabase
+            .from("rfq_response_item_charges")
+            .select("*")
+            .eq("rfq_response_id", id)
+            .eq("vendor_id", vendorId)
+            .single();
+            if (rfqChargesError) throw rfqChargesError;
+
+            setCharges({
+            shipment_charges: rfqCharges?.shipment_charges || "",
+            custom_charges: rfqCharges?.custom_charges || "",
+            port_connectivity_charges: rfqCharges?.port_connectivity_charges || "",
+            other_charges: rfqCharges?.other_charges || "",
+            freight_charges: rfqCharges?.freight_charges || "",
+            remark_charges: rfqCharges?.remark_charges || "",
+            });
+            console.log("charges ", rfqCharges);
+
+        } else {
+          // If no response exists, just set the items
+          const { data: items, error: itemsError } = await supabase
+            .from("rfq_items")
+            .select("*")
+            .eq("rfq_id", id);
+
+          if (itemsError) throw itemsError;
+          console.log("items ", items);
+
+          setItems(items || []);
+        }
+      } catch (err) {
+        console.error("Error checking RFQ response:", (err as Error).message);
+      }
+    };
+
+    checkResponseExist();
+  }, [id]);
 
   useEffect(() => {
     if (!id) return;
@@ -475,68 +568,23 @@ export default function ViewRfq() {
       const supabase = createClient();
 
       try {
-        // ✅ Get the current logged-in user
+        // Get the current logged-in user
         const { data: user, error: userError } = await supabase.auth.getUser();
         if (userError) throw userError;
 
-        const userId = user?.user?.id; // Get the authenticated user's ID
-        console.log("✅ Authenticated User ID:", userId);
+        const userId = user?.user?.id;
 
-        const { data: merchantData, error: merchantError } = await supabase
-          .from("merchant")
-          .select("id")
-          .eq("merchant_profile", userId) // Match with authenticated user
-          .single(); // Since each user has one merchant profile
-
-        if (merchantError) throw merchantError;
-
-        const merchantId = merchantData?.id;
-        console.log("✅ Retrieved Merchant ID:", merchantId);
-
-        const { data: rfqSupplierData, error: supplierError } = await supabase
-          .from("rfq_supplier")
-          .select("rfq_id")
-          .eq("vendor_id", merchantId);
-
-        if (supplierError) throw supplierError;
-
-        console.log("✅ RFQs for Merchant:", rfqSupplierData);
-
-        if (supplierError) throw supplierError;
-        if (!rfqSupplierData || rfqSupplierData.length === 0) {
-          console.warn("⚠️ No RFQs found for this vendor.");
-          return;
-        }
-
-        const rfqIdsArray = rfqSupplierData.map((row) => row.rfq_id);
-
-        console.log("✅ RFQ IDs Found:", rfqIdsArray);
-
-        // Step 2: Fetch RFQs
+        // Fetch RFQs
         const { data: rfqs, error: rfqsError } = await supabase
           .from("rfq")
           .select("*")
-          .in("id", rfqIdsArray);
-
-        console.log("thitsd fsidfosindofsdhfo", rfqs);
+          .eq("id", id);
 
         if (rfqsError) throw rfqsError;
 
-        console.log("✅ RFQs for Vendor:", rfqs);
-        setSelectedRfq(rfqs.length > 0 ? rfqs[0] : null);
-
-        // Step 3: Fetch RFQ Items
-        const { data: items, error: itemsError } = await supabase
-          .from("rfq_items")
-          .select("*")
-          .in("rfq_id", rfqIdsArray);
-
-        if (itemsError) throw itemsError;
-
-        console.log("✅ RFQ Items for Vendor:", items);
-        setItems(items);
+        setSelectedRfq(rfqs?.[0] ?? []);
       } catch (err) {
-        console.error("❌ Error fetching RFQs:", (err as Error).message);
+        console.error("Error fetching RFQs:", (err as Error).message);
       }
     }
 
@@ -576,7 +624,6 @@ export default function ViewRfq() {
         throw new Error("Failed to update some RFQ items.");
       }
 
-      console.log("✅ RFQ items updated successfully!");
       setSuccessMessage("RFQ items updated successfully!");
       return true; // ✅ Proceed to next step
     } catch (error) {
@@ -588,58 +635,136 @@ export default function ViewRfq() {
     }
   };
 
+  const handleUpdateSupplierStatus = async () => {
+    const supabase = createClient();
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    if (userError || !userData?.user?.id) {
+      throw new Error("Failed to retrieve user.");
+    }
+
+    const userId = userData.user.id;
+
+    // Get vendor/merchant ID
+    const { data: merchant, error: merchantError } = await supabase
+      .from("merchant")
+      .select("id")
+      .eq("merchant_profile", userId)
+      .single();
+
+    if (merchantError || !merchant?.id) {
+      throw new Error("Merchant ID not found.");
+    }
+
+    const vendorId = merchant.id;
+
+    // Update status of rfq_supplier
+    const { error: rfqSupplierStatusError } = await supabase
+      .from("rfq_supplier")
+      .update({ status: "completed" })
+      .eq("rfq_id", id)
+      .eq("vendor_id", vendorId);
+
+    if (rfqSupplierStatusError) {
+      console.error(
+        "❌ Error updating RFQ supplier status:",
+        rfqSupplierStatusError
+      );
+    } else {
+      setSuccessMessage("Successfully delivered!");
+    }
+  };
+  
   const submitVendorResponse = async () => {
     setIsLoading(true);
     setErrorMessage(null);
     setSuccessMessage(null);
 
     try {
-      // ✅ Get the current logged-in vendor ID
-      const { data: user, error: userError } = await supabase.auth.getUser();
-      if (userError || !user?.user?.id) {
+      const supabase = createClient();
+
+      //update rfq status
+      const { error: rfqStatusError } = await supabase
+        .from("rfq")
+        .update({ status: "quoted" })
+        .eq("id", id);
+
+      if (rfqStatusError) {
+        console.error("❌ Error updating RFQ status:", rfqStatusError);
+      }
+
+      // ✅ Get logged-in user
+      const { data: userData, error: userError } =
+        await supabase.auth.getUser();
+      if (userError || !userData?.user?.id) {
         throw new Error("Failed to retrieve user.");
       }
 
-      // ✅ Get Merchant ID using authenticated user
-      const { data: merchantData, error: merchantError } = await supabase
+      const userId = userData.user.id;
+
+      // ✅ Get vendor/merchant ID
+      const { data: merchant, error: merchantError } = await supabase
         .from("merchant")
         .select("id")
-        .eq("merchant_profile", user.user.id)
+        .eq("merchant_profile", userId)
         .single();
 
-      if (merchantError || !merchantData?.id) {
+      if (merchantError || !merchant?.id) {
         throw new Error("Merchant ID not found.");
       }
 
-      const vendorId = merchantData.id;
-      console.log("✅ Vendor ID Retrieved:", vendorId);
+      const vendorId = merchant.id;
 
-      const responseData = items.map((item) => ({
+      // ✅ Prepare RFQ response payload
+      const rfqResponses = items.map((item) => ({
         rfq_id: item.rfq_id,
         item_id: item.id,
-        vendor_id: vendorId, // ✅ Corrected vendor_id
+        vendor_id: vendorId,
         offered_price: item.offer_price,
         offer_quality: item.offer_quality,
         uom: item.uom_vendor,
-        shipment_charges: item.shipment_charges || 0,
-        custom_charges: item.custom_charges || 0,
-        port_connectivity_charges: item.port_connectivity_charges || 0,
-        agent_charges: item.agent_charges || 0,
-        other_charges: item.other_charges || 0,
-        freight_charges: item.freight_charges || 0,
-
-        remarks: item.remark_charges || "",
       }));
 
-      const { error } = await supabase
+      const { error: responseInsertError } = await supabase
         .from("rfq_response")
-        .insert(responseData);
-      if (error) throw error;
+        .insert(rfqResponses);
 
-      console.log("✅ Vendor responses inserted successfully!");
+      if (responseInsertError) throw responseInsertError;
+
+      //update status of suppliet
+      const { error: rfqSupplierStatusError } = await supabase
+        .from("rfq_supplier")
+        .update({ status: "quoted" })
+        .eq("rfq_id", id)
+        .eq("vendor_id", vendorId);
+
+      if (rfqSupplierStatusError) {
+        console.error(
+          "❌ Error updating RFQ supplier status:",
+          rfqSupplierStatusError
+        );
+      }
+
+      // ✅ Prepare charges payload
+      const chargePayload = {
+        rfq_response_id: id, // TODO: Dynamically link this if needed
+        vendor_id: vendorId,
+        shipment_charges: charges.shipment_charges ?? 0,
+        custom_charges: charges.custom_charges ?? 0,
+        port_connectivity_charges: charges.port_connectivity_charges ?? 0,
+        other_charges: charges.other_charges ?? 0,
+        freight_charges: charges.freight_charges ?? 0,
+        remark_charges: charges.remark_charges ?? "",
+      };
+
+      const { error: chargesInsertError } = await supabase
+        .from("rfq_response_item_charges")
+        .insert([chargePayload]);
+
+      if (chargesInsertError) throw chargesInsertError;
+
       setSuccessMessage("Vendor responses submitted successfully!");
     } catch (error) {
-      console.error("❌ Error inserting vendor responses:", error);
+      console.error("❌ Error submitting vendor responses:", error);
       setErrorMessage("Failed to submit vendor responses. Please try again.");
     } finally {
       setIsLoading(false);
@@ -652,8 +777,6 @@ export default function ViewRfq() {
     if (!isUpdated) return; // ❌ Stop if update fails
     await submitVendorResponse(); // ✅ Step 2: Insert into rfq_response
   };
-
-  console.log("RFQ ID:", id);
 
   const handleChange = (e: any, itemId: any) => {
     const { name, value } = e.target;
@@ -746,153 +869,159 @@ export default function ViewRfq() {
             </div>
           </div>
           <Separator />
-          {items.map((item: any, i: any) => (
-            <>
-              <div
-                key={item.id}
-                className="flex gap-4 items-center mx-auto mt-10"
-              >
-                <div>
-                  <label
-                    htmlFor="freight_charges"
-                    className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                  >
-                    Freight Charges
-                  </label>
-                  <input
-                    type="text"
-                    id="freight_charges"
-                    value={item.freight_charges || ""}
-                    onChange={(e) => handleChange(e, item.id)}
-                    name="freight_charges"
-                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                    placeholder="Freight Charges"
-                    required
-                  />
-                </div>
-                <div>
-                  <label
-                    htmlFor="custom_charges"
-                    className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                  >
-                    Customs Charges
-                  </label>
-                  <input
-                    type="text"
-                    id="custom_charges"
-                    value={item.custom_charges || ""}
-                    onChange={(e) => handleChange(e, item.id)}
-                    name="custom_charges"
-                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                    placeholder="Customs Charges"
-                    required
-                  />
-                </div>
-                <div>
-                  <label
-                    htmlFor="shipment_charges"
-                    className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                  >
-                    Shipment Charges
-                  </label>
-                  <input
-                    type="text"
-                    id="shipment_charges"
-                    value={item.shipment_charges || ""}
-                    onChange={(e) => handleChange(e, item.id)}
-                    name="shipment_charges"
-                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                    placeholder="Shipment Charges"
-                    required
-                  />
-                </div>
 
-                <div>
-                  <label
-                    htmlFor="port_connectivity_charges"
-                    className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                  >
-                    Port Connectivity Charges
-                  </label>
-                  <input
-                    type="text"
-                    id="port_connectivity_charges"
-                    value={item.port_connectivity_charges || ""}
-                    onChange={(e) => handleChange(e, item.id)}
-                    name="port_connectivity_charges"
-                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                    placeholder="Port Connectivity Charges"
-                    required
-                  />
-                </div>
-                <div>
-                  <label
-                    htmlFor="agent_charges"
-                    className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                  >
-                    Agent Charges
-                  </label>
-                  <input
-                    type="text"
-                    id="agent_charges"
-                    value={item.agent_charges || ""}
-                    onChange={(e) => handleChange(e, item.id)}
-                    name="agent_charges"
-                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                    placeholder="Agent Charges"
-                    required
-                  />
-                </div>
-                <div>
-                  <label
-                    htmlFor="other_charges"
-                    className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                  >
-                    Other Charges
-                  </label>
-                  <input
-                    type="text"
-                    id="other_charges"
-                    value={item.other_charges || ""}
-                    onChange={(e) => handleChange(e, item.id)}
-                    name="other_charges"
-                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                    placeholder="Other Charges"
-                    required
-                  />
-                </div>
-                <div>
-                  <label
-                    htmlFor="remark_charges"
-                    className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                  >
-                    Remark
-                  </label>
-                  <input
-                    type="text"
-                    id="remark_charges"
-                    value={item.remark_charges || ""}
-                    onChange={(e) => handleChange(e, item.id)}
-                    name="remark_charges"
-                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                    placeholder="Remark"
-                    required
-                  />
-                </div>
-              </div>
-            </>
-          ))}
+          <div className="flex gap-4 items-center mx-auto mt-10">
+            <div>
+              <label
+                htmlFor="freight_charges"
+                className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+              >
+                Freight Charges
+              </label>
+              <input
+                type="text"
+                id="freight_charges"
+                value={charges.freight_charges || ""}
+                onChange={(e) =>
+                  setCharges({ ...charges, freight_charges: e.target.value })
+                }
+                name="freight_charges"
+                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                placeholder="Freight Charges"
+                required
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="custom_charges"
+                className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+              >
+                Customs Charges
+              </label>
+              <input
+                type="text"
+                id="custom_charges"
+                value={charges.custom_charges || ""}
+                onChange={(e) =>
+                  setCharges({ ...charges, custom_charges: e.target.value })
+                }
+                name="custom_charges"
+                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                placeholder="Customs Charges"
+                required
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="shipment_charges"
+                className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+              >
+                Shipment Charges
+              </label>
+              <input
+                type="text"
+                id="shipment_charges"
+                value={charges.shipment_charges || ""}
+                onChange={(e) =>
+                  setCharges({ ...charges, shipment_charges: e.target.value })
+                }
+                name="shipment_charges"
+                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                placeholder="Shipment Charges"
+                required
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="port_connectivity_charges"
+                className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+              >
+                Port Connectivity Charges
+              </label>
+              <input
+                type="text"
+                id="port_connectivity_charges"
+                value={charges.port_connectivity_charges || ""}
+                onChange={(e) =>
+                  setCharges({
+                    ...charges,
+                    port_connectivity_charges: e.target.value,
+                  })
+                }
+                name="port_connectivity_charges"
+                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                placeholder="Port Connectivity Charges"
+                required
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="other_charges"
+                className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+              >
+                Other Charges
+              </label>
+              <input
+                type="text"
+                id="other_charges"
+                value={charges.other_charges || ""}
+                onChange={(e) =>
+                  setCharges({ ...charges, other_charges: e.target.value })
+                }
+                name="other_charges"
+                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                placeholder="Other Charges"
+                required
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="remark_charges"
+                className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+              >
+                Remark
+              </label>
+              <input
+                type="text"
+                id="remark_charges"
+                value={charges.remark_charges || ""}
+                onChange={(e) =>
+                  setCharges({ ...charges, remark_charges: e.target.value })
+                }
+                name="remark_charges"
+                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                placeholder="Remark"
+                required
+              />
+            </div>
+          </div>
 
           <div className="text-right mt-3">
-            <Button
-              className="bg-green-600 mt-3 mx-2"
-              onClick={() => handleSubmit()}
-            >
-              {" "}
-              {isloading ? <Loader2Icon className="animate-spin mr-2" /> : null}
-              {isloading ? "Sending Send Qutotaion" : "Send Qutotaion"}
-            </Button>
-            <Button className="bg-blue-600 mt-3 mx-2">Print Invoice</Button>
+            {!viewMode ? null:(
+              <Button
+                className="bg-red-600 mt-3 mx-2"
+                onClick={handleUpdateSupplierStatus}
+              >
+                Complete Delivery
+              </Button>
+            )}
+
+            {viewMode ? null : (
+              <Button
+                className="bg-green-600 mt-3 mx-2"
+                onClick={() => handleSubmit()}
+                disabled={viewMode}
+              >
+                {" "}
+                {isloading ? (
+                  <Loader2Icon className="animate-spin mr-2" />
+                ) : null}
+                {isloading ? "Sending Send Qutotaion" : "Send Qutotaion"}
+              </Button>
+            )}
+             {viewMode ? null : (
+            <Button className="bg-blue-600 mt-3 mx-2">Print Invoice</Button>)}
           </div>
         </div>
       </main>

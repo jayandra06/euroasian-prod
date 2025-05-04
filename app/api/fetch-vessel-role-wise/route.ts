@@ -97,7 +97,7 @@ export async function GET(req: NextRequest) {
       const { data: manager, error: managerError } = await supabase
         .from("manager")
         .select("id")
-        .eq("email", "s7uii@ptct.net")
+        .eq("email", email)
         .single();
 
       if (managerError || !manager) {

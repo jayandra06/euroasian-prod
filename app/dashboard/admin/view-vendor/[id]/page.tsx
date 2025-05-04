@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { createClient } from "@/utils/supabase/client";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
+
 
 import {
   Select,
@@ -116,53 +117,82 @@ export default function BecomeASeller() {
   const [invitedBy, setInvitedBy] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const  [fileUrl, setFileUrl] = useState<string>("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
+  const { id } = useParams(); 
 
-  const validateForm = () => {
-    let newErrors: { [key in keyof FormData]?: string } = {};
-    if (!formData.name.trim()) newErrors.name = "Name is required.";
-    if (!formData.business_email.trim())
-      newErrors.business_email = "Business Email is required.";
-    if (!formData.phone.trim()) newErrors.phone = "Phone is required.";
-    if (!formData.tax_id.trim()) newErrors.tax_id = "Tax ID is required.";
-    if (!formData.warehouse_address.trim())
-      newErrors.warehouse_address = "Warehouse address is required.";
-    if (!formData.managing_director.trim())
-      newErrors.managing_director = "Managing director name is required.";
-    if (!formData.managing_director_email.trim())
-      newErrors.managing_director_email =
-        "Managing director email is required.";
-    if (!formData.managing_director_phone.trim())
-      newErrors.managing_director_phone =
-        "Managing director phone is required.";
-    if (!formData.managing_director_phone.trim())
-      newErrors.managing_director_desk_phone =
-        "Managing director desk phone is required.";
-    if (!formData.port.trim()) newErrors.port = "port is required.";
-    if (!formData.sales_manager.trim())
-      newErrors.sales_manager = "Sales manager name is required.";
-    if (!formData.sales_manager_email.trim())
-      newErrors.sales_manager_email = "Sales manager email is required.";
-    if (!formData.sales_manager_phone.trim())
-      newErrors.sales_manager_phone = "Sales manager phone is required.";
-    if (!formData.sales_manager_phone.trim())
-      newErrors.sales_manager_desk_phone =
-        "Sales manager desk phone is required.";
-    if (!formData.sales_manager_phone.trim())
-      newErrors.logistic_service = "Logistic service is required.";
-    if (formData.brands.length === 0) {
-      newErrors.brands = "At least one brand is required.";
-    }
-    if (formData.category.length === 0) {
-      newErrors.category = "At least one category is required.";
-    }
-    if (formData.model.length === 0) {
-      newErrors.model = "At least one model is required.";
-    }
-    if (!formData.account_holder_name.trim())
-      newErrors.account_holder_name = "Account holder name is required.";
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+  useEffect(() => {
+    const fetchVendorData = async () => {
+        if (!id) {
+            setError("Vendor ID is missing.");
+            setLoading(false);
+            return;
+        }
+
+        try {
+            const { data, error: fetchError } = await supabase
+                .from("merchant")
+                .select("*")
+                .eq("id", id) // Use the id from the URL
+                .single();
+
+            if (fetchError) {
+                setError(`Error fetching vendor data: ${fetchError.message}`);
+                setLoading(false);
+                return;
+            }
+
+            if (!data) {
+                setError("Vendor not found.");
+                setLoading(false);
+                return;
+            }
+
+            // Assuming your column names match the FormData interface
+            setFormData({
+                name: data.name || "",
+                business_email: data.business_email || "",
+                phone: data.phone || "",
+                status: data.status || "",
+                merchant_profile: data.merchant_profile || "",
+                brands: data.brands || [],
+                category: data.category || [],
+                model: data.model || [],
+                tax_id: data.tax_id || "",
+                warehouse_address: data.warehouse_address || "",
+                managing_director: data.managing_director || "",
+                managing_director_email: data.managing_director_email || "",
+                managing_director_phone: data.managing_director_phone || "",
+                managing_director_desk_phone: data.managing_director_desk_phone || "",
+                port: data.port || "",
+                logistic_service: data.logistic_service || "",
+                sales_manager: data.sales_manager || "",
+                sales_manager_email: data.sales_manager_email || "",
+                sales_manager_phone: data.sales_manager_phone || "",
+                sales_manager_desk_phone: data.sales_manager_desk_phone || "",
+                account_holder_name: data.account_holder_name || "",
+                ifsc_code: data.ifsc_code || "",
+                spea_code: data.spea_code || "",
+                bic_swift: data.bic_swift || "",
+                account_type: data.account_type || "",
+                branch_name: data.branch_name || "",
+                bank_address: data.bank_address || "",
+                bank_name: data.bank_name || "",
+                account_number: data.account_number || "",
+                micr_code: data.micr_code || "",
+                document: data.document || "",
+            });
+            setLoading(false);
+        } catch (err) {
+            setError(`An unexpected error occurred: ${err}`);
+            setLoading(false);
+        }
+    };
+
+    fetchVendorData();
+}, [id, supabase]);
+
 
   const handleSelectCategory = (v: string) => {
     if (!formData.category.includes(v)) {
@@ -188,46 +218,7 @@ export default function BecomeASeller() {
 
   const [userID, setUserId] = useState("");
 
-  useEffect(() => {
-    const fetchUserAndType = async () => {
-      console.log("This is t");
-      // Step 1: Get the current user
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser();
 
-      if (userError || !user) {
-        console.error("Error fetching user:", userError);
-        return;
-      }
-
-      setUserId(user?.id || " ");
-      const userId = user.id;
-
-      // Step 2: Use userId to get data from 'invitations'
-      const { data, error } = await supabase
-        .from("invitations")
-        .select("type,invited_by")
-        .eq("new_user_id", userId)
-        .single(); // assuming only one invitation per user
-
-      if (error) {
-        console.error("Error fetching invitation data:", error);
-        return;
-      }
-
-      if (data) {
-        console.log("tye", data.type);
-        console.log("profileId", userId);
-        setType(data.type); // assuming you defined const [type, setType] = useState("")
-        setProfileId(userId); // assuming you defined const [profileId, setProfileId] = useState("")
-        setInvitedBy(data.invited_by);
-      }
-    };
-
-    fetchUserAndType();
-  }, []);
 
   async function handleSubmit() {
     let fileUrl = "";
@@ -310,28 +301,18 @@ export default function BecomeASeller() {
   }, []);
   return (
     <>
-      <div className="bg-white shadow-md rounded-md p-8">
-        <NavigationMenu>
-          <NavigationMenuList className="justify-start">
-            <NavigationMenuItem>
-              <div className="font-bold text-xl text-gray-800">Euroasian</div>
-            </NavigationMenuItem>
-          </NavigationMenuList>
-        </NavigationMenu>
-      </div>
+    
       <div className="bg-gray-100 min-h-screen py-8">
         <div className="container mx-auto p-4 max-w-4xl">
           <div className="bg-white rounded-xl shadow-md p-8">
             <div>
               <h1 className="text-center text-3xl font-semibold text-gray-800 mb-8">
-                Vendor Onboarding Page
+                Vendor Details
               </h1>
             </div>
 
             <div className="mb-6">
-              <h2 className="text-xl font-semibold text-gray-700 mb-4 border-b pb-2">
-                Vendor Details
-              </h2>
+             
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <Label className="text-gray-700">Name</Label>{" "}
@@ -824,23 +805,30 @@ export default function BecomeASeller() {
                 Document Uploads
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {" "}
-                {/* Adjust grid as needed */}
                 <div>
                   <Label className="text-gray-700">Document</Label>
-                  <Input
-                    type="file"
-                    onChange={(e) => {
-                      if (e.target.files && e.target.files[0]) {
-                        setSelectedFile(e.target.files[0]);
-                        setErrors({ ...errors, document: "" }); // Clear upload error
-                      }
-                    }}
-                    className="w-full border rounded-md py-2 px-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary border-gray-300"
-                  />
-                  {/* You might want to display the selected file name here */}
+                  
+                  {formData.document && (
+                    <div className="mt-2">
+                      {formData.document.match(/\.(jpeg|jpg|gif|png)$/i) ? (
+                        <img
+                          src={formData.document}
+                          alt="Uploaded Document"
+                          className="w-full h-auto rounded-md"
+                        />
+                      ) : (
+                        <a
+                          href={formData.document}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-500 underline"
+                        >
+                          View Document
+                        </a>
+                      )}
+                    </div>
+                  )}
                 </div>
-                {/* Add more document upload fields as needed */}
               </div>
             </div>
 
@@ -1007,14 +995,7 @@ export default function BecomeASeller() {
                 </div>
               </div>
             </div>
-            <div className="mt-8">
-              <Button
-                className="bg-blue-500 hover:bg-blue-700 flex justify-center text-white font-bold py-3 px-6 rounded-md focus:outline-none focus:shadow-outline"
-                onClick={handleSubmit} // Call handleSubmit when the button is clicked
-              >
-                Become a Vendor
-              </Button>
-            </div>
+           
           </div>
         </div>
       </div>
