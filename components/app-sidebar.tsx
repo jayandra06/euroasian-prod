@@ -227,6 +227,18 @@ const customerData = {
       title: "Sustuabinability & ESG Reporting",
       url: "/dashboard/customer",
     },
+
+{
+title:"Vessel Management",
+url:"/dashboard/customer/vessel_management",
+},
+{
+  title:"Role Management",
+  url:"/dashboard/customer/role_management",
+  
+  },
+    
+
     {
       title: "Vessel Management",
       url: "/dashboard/customer/vessel_management",
