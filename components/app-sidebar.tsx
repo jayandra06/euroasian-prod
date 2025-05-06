@@ -42,18 +42,7 @@ const adminData = {
           title: "Inventory",
           url: "/dashboard/admin/inventory",
         },
-        {
-          title: "Brands",
-          url: "/dashboard/admin/brands",
-        },
-        {
-          title: "Categories",
-          url: "/dashboard/admin/categories",
-        },
-        {
-          title: "Models",
-          url: "/dashboard/admin/models",
-        },
+      
       ],
     },
     {
@@ -65,9 +54,18 @@ const adminData = {
           title: "All Vendors",
           url: "/dashboard/admin/vendors",
         },
+      
         {
           title: "Brands",
           url: "/dashboard/admin/brands",
+        },
+        {
+          title: "Categories",
+          url: "/dashboard/admin/categories",
+        },
+        {
+          title: "Models",
+          url: "/dashboard/admin/models",
         },
       ],
     },

@@ -56,6 +56,8 @@ export async function GET(req: NextRequest) {
         );
       }
 
+      console.log("this is data", customerVessels);
+
       return NextResponse.json(
         {
           message: "Vessels fetched successfully",

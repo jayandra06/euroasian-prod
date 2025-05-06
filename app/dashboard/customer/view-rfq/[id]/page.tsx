@@ -29,6 +29,7 @@ import { createClient } from "@/utils/supabase/client";
 import { Loader2 } from "lucide-react";
 import { useParams } from "next/navigation";
 import { toast } from "react-hot-toast";
+import { set } from "react-hook-form";
 
 interface RfqData {
   supply_port: string;
@@ -47,6 +48,7 @@ interface RfqData {
   offer_quality: string;
   remarks: string;
   [key: string]: any;
+  forwad_to_director: boolean;
 }
 
 // @ts-ignore
@@ -64,201 +66,205 @@ function RFQInfoCard({ rfqData }: { rfqData: RfqData }) {
         <div>
           {/* RFQ Info Section */}
           <div className="w-full p-6">
-            <div className="grid grid-cols-5 gap-6">
-              <div className="flex flex-col">
-                <Label htmlFor="leadDate">Lead Date</Label>
-                <Input
-                  type="date"
-                  className="mt-2"
-                  id="leadDate"
-                  value={rfqData?.lead_date?.split("T")[0] || ""}
-                  disabled
-                />
+            <div className="grid grid-cols-4 gap-6">
+              {/* Row 1 */}
+              <div className="flex flex-col col-span-1">
+              <Label htmlFor="vesselName">
+                Vessel Name <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                type="text"
+                id="vessel_name"
+                placeholder="Enter Vessel Name"
+                value={rfqData.vessel_name}
+                disabled
+              />
               </div>
-              <div className="flex flex-col">
-                <Label htmlFor="supplyPort">
-                  Supply Port <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  type="text"
-                  id="supplyport"
-                  value={rfqData?.supply_port || ""}
-                  disabled
-                />
+              <div className="flex flex-col col-span-1">
+              <Label htmlFor="vesselExName">Vessel Ex Name</Label>
+              <Input
+                type="text"
+                id="vessel_ex_name"
+                placeholder="Enter Vessel Ex Name"
+                value={rfqData.vessel_ex_name || ""}
+                disabled
+              />
               </div>
-              <div className="flex flex-col">
-                <Label htmlFor="valid_date">
-                  Valid Until <span className="text-red-500 ml-1">*</span>
-                </Label>
-                <Input
-                  type="text"
-                  id="valid_date"
-                  value={rfqData.valid_date || ""}
-                  disabled
-                />
+              <div className="flex flex-col col-span-1">
+              <Label htmlFor="imoNo">
+                IMO No <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                type="text"
+                id="imoNo"
+                placeholder="Enter IMO No."
+                value={rfqData.imo_no}
+                disabled
+              />
               </div>
-              <div className="flex flex-col">
-                <Label htmlFor="imoNo">
-                  IMO No <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  type="text"
-                  id="imoNo"
-                  placeholder="Enter IMO No."
-                  value={rfqData.imo_no}
-                  disabled
-                />
-              </div>
-
-              <div className="flex flex-col">
-                <Label htmlFor="vesselName">
-                  Vessel Name <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  type="text"
-                  id="vessel_name"
-                  placeholder="Enter Vessel Name"
-                  value={rfqData.vessel_name}
-                  disabled
-                />
-              </div>
-              <div className="flex flex-col">
-                <Label htmlFor="imoNo">
-                  HULL No <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  type="text"
-                  id="hull_no"
-                  placeholder="Enter HULL No."
-                  value={rfqData.hull_no}
-                  disabled
-                />
-              </div>
-              <div className="flex flex-col">
-                <Label htmlFor="clientName">Equipment Tags</Label>
-                <Input
-                  type="text"
-                  id="equipement_tag"
-                  placeholder="Enter Equipment Tags"
-                  value={rfqData.equipement_tag}
-                  className="mt-2"
-                  disabled
-                />
+              <div className="flex flex-col col-span-1">
+              <Label htmlFor="supplyPort">
+                Supply Port <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                type="text"
+                id="supplyport"
+                value={rfqData?.supply_port || ""}
+                disabled
+              />
               </div>
 
-              <div className="flex flex-col">
-                <Label htmlFor="brand">
-                  Brand <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  type="text"
-                  id="brand"
-                  placeholder="brand"
-                  value={rfqData.brand}
-                  className="mt-2"
-                  disabled
-                />
+              {/* Row 2 */}
+              <div className="flex flex-col col-span-1">
+              <Label htmlFor="equipementTag">Equipment Tags</Label>
+              <Input
+                type="text"
+                id="equipement_tag"
+                placeholder="Enter Equipment Tags"
+                value={rfqData.equipement_tag}
+                className="mt-2"
+                disabled
+              />
+              </div>
+              <div className="flex flex-col col-span-1">
+              <Label htmlFor="category">
+                Category <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                type="text"
+                id="Category"
+                placeholder="Enter Category"
+                value={rfqData.category}
+                className="mt-2"
+                disabled
+              />
+              </div>
+              <div className="flex flex-col col-span-1">
+              <Label htmlFor="brand">
+                Brand <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                type="text"
+                id="brand"
+                placeholder="brand"
+                value={rfqData.brand}
+                className="mt-2"
+                disabled
+              />
+              </div>
+              <div className="flex flex-col col-span-1">
+              <Label htmlFor="model">
+                Model <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                type="text"
+                id="model"
+                placeholder="Enter Model"
+                value={rfqData.model}
+                className="mt-2"
+                disabled
+              />
               </div>
 
-              <div className="flex flex-col">
-                <Label htmlFor="model">
-                  Model <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  type="text"
-                  id="model"
-                  placeholder="Enter Model"
-                  value={rfqData.model}
-                  className="mt-2"
-                  disabled
-                />
+              {/* Row 3 */}
+              <div className="flex flex-col col-span-1">
+              <Label htmlFor="hullNo">
+                HULL No <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                type="text"
+                id="hull_no"
+                placeholder="Enter HULL No."
+                value={rfqData.hull_no}
+                disabled
+              />
+              </div>
+              <div className="flex flex-col col-span-1">
+              <Label htmlFor="drawingNumber">Drawing Number</Label>
+              <Input
+                type="text"
+                id="drawing_number"
+                placeholder="Enter Drawing Number"
+                value={rfqData.drawing_number}
+                className="mt-2"
+                disabled
+              />
+              </div>
+              <div className="flex flex-col col-span-1">
+              <Label htmlFor="serialNumber">Serial Number</Label>
+              <Input
+                type="text"
+                id="serial_number"
+                placeholder="Enter Serial No"
+                value={rfqData.serial_no}
+                className="mt-2"
+                disabled
+              />
+              </div>
+              <div className="flex flex-col col-span-1">
+              <Label htmlFor="offerQuality">
+                Offered Quality <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                type="text"
+                id="offer_quality"
+                placeholder="Enter Offer_quality"
+                value={rfqData.offer_quality}
+                className="mt-2"
+                disabled
+              />
               </div>
 
-              <div className="flex flex-col">
-                <Label htmlFor="category">
-                  Category <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  type="text"
-                  id="Category"
-                  placeholder="Enter Category"
-                  value={rfqData.category}
-                  className="mt-2"
-                  disabled
-                />
+              {/* Row 4 */}
+              <div className="flex flex-col col-span-1">
+              <Label htmlFor="createDate">Create Date</Label>
+              <Input
+                type="date"
+                id="create_date"
+                value={rfqData?.create_date?.split("T")[0] || ""}
+                disabled
+              />
               </div>
-
-              {/* drawing Number */}
-              <div className="flex flex-col">
-                <Label htmlFor="clientName">Drawing Number</Label>
-                <Input
-                  type="text"
-                  id="drawing_number"
-                  placeholder="Enter Drawing Number"
-                  value={rfqData.drawing_number}
-                  className="mt-2"
-                  disabled
-                />
+              <div className="flex flex-col col-span-1"></div>
+              <Label htmlFor="leadDate">Lead Date</Label>
+              <Input
+                type="date"
+                className="mt-2"
+                id="leadDate"
+                value={rfqData?.lead_date?.split("T")[0] || ""}
+                disabled
+              />
               </div>
-              <div className="flex flex-col">
-                <Label htmlFor="clientName">Serial Number</Label>
-                <Input
-                  type="text"
-                  id="serial_number"
-                  placeholder="Enter Serial No"
-                  value={rfqData.serial_no}
-                  className="mt-2"
-                  disabled
-                />
+              <div className="flex flex-col col-span-1">
+              <Label htmlFor="remarks">General Remarks</Label>
+              <Input
+                type="text"
+                id="remarks"
+                placeholder="Enter Remarks"
+                value={rfqData.remarks}
+                className="mt-2"
+                disabled
+              />
               </div>
-
-              <div className="flex flex-col">
-                <Label htmlFor="model">
-                  Offered Quality <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  type="text"
-                  id="offer_quality"
-                  placeholder="Enter Offer_quality"
-                  value={rfqData.offer_quality}
-                  className="mt-2"
-                  disabled
+              <div className="flex flex-col col-span-1 items-center">
+              <Label htmlFor="upload">Uploaded Image</Label>
+              {rfqData?.upload ? (
+                <div className="relative w-32 h-32 mt-2 overflow-hidden rounded-md shadow-md">
+                <Image
+                  src={rfqData.upload}
+                  alt="Uploaded File"
+                  layout="fill"
+                  objectFit="cover"
                 />
-              </div>
-              <div className="flex flex-col">
-                <Label htmlFor="clientName">General Remarks</Label>
-                <Input
-                  type="text"
-                  id="remarks"
-                  placeholder="Enter Remarks"
-                  value={rfqData.remarks}
-                  className="mt-2"
-                  disabled
-                />
-              </div>
-              <div className="flex flex-col items-center">
-                {" "}
-                {/* Center the image and label */}
-                <Label htmlFor="upload">Uploaded Image</Label>{" "}
-                {/* More descriptive label */}
-                {rfqData?.upload ? (
-                  <div className="relative w-32 h-32 mt-2 overflow-hidden rounded-md shadow-md">
-                    {/* Fixed square container with overflow hidden and styling */}
-                    <Image
-                      src={rfqData.upload}
-                      alt="Uploaded File"
-                      layout="fill" // Make the image fill the container
-                      objectFit="cover" // Maintain aspect ratio and cover the container
-                    />
-                  </div>
-                ) : (
-                  <p className="mt-2">No file uploaded</p>
-                )}
+                </div>
+              ) : (
+                <p className="mt-2">No file uploaded</p>
+              )}
               </div>
             </div>
           </div>
         </div>
-      </div>
+      {/* </div> */}
     </>
   );
 }
@@ -417,6 +423,8 @@ export default function ViewRfq() {
   const [isViewMode, setIsViewMode] = useState(false);
   const [showRequestButton, setShowRequestButton] = useState(false);
   const [initiator_role, setInitiatorRole] = useState<string | null>(null);
+  const [isforwardToDirector, setIsForwardToDirector] = useState(false);
+  const [directorEmails, setDirectorEmails] = useState<string[]>([]);
 
   interface ChargeData {
     vendor_id: string;
@@ -443,6 +451,7 @@ export default function ViewRfq() {
   type ApprovalEntry = {
     role: string;
     status: string;
+    email?: string;
     created_at: string;
   };
 
@@ -452,116 +461,211 @@ export default function ViewRfq() {
     }
   }, [vendors]);
 
-  useEffect(() => {
-    const checkApprovalStatus = async () => {
-      try {
-        const {
-          data: { user },
-          error: userError,
-        } = await supabase.auth.getUser();
-        if (userError) {
-          console.error("Failed to fetch user", userError);
-          return;
+  const checkApprovalStatus = async () => {
+    try {
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+      if (userError) {
+        console.error("Failed to fetch user", userError);
+        return;
+      }
+
+      setUser(user);
+
+      const userId = user?.id;
+      if (!userId) {
+        console.error("User ID not found");
+        return;
+      }
+
+      const [profileResponse, rfqResponse, approvalResponse] =
+        await Promise.all([
+          supabase
+            .from("profiles")
+            .select("user_role")
+            .eq("id", userId)
+            .single(),
+          supabase
+            .from("rfq")
+            .select("initiator_role, forward_to_director, vessel_id")
+            .eq("id", id)
+            .single(),
+          supabase
+            .from("rfq_approval_flow")
+            .select("role, status,email, created_at")
+            .eq("rfq_id", id)
+            .order("created_at", { ascending: true }),
+        ]);
+
+      const vesselId = rfqResponse.data?.vessel_id;
+
+      let directorEmails = [];
+
+      if (vesselId) {
+        const directorAssignmentRes = await supabase
+          .from("director_assignment")
+          .select("director_id")
+          .eq("vessel_id", vesselId);
+
+        const directorIds = directorAssignmentRes.data?.map(
+          (d) => d.director_id
+        );
+        console.log("Director IDs:", directorIds);
+        if (directorIds && directorIds.length > 0) {
+          const directorRes = await supabase
+            .from("director")
+            .select("email, id")
+            .in("id", directorIds);
+
+          directorEmails = directorRes.data?.map((d) => d.email) || [];
+          setDirectorEmails(directorEmails);
         }
+      }
 
-        setUser(user);
+      const { data: profileData } = profileResponse;
+      const { data: rfqData } = rfqResponse as { data: RfqData | null };
+      const { data: approvalData } = approvalResponse as {
+        data: ApprovalEntry[];
+      };
 
-        const userId = user?.id;
-        if (!userId) {
-          console.error("User ID not found");
-          return;
-        }
+      console.log("Profile Data:", profileData);
+      console.log("RFQ Data:", rfqData);
+      console.log("Approval Data:", approvalData);
 
-        const [profileResponse, rfqResponse, approvalResponse] =
-          await Promise.all([
-            supabase
-              .from("profiles")
-              .select("user_role")
-              .eq("id", userId)
-              .single(),
-            supabase.from("rfq").select("initiator_role").eq("id", id).single(),
-            supabase
-              .from("rfq_approval_flow")
-              .select("role, status, created_at")
-              .eq("rfq_id", id)
-              .order("created_at", { ascending: true }),
-          ]);
+      const currentUserRole = profileData?.user_role || null;
+      const initiatorRole = rfqData?.initiator_role || null;
 
-        const { data: profileData } = profileResponse;
-        const { data: rfqData } = rfqResponse;
-        const { data: approvalData } = approvalResponse as {
-          data: ApprovalEntry[];
-        };
+      setInitiatorRole(initiatorRole);
 
-        console.log("Profile Data:", profileData);
-        console.log("RFQ Data:", rfqData);
-        console.log("Approval Data:", approvalData);
+      if (!initiatorRole) {
+        console.error("Initiator role not found");
+        return;
+      }
 
-        const currentUserRole = profileData?.user_role || null;
-        const initiatorRole = rfqData?.initiator_role || null;
+      setUserRole(currentUserRole);
 
-        setInitiatorRole(initiatorRole);
+      setIsForwardToDirector(rfqData?.forward_to_director || false);
 
-        if (!initiatorRole) {
-          console.error("Initiator role not found");
-          return;
-        }
+      const approvalFlow = [];
+      if (initiatorRole === "manager") {
+        approvalFlow.push("manager", "branch_admin", "customer");
+      } else if (initiatorRole === "branch_admin") {
+        approvalFlow.push("branch_admin", "customer");
+      } else if (initiatorRole === "customer") {
+      }
 
-        setUserRole(currentUserRole);
+      if (rfqData?.forward_to_director) {
+        approvalFlow.push("director", "customer");
+      }
 
-        const approvalFlow = [];
-        if (initiatorRole === "manager") {
-          approvalFlow.push("manager", "branch_admin", "customer");
-        } else if (initiatorRole === "branch_admin") {
-          approvalFlow.push("branch_admin", "customer");
-        } else if (initiatorRole === "customer") {
-        }
+      let nextRole = null;
 
-        const approvedRoles = approvalData?.map((entry) => entry.role) || [];
+      for (const role of approvalFlow) {
+        if (role === "director") {
+          const totalDirectors = directorEmails.length;
+          const approvedOrRequested =
+            approvalData?.filter(
+              (d) =>
+                d.role === "director" &&
+                directorEmails.includes(d.email) &&
+                (d.status === "requested" || d.status === "approved")
+            ).length || 0;
 
-        // Determine next role to approve
-        let nextRole = null;
-        for (const role of approvalFlow) {
-          if (!approvedRoles.includes(role)) {
+          if (approvedOrRequested < totalDirectors) {
+            nextRole = "director";
+            break;
+          }
+        } else {
+          const roleApproved = approvalData?.some(
+            (d) =>
+              d.role === role &&
+              (d.status === "requested" || d.status === "approved")
+          );
+          if (!roleApproved) {
             nextRole = role;
             break;
           }
         }
-
-        console.log("Next Role to Approve:", nextRole);
-
-        // Show "Request for Approval" button
-        if (currentUserRole === nextRole) {
-          setShowRequestButton(true);
-        } else {
-          setShowRequestButton(false);
-        }
-
-        // Enable Confirm Delivery when ALL roles have "requested"
-        const allRequested = approvalFlow.every((role) =>
-          approvalData?.some(
-            (entry) =>
-              (entry.role === role && entry.status === "requested") ||
-              entry.status !== "approved"
-          )
-        );
-        console.log("All Requested:", approvalFlow.length);
-        console.log("All Requested:", approvalData.length);
-
-        if (
-          allRequested &&
-          approvalFlow.length === approvalData.length &&
-          currentUserRole === initiatorRole
-        ) {
-          setEnableConfirmDelivery(true);
-        } else {
-          setEnableConfirmDelivery(false);
-        }
-      } catch (error) {
-        console.error("An unexpected error occurred", error);
       }
-    };
 
+      console.log("Next Role to Approve:", nextRole);
+
+      if (
+        currentUserRole === nextRole ||
+        (nextRole === "director" && directorEmails.includes(user.email))
+      ) {
+        setShowRequestButton(true);
+      } else {
+        setShowRequestButton(false);
+      }
+
+      // console.log("=== DEBUG START ===");
+      // console.log("Approval Flow:", approvalFlow);
+      // console.log("Director Emails:", directorEmails);
+      // console.log("Approval Data:", approvalData);
+      // console.log("Current User Role:", currentUserRole);
+      // console.log("Initiator Role:", initiatorRole);
+
+      const allApproved = approvalFlow.every((role) => {
+        if (role === "director") {
+          const totalDirectors = directorEmails.length;
+
+          const approvedDirectors =
+            approvalData?.filter((d) => {
+              const match =
+                d.role === "director" &&
+                d.status === "approved" &&
+                directorEmails
+                  .map((email) => email.toLowerCase().trim())
+                  .includes(d.email?.toLowerCase().trim());
+
+              if (match) {
+                console.log(
+                  `✅ Approved by Director: ${d.email} (status: ${d.status})`
+                );
+              } else if (d.role === "director") {
+                console.log(
+                  `❌ Not counted - Director: ${d.email}, Status: ${d.status}`
+                );
+              }
+
+              return match;
+            }).length || 0;
+
+          console.log(
+            `Approved Directors: ${approvedDirectors} / ${totalDirectors}`
+          );
+
+          return approvedDirectors === totalDirectors;
+        } else {
+          const roleApproved = approvalData?.some(
+            (d) => d.role === role && d.status === "requested"
+          );
+
+          console.log(`${roleApproved ? "✅" : "❌"} Role Approved: ${role}`);
+
+          return roleApproved;
+        }
+      });
+
+      console.log("Final All Approved:", allApproved);
+
+      if (allApproved && currentUserRole === initiatorRole) {
+        console.log("🎉 All approvals done. Enabling delivery.");
+        setEnableConfirmDelivery(true);
+      } else {
+        console.log("🚫 Not all approvals done or role mismatch.");
+        setEnableConfirmDelivery(false);
+      }
+      console.log("=== DEBUG END ===");
+    } catch (error) {
+      console.error("An unexpected error occurred", error);
+    }
+  };
+
+  useEffect(() => {
     if (id) {
       checkApprovalStatus();
     }
@@ -592,6 +696,120 @@ export default function ViewRfq() {
 
     fetchRfqDecision();
   }, [id]);
+  const handleForwardToDirector = async () => {
+    try {
+      // 1. Update the RFQ to mark it as forwarded to director
+      const { error: updateError } = await supabase
+        .from("rfq")
+        .update({ forward_to_director: true })
+        .eq("id", id);
+
+      if (updateError) throw updateError;
+
+      // 2. If user is customer, record their approval and vendor decision
+      if (userRole === "customer") {
+        const { error: approvalError } = await supabase
+          .from("rfq_approval_flow")
+          .insert({
+            rfq_id: id,
+            action_by: user?.id,
+            status: "requested",
+            role: "customer",
+          });
+
+        if (approvalError) throw approvalError;
+
+        console.log("Customer request saved successfully.");
+
+        if (approvedVendorId) {
+          const { error: vendorError } = await supabase
+            .from("rfq_decision")
+            .insert({
+              rfq_id: id,
+              vendor_id: approvedVendorId,
+              status: "selected",
+              action_by: user?.id,
+            });
+
+          if (vendorError) throw vendorError;
+
+          console.log("Customer's vendor selection saved successfully.");
+        }
+      }
+
+      // 3. Fetch director emails assigned to this RFQ’s vessel
+      const rfqRes = await supabase
+        .from("rfq")
+        .select("vessel_id")
+        .eq("id", id)
+        .single();
+
+      const vesselId = rfqRes.data?.vessel_id;
+
+      if (!vesselId) throw new Error("Vessel ID not found for RFQ");
+
+      const directorAssignments = await supabase
+        .from("director_assignment")
+        .select("director_id")
+        .eq("vessel_id", vesselId);
+
+      const directorIds =
+        directorAssignments.data?.map((d) => d.director_id) || [];
+
+      const directorRes = await supabase
+        .from("director")
+        .select("id, email")
+        .in("id", directorIds);
+
+      const directorEmails = directorRes.data?.map((d) => d.email) || [];
+
+      if (directorEmails.length === 0) {
+        throw new Error("No directors assigned to this vessel.");
+      }
+
+      // 4. Insert approval flow entry for each director (with email)
+      const approvalInserts = directorEmails.map((email) => ({
+        rfq_id: id,
+        action_by: null, // director has not acted yet
+        status: "pending",
+        role: "director",
+        email: email,
+      }));
+
+      const { error: directorInsertError } = await supabase
+        .from("rfq_approval_flow")
+        .insert(approvalInserts);
+
+      if (directorInsertError) throw directorInsertError;
+
+      // 5. Send confirmation emails to all directors
+      const emailResponse = await fetch("/api/send-confirmation-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          rfqId: id,
+          directorEmails, // send all director emails
+        }),
+      });
+
+      const emailData = await emailResponse.json();
+
+      if (!emailResponse.ok) {
+        console.error(
+          "Failed to send confirmation email:",
+          emailData.error || emailData.message
+        );
+      } else {
+        toast.success("Confirmation email sent to all directors.");
+      }
+
+      // 6. Recalculate status
+      checkApprovalStatus();
+    } catch (err) {
+      console.error("Failed to forward to director:", err);
+      toast.error("Something went wrong while forwarding to director.");
+    }
+  };
 
   useEffect(() => {
     const fetchVendorsWithStatus = async () => {
@@ -853,7 +1071,6 @@ export default function ViewRfq() {
               (!rejectionReasons[vendor_id] ||
                 rejectionReasons[vendor_id].trim() === "")
             ) {
-             
               return null;
             }
 
@@ -951,8 +1168,6 @@ export default function ViewRfq() {
     }
   };
 
-  console.log("geetting rfqitems", rfqItems);
-
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -987,7 +1202,7 @@ export default function ViewRfq() {
         <div className="flex w-full max-w-6xl justify-self-center items-center mt-8">
           <h1 className="text-xl font-bold">Choose vendors</h1>
         </div>
-        <div className="relative flex justify-center max-w-5xl mx-auto mt-6 bg-white rounded-xl px-4 py-6 shadow-md border border-gray-200 mb-6">
+        <div className="relative flex justify-center w-full mx-auto mt-6 bg-white rounded-xl px-4 py-6 shadow-md border border-gray-200 mb-6">
           <div className="flex flex-wrap gap-6 items-start justify-center">
             {vendors
               .filter((vendor) => {
@@ -1130,7 +1345,7 @@ export default function ViewRfq() {
           </div>
           <Separator />
 
-          <div className="flex gap-4 items-center mx-auto mt-10 mb-4">
+          <div className="flex gap-4 items-center mx-auto mt-10 mb-10">
             {/* Check if selectedVendor exists in the charges array */}
             {selectedVendor &&
               charges.some((charge) => charge.vendor_id === selectedVendor) && (
@@ -1189,10 +1404,30 @@ export default function ViewRfq() {
           </div>
 
           <div className="border-t border-gray-300 pt-4 fixed bottom-0 left-[calc(250px)] right-0 bg-white shadow-lg shadow-blue-500/50 px-6 z-50">
+            {userRole === "customer" && isforwardToDirector && (
+              <div>
+                <p className="text-gray-700 font-medium">
+                  {enableConfirmDelivery
+                    ? "Director approved."
+                    : "Waiting for Director's approval."}
+                </p>
+              </div>
+            )}
             <div className="text-right mt-3 space-x-4">
+              {userRole === "customer" && !isforwardToDirector && (
+                <button
+                  className="px-4 py-2 my-4 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                  onClick={() => {
+                    handleForwardToDirector();
+                  }}
+                >
+                  Forward to Director
+                </button>
+              )}
+
               {enableConfirmDelivery ? (
                 <button
-                  className={`px-4 py-2 rounded-md ${
+                  className={`px-4 py-2 my-4 rounded-md ${
                     enableConfirmDelivery
                       ? "bg-green-600 text-white"
                       : "bg-gray-400 text-gray-200"
@@ -1201,13 +1436,13 @@ export default function ViewRfq() {
                     handleConfirmDelivery("approved");
                   }}
                 >
-                  Confirm Delivery
+                  Confirm Order
                 </button>
               ) : null}
 
               {showRequestButton ? (
                 <button
-                  className={`mt-4 px-4 py-2 rounded-md text-sm font-medium bg-blue-600 text-white hover:bg-blue-700`}
+                  className={`mt-4 px-4 py-2 my-4  rounded-md text-sm font-medium bg-blue-600 text-white hover:bg-blue-700`}
                   onClick={() => {
                     handleRequestForApproval();
                   }}

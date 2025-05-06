@@ -126,24 +126,31 @@ function RFQInfoCard({
                 </Label>
                 <Select
                   name="vessel_name"
-                  onValueChange={(e) =>
-                    setcreateRfq({ ...createRfq, vessel_name: e })
-                  }
+                  onValueChange={(e) => {
+                  const selectedVessel = vessels.find(
+                    (vessel) => vessel.vessel_name === e
+                  );
+                  setcreateRfq({
+                    ...createRfq,
+                    vessel_name: e,
+                    vessel_id: selectedVessel?.id || "",
+                  });
+                  }}
                 >
                   <SelectTrigger
-                    className={`border mt-2 ${
-                      errors.vessel_name ? "border-red-500" : "border-gray-300"
-                    }`}
+                  className={`border mt-2 ${
+                    errors.vessel_name ? "border-red-500" : "border-gray-300"
+                  }`}
                   >
-                    <SelectValue placeholder="Select Vessel" />
+                  <SelectValue placeholder="Select Vessel" />
                   </SelectTrigger>
                   <SelectContent>
-                    {Array.isArray(vessels) &&
-                      vessels.map((vessel, i) => (
-                        <SelectItem value={vessel.vessel_name} key={vessel.id}>
-                          {vessel.vessel_name}
-                        </SelectItem>
-                      ))}
+                  {Array.isArray(vessels) &&
+                    vessels.map((vessel) => (
+                    <SelectItem value={vessel.vessel_name} key={vessel.id}>
+                      {vessel.vessel_name}
+                    </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 {errors.vessel_name && (
@@ -155,7 +162,7 @@ function RFQInfoCard({
                 <Input
                   type="text"
                   id="vesselExNumber"
-                  placeholder="Vessel Ex Number"
+                  placeholder="Vessel Ex Name"
                   name="vessel_ex_name"
                   value={createRfq.vessel_ex_name}
                   onChange={(e) =>
@@ -728,6 +735,7 @@ export default function CreateEnquiryPage() {
   const [vendorsError, setVendorsError] = useState(false);
   const [createRfq, setCreateRfq] = useState({
     vessel_name: "",
+    vessel_id: "",
     supply_port: "",
     created_date: "",
     lead_date: "",
@@ -850,6 +858,7 @@ export default function CreateEnquiryPage() {
           .insert([
             {
               vessel_name: createRfq.vessel_name,
+              vessel_id: createRfq.vessel_id,
               supply_port: createRfq.supply_port,
               lead_date: createRfq.lead_date,
               drawing_number: createRfq.drawing_number,

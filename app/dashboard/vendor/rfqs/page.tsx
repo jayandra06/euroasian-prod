@@ -178,7 +178,7 @@ export default function RFQsPage() {
       case "sent":
         return "quoted";
       case "confirmed":
-        return "order_confirm";
+        return "ordered_confirm";
       case "cancelled":
         return "cancelled";
       case "completed":
