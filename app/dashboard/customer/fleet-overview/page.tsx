@@ -70,9 +70,9 @@ const FleetOverview = () => {
                 </thead>
                 <tbody>
                   {[
-                    ['Main Engines', '5', '1', '28-Apr-2025'],
-                    ['Bilge Pumps', '12', '1', '27-Apr-2025'],
-                    ['Purifiers', '9', '—', '28-Apr-2025']
+                    ['Main Engines', '0', '0', '28-Apr-2025'],
+                    ['Bilge Pumps', '0', '0', '27-Apr-2025'],
+                    ['Purifiers', '0', '—', '28-Apr-2025']
                   ].map((row, idx) => (
                     <tr key={idx}>
                       {row.map((cell, i) => (
