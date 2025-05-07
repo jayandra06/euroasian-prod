@@ -28,10 +28,10 @@ const FleetOverview = () => {
             </CardHeader>
             <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
-                { label: 'Total Vessels', value: '25' },
-                { label: 'Active Vessels', value: '20' },
-                { label: 'In Dry Dock', value: '5' },
-                { label: 'Fleet Hours', value: '14,350 h' }
+                { label: 'Total Vessels', value: '0' },
+                { label: 'Active Vessels', value: '0' },
+                { label: 'In Dry Dock', value: '0' },
+                { label: 'Fleet Hours', value: '00,000 h' }
               ].map((item, idx) => (
                 <div key={idx} className="p-3 border rounded text-center bg-muted">
                   <div className="text-xl font-bold">{item.value}</div>
