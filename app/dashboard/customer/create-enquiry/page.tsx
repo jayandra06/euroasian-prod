@@ -35,6 +35,7 @@ import { Loader, Trash2 } from "lucide-react";
 import ErrorToast from "@/components/ui/errorToast";
 import SuccessToast from "@/components/ui/successToast";
 import { equal } from "assert";
+import { useRouter } from "next/navigation";
 
 function RFQInfoCard({
   createRfq,
@@ -127,30 +128,30 @@ function RFQInfoCard({
                 <Select
                   name="vessel_name"
                   onValueChange={(e) => {
-                  const selectedVessel = vessels.find(
-                    (vessel) => vessel.vessel_name === e
-                  );
-                  setcreateRfq({
-                    ...createRfq,
-                    vessel_name: e,
-                    vessel_id: selectedVessel?.id || "",
-                  });
+                    const selectedVessel = vessels.find(
+                      (vessel) => vessel.vessel_name === e
+                    );
+                    setcreateRfq({
+                      ...createRfq,
+                      vessel_name: e,
+                      vessel_id: selectedVessel?.id || "",
+                    });
                   }}
                 >
                   <SelectTrigger
-                  className={`border mt-2 ${
-                    errors.vessel_name ? "border-red-500" : "border-gray-300"
-                  }`}
+                    className={`border mt-2 ${
+                      errors.vessel_name ? "border-red-500" : "border-gray-300"
+                    }`}
                   >
-                  <SelectValue placeholder="Select Vessel" />
+                    <SelectValue placeholder="Select Vessel" />
                   </SelectTrigger>
                   <SelectContent>
-                  {Array.isArray(vessels) &&
-                    vessels.map((vessel) => (
-                    <SelectItem value={vessel.vessel_name} key={vessel.id}>
-                      {vessel.vessel_name}
-                    </SelectItem>
-                    ))}
+                    {Array.isArray(vessels) &&
+                      vessels.map((vessel) => (
+                        <SelectItem value={vessel.vessel_name} key={vessel.id}>
+                          {vessel.vessel_name}
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
                 {errors.vessel_name && (
@@ -378,6 +379,25 @@ function RFQInfoCard({
                   <p className="text-red-500 text-sm">{errors.hull_no}</p>
                 )}
               </div>
+              <div className="flex flex-col">
+                <Label htmlFor="serialNumber">Serial Number</Label>
+                <Input
+                  type="text"
+                  id="serialNumber"
+                  placeholder="Serial Number"
+                  name="serial_no"
+                  value={createRfq.serial_no}
+                  onChange={(e) =>
+                    setcreateRfq({ ...createRfq, serial_no: e.target.value })
+                  }
+                  className={`border mt-2 ${
+                    errors.serial_no ? "border-red-500" : "border-gray-300"
+                  }`}
+                />
+                {errors.serial_no && (
+                  <p className="text-red-500 text-sm">{errors.serial_no}</p>
+                )}
+              </div>
 
               <div className="flex flex-col">
                 <Label htmlFor="drawingNumber">Drawing Number</Label>
@@ -404,30 +424,36 @@ function RFQInfoCard({
                   </p>
                 )}
               </div>
-
               <div className="flex flex-col">
-                <Label htmlFor="serialNumber">Serial Number</Label>
+                <Label htmlFor="general_remarks">Remarks</Label>
                 <Input
                   type="text"
-                  id="serialNumber"
-                  placeholder="Serial Number"
-                  name="serial_no"
-                  value={createRfq.serial_no}
+                  id="remarks"
+                  placeholder="Remarks"
+                  name="remarks"
+                  value={createRfq.remarks}
                   onChange={(e) =>
-                    setcreateRfq({ ...createRfq, serial_no: e.target.value })
+                    setcreateRfq({
+                      ...createRfq,
+                      remarks: e.target.value,
+                    })
                   }
                   className={`border mt-2 ${
-                    errors.serial_no ? "border-red-500" : "border-gray-300"
+                    errors.general_remarks
+                      ? "border-red-500"
+                      : "border-gray-300"
                   }`}
                 />
-                {errors.serial_no && (
-                  <p className="text-red-500 text-sm">{errors.serial_no}</p>
+                {errors.general_remarks && (
+                  <p className="text-red-500 text-sm">
+                    {errors.general_remarks}
+                  </p>
                 )}
               </div>
 
               <div className="flex flex-col">
                 <Label htmlFor="model">
-                  Offered Quality <span className="text-red-500">*</span>
+                  Preffered Quality <span className="text-red-500">*</span>
                 </Label>
                 <Select
                   name="offer_quality"
@@ -456,6 +482,100 @@ function RFQInfoCard({
                 </Select>
                 {errors.offer_quality && (
                   <p className="text-red-500 text-sm">{errors.offer_quality}</p>
+                )}
+              </div>
+              <div className="flex flex-col">
+                <Label htmlFor="incoterm">
+                  Type of Incoterms <span className="text-red-500">*</span>
+                </Label>
+                <Select
+                  name="incoterm"
+                  onValueChange={(v) => {
+                    setcreateRfq({ ...createRfq, incoterm: v });
+                    setErrors({ ...errors, incoterm: "" });
+                  }}
+                  value={createRfq.incoterm || ""}
+                >
+                  <SelectTrigger
+                    className={`border mt-2 ${
+                      errors.incoterm ? "border-red-500" : "border-gray-300"
+                    }`}
+                  >
+                    <SelectValue placeholder="Select Incoterm" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[
+                      { code: "EXW", label: "Ex Works" },
+                      { code: "FCA", label: "Free Carrier" },
+                      { code: "CPT", label: "Carriage Paid To" },
+                      { code: "CIP", label: "Carriage and Insurance Paid To" },
+                      { code: "DAP", label: "Delivered at Place" },
+                      { code: "DPU", label: "Delivered at Place Unloaded" },
+                      { code: "DDP", label: "Delivered Duty Paid" },
+                      { code: "FAS", label: "Free Alongside Ship" },
+                      { code: "FOB", label: "Free On Board" },
+                      { code: "CFR", label: "Cost and Freight" },
+                      { code: "CIF", label: "Cost, Insurance and Freight" },
+                    ].map((term) => (
+                      <SelectItem key={term.code} value={term.label}>
+                        {term.code} ({term.label})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {errors.incoterm && (
+                  <p className="text-red-500 text-sm">{errors.incoterm}</p>
+                )}
+              </div>
+              <div className="flex flex-col">
+                <Label htmlFor="logistic_container">
+                  Type of Logistic Container{" "}
+                  <span className="text-red-500">*</span>
+                </Label>
+                <Select
+                  name="logistic_container"
+                  onValueChange={(v) => {
+                    setcreateRfq({ ...createRfq, logistic_container: v });
+                    setErrors({ ...errors, logistic_container: "" });
+                  }}
+                  value={createRfq.logistic_container || ""}
+                >
+                  <SelectTrigger
+                    className={`border mt-2 ${
+                      errors.logistic_container
+                        ? "border-red-500"
+                        : "border-gray-300"
+                    }`}
+                  >
+                    <SelectValue placeholder="Select Container Type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[
+                      { code: "Nest 50", label: "50L Crate" },
+                      { code: "Nest 60", label: "60L Crate" },
+                      { code: "Euro Crate", label: "Standard Euro Crate" },
+                      { code: "Foldable Crate", label: "Collapsible Crate" },
+                      { code: "Pallet Box", label: "Heavy-Duty Pallet Box" },
+                      {
+                        code: "IBC Tank",
+                        label: "Intermediate Bulk Container",
+                      },
+                      { code: "Plastic Drum", label: "220L Sealed Drum" },
+                      {
+                        code: "Wooden Crate",
+                        label: "Custom Size Wooden Crate",
+                      },
+                    ].map((container) => (
+                      <SelectItem key={container.code} value={container.code}>
+                        {container.code} ({container.label})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {errors.logistic_container && (
+                  <p className="text-red-500 text-sm">
+                    {errors.logistic_container}
+                  </p>
                 )}
               </div>
 
@@ -488,32 +608,6 @@ function RFQInfoCard({
                 />
                 {errors.lead_date && (
                   <p className="text-red-500 text-sm">{errors.lead_date}</p>
-                )}
-              </div>
-              <div className="flex flex-col">
-                <Label htmlFor="general_remarks">General Remarks</Label>
-                <Input
-                  type="text"
-                  id="general_remarks"
-                  placeholder="general_remarks"
-                  name="general_remarks"
-                  value={createRfq.general_remarks}
-                  onChange={(e) =>
-                    setcreateRfq({
-                      ...createRfq,
-                      general_remarks: e.target.value,
-                    })
-                  }
-                  className={`border mt-2 ${
-                    errors.general_remarks
-                      ? "border-red-500"
-                      : "border-gray-300"
-                  }`}
-                />
-                {errors.general_remarks && (
-                  <p className="text-red-500 text-sm">
-                    {errors.general_remarks}
-                  </p>
                 )}
               </div>
 
@@ -731,8 +825,8 @@ export default function CreateEnquiryPage() {
   const [category, setCategory] = useState<any[]>([]);
   const [model, setModels] = useState<any[]>([]);
   const [vendors, updateVendors] = useState<any[]>([]);
-  console.log("vendor", vendors);
   const [vendorsError, setVendorsError] = useState(false);
+  const router = useRouter();
   const [createRfq, setCreateRfq] = useState({
     vessel_name: "",
     vessel_id: "",
@@ -751,6 +845,8 @@ export default function CreateEnquiryPage() {
     serial_no: "",
     vessel_ex_name: "",
     upload: "",
+    incoterm:"",
+    logistic_container:""
   });
   const [items, setItems] = useState<any>([
     {
@@ -789,7 +885,6 @@ export default function CreateEnquiryPage() {
 
   const getQuote = async () => {
     try {
-      console.log("🔵 Starting RFQ creation process...");
       setIsLoading(true);
       setErrorMessage("");
       setSuccessMessage("");
@@ -878,6 +973,8 @@ export default function CreateEnquiryPage() {
               branch: branchValues[0] ?? null,
               status: "sent",
               initiator_role: userRole,
+              incoterm: createRfq.incoterm,
+              logistics_containers: createRfq.logistic_container,
             },
           ])
           .select("*")
@@ -972,8 +1069,9 @@ export default function CreateEnquiryPage() {
         }
       }
 
-      setSuccessMessage("RFQ Successfully Created!");
-      console.log("🎉 All done!");
+      setSuccessMessage("RFQ Successfully Created & Sent");
+
+      router.push("/dashboard/customer/rfqs");
     } catch (finalError) {
       console.error("🔥 Fatal error in getQuote:", finalError);
       setErrorMessage("Something went wrong. Please try again.");

@@ -65,7 +65,7 @@ function BranchDirectorManagementTableRow({
                 className="flex items-center text-red-600"
               >
                 <Trash2 className="mr-2 h-4 w-4" />
-                Remove Director
+                Remove Owner
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -76,7 +76,7 @@ function BranchDirectorManagementTableRow({
           <DialogHeader>
             <DialogTitle>Confirm Removal</DialogTitle>
             <DialogDescription>
-              Are you sure you want to remove {director.email} as a director?
+              Are you sure you want to remove {director.email} as a Owner?
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -200,10 +200,10 @@ export default function BranchDirectorManagement({
   return (
     <div className="mt-6">
       <div className="py-2 sm:flex justify-between items-center">
-        <h3 className="text-lg font-semibold">Branch Directors</h3>
+        <h3 className="text-lg font-semibold">Branch Owners</h3>
         <Button onClick={() => setIsAssignDirectorDialogOpen(true)}>
           <UserPlus className="mr-2 h-4 w-4" />
-          Assign Director
+          Assign Owner
         </Button>
       </div>
       <div className="mt-4 overflow-x-auto">
@@ -245,16 +245,16 @@ export default function BranchDirectorManagement({
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Assign New Director</DialogTitle>
+            <DialogTitle>Assign New Owner</DialogTitle>
             <DialogDescription>
-              Enter the email address of the user to assign as a director for
+              Enter the email address of the user to assign as a Owner for
               this branch.
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleAssignDirector} className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="directorEmail" className="text-right">
-                Director Email
+                Owner Email
               </Label>
               <Input
                 id="directorEmail"
@@ -275,7 +275,7 @@ export default function BranchDirectorManagement({
                 Cancel
               </Button>
               <Button type="submit" disabled={!directorEmail}>
-                Assign Director
+                Assign Owner
               </Button>
             </DialogFooter>
           </form>

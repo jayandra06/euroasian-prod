@@ -163,7 +163,7 @@ export default function DirectorAssignUX({ branchId }: { branchId: string }) {
       {/* Assigned Directors */}
       <Card>
         <CardHeader className="flex items-center justify-between">
-          <span>Assigned Directors</span>
+          <span>Assigned Owneres</span>
           {selectedVessel &&
             (directors.length === 0 ? (
               <p className="text-sm text-muted-foreground">
@@ -173,12 +173,12 @@ export default function DirectorAssignUX({ branchId }: { branchId: string }) {
               <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                 <DialogTrigger asChild>
                   <Button size="sm" onClick={() => setDialogOpen(true)}>
-                    Assign Directors
+                    Assign Owners
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
                   <h2 className="text-lg font-semibold mb-4">
-                    Assign Directors
+                    Assign Owners
                   </h2>
                   <div className="flex flex-col gap-3">
                     {directors.map((director) => (

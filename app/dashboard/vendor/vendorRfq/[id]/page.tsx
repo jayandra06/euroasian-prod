@@ -26,34 +26,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2Icon } from "lucide-react";
+import { Loader2Icon, Router } from "lucide-react";
 import ErrorToast from "@/components/ui/errorToast";
 import SuccessToast from "@/components/ui/successToast";
 import Image from "next/image";
 
 import { useParams, useSearchParams } from "next/navigation";
-import { create } from "domain";
-import { set } from "react-hook-form";
+import { useRouter } from "next/navigation";
 
 // @ts-ignore
 function RFQInfoCard({
   rfqInfo,
-
-  setRfqInfo,
 }: {
   rfqInfo: any;
 
   setRfqInfo: any;
 }) {
   const supabase = createClient();
-
-  const getPublicUrl = (path: string) => {
-    const { data } = supabase.storage.from("rfq-image").getPublicUrl(path);
-    return data.publicUrl;
-  };
-  if (!rfqInfo) {
-    return <p>Loading...</p>;
-  }
 
   return (
     <>
@@ -68,65 +57,56 @@ function RFQInfoCard({
         <div>
           {/* RFQ Info Section */}
           <div className="w-full p-6">
-            <div className="grid grid-cols-5 gap-6">
-             
+            <div className="grid grid-cols-4 gap-6">
               <div className="flex flex-col">
-                <Label htmlFor="vesselName">
-                  Vessel Name <span className="text-red-500">*</span>
-                </Label>
+                <Label htmlFor="vesselName">Vessel Name</Label>
                 <Input
                   type="text"
                   id="vessel_name"
+                  className="mt-2"
                   placeholder="vessel_name"
                   value={rfqInfo?.vessel_name}
                   disabled
                 />
               </div>
               <div className="flex flex-col">
-                <Label htmlFor="Vessel Ex Name">
-                  Vessel Ex Name<span className="text-red-500">*</span>
-                </Label>
+                <Label htmlFor="Vessel Ex Name">Vessel Ex Name</Label>
                 <Input
                   type="text"
                   id="vessel_ex_name"
+                  className="mt-2"
                   placeholder="vessel ex name"
                   value={rfqInfo?.vessel_name}
                   disabled
                 />
               </div>
               <div className="flex flex-col">
-                <Label htmlFor="imoNo">
-                  IMO No <span className="text-red-500">*</span>
-                </Label>
+                <Label htmlFor="imoNo">IMO No</Label>
                 <Input
                   type="text"
                   id="imoNo"
+                  className="mt-2"
                   placeholder="Enter IMO No."
                   value={rfqInfo?.imo_no}
                   disabled
                 />
               </div>
               <div className="flex flex-col">
-                <Label htmlFor="supplyPort">
-                  Supply Port <span className="text-red-500">*</span>
-                </Label>
+                <Label htmlFor="supplyPort">Supply Port</Label>
                 <Input
                   type="text"
+                  className="mt-2"
                   id="supply_port"
                   value={rfqInfo?.supply_port || ""}
                   disabled
                 />
               </div>
-             
-             
 
-             
-            
               <div className="flex flex-col">
                 <Label htmlFor="clientName">Equipment Tags</Label>
                 <Input
                   type="text"
-                  id="clientName"
+                  id="equipement_tag"
                   placeholder="Enter Equipment Tags"
                   value={rfqInfo?.equipement_tag}
                   className="mt-2"
@@ -134,12 +114,11 @@ function RFQInfoCard({
                 />
               </div>
               <div className="flex flex-col">
-                <Label htmlFor="category">
-                  Category <span className="text-red-500">*</span>
-                </Label>
+                <Label htmlFor="category">Category</Label>
                 <Input
                   type="text"
                   id="category"
+                  className="mt-2"
                   placeholder="category"
                   value={rfqInfo?.category}
                   disabled
@@ -147,12 +126,11 @@ function RFQInfoCard({
               </div>
 
               <div className="flex flex-col">
-                <Label htmlFor="brand">
-                  Brand <span className="text-red-500">*</span>
-                </Label>
+                <Label htmlFor="brand">Brand</Label>
                 <Input
                   type="text"
                   id="brand"
+                  className="mt-2"
                   placeholder="brand"
                   value={rfqInfo?.brand}
                   disabled
@@ -160,41 +138,24 @@ function RFQInfoCard({
               </div>
 
               <div className="flex flex-col">
-                <Label htmlFor="model">
-                  Model <span className="text-red-500">*</span>
-                </Label>
+                <Label htmlFor="model">Model</Label>
                 <Input
                   type="text"
                   id="model"
+                  className="mt-2"
                   placeholder="model"
                   value={rfqInfo?.model}
                   disabled
                 />
               </div>
               <div className="flex flex-col">
-                <Label htmlFor="model">
-                  Hull Number <span className="text-red-500">*</span>
-                </Label>
+                <Label htmlFor="model">HULL NO.</Label>
                 <Input
                   type="text"
                   id="hull_number"
-                  placeholder="hull_number"
-                  value={rfqInfo?.model}
-                  disabled
-                />
-              </div>
-
-          
-
-              {/* drawing Number */}
-              <div className="flex flex-col">
-                <Label htmlFor="clientName">Drawing Number</Label>
-                <Input
-                  type="text"
-                  id="clientName"
-                  placeholder="Enter Drawing Number"
-                  value={rfqInfo?.drawing_number}
                   className="mt-2"
+                  placeholder="hull_number"
+                  value={rfqInfo?.hull_no}
                   disabled
                 />
               </div>
@@ -209,8 +170,22 @@ function RFQInfoCard({
                   disabled
                 />
               </div>
+
+              {/* drawing Number */}
               <div className="flex flex-col">
-                <Label htmlFor="clientName">Offer Quality</Label>
+                <Label htmlFor="clientName">Drawing Number</Label>
+                <Input
+                  type="text"
+                  id="clientName"
+                  placeholder="Enter Drawing Number"
+                  value={rfqInfo?.drawing_number}
+                  className="mt-2"
+                  disabled
+                />
+              </div>
+
+              <div className="flex flex-col">
+                <Label htmlFor="clientName">Prefferd Quality</Label>
                 <Input
                   type="text"
                   id="clientName"
@@ -220,9 +195,42 @@ function RFQInfoCard({
                   disabled
                 />
               </div>
-             
+              <div className="flex flex-col">
+                <Label htmlFor=" Genereal Remarks">Remarks</Label>
+                <Input
+                  type="text"
+                  id="remarks"
+                  placeholder="Remarks"
+                  value={rfqInfo?.remarks || ""}
+                  className="mt-2"
+                  disabled
+                />
+              </div>
+              <div className="flex flex-col">
+                <Label htmlFor="incoterm">Type of Incoterm</Label>
+                <Input
+                  type="text"
+                  className="mt-2"
+                  id="incoterm"
+                  name="incoterm"
+                  value={rfqInfo?.incoterm || ""}
+                  disabled
+                />
+              </div>
 
-          
+              <div className="flex flex-col ">
+                <Label htmlFor="logistic_container">
+                  Type of Logistic Container
+                </Label>
+                <Input
+                  type="text"
+                  className="mt-2"
+                  id="logistics_containers"
+                  name="logistics_containers"
+                  value={rfqInfo?.logistics_containers || ""}
+                  disabled
+                />
+              </div>
               <div className="flex flex-col">
                 <Label htmlFor="leadDate">Lead Date</Label>
                 <Input
@@ -234,12 +242,12 @@ function RFQInfoCard({
                 />
               </div>
              
+
               <div className="flex flex-col">
-                <Label htmlFor="expireDate">
-                  Valid Until <span className="text-red-500 ml-1">*</span>
-                </Label>
+                <Label htmlFor="expireDate">Valid Until</Label>
                 <Input
                   type="text"
+                  className="mt-2"
                   id="date"
                   value={
                     rfqInfo?.created_at
@@ -256,17 +264,7 @@ function RFQInfoCard({
                   disabled
                 />
               </div>
-              <div className="flex flex-col">
-                <Label htmlFor=" Genereal Remarks">General Remarks</Label>
-                <Input
-                  type="text"
-                  id="remarks"
-                  placeholder="remarks"
-                  value={rfqInfo?.remarks || ""}
-                  className="mt-2"
-                  disabled
-                />
-              </div>
+              
               <div className="flex flex-col items-center">
                 {" "}
                 {/* Center the image and label */}
@@ -475,6 +473,7 @@ export default function ViewRfq() {
   });
 
   const [viewMode, setViewMode] = useState(false);
+  const Router = useRouter();
 
   const handleUpdateItem = (id: number, key: string, value: any) => {
     setItems((prevItems) =>
@@ -522,7 +521,6 @@ export default function ViewRfq() {
           console.error("Error fetching RFQ response:", responseError.message);
         }
         if (response) {
-
           setViewMode(true);
           // Fetch the items associated with the RFQ
           const { data: items, error: itemsError } = await supabase
@@ -534,34 +532,34 @@ export default function ViewRfq() {
 
           console.log("items ", items);
           // Combine response data with items data
-            const combinedData = items.map((item) => ({
+          const combinedData = items.map((item) => ({
             ...item, // Spread item data
             ...response, // Spread response data
-            uom_vendor: response.uom ,
-            uom:item.uom
-            }));
+            uom_vendor: response.uom,
+            uom: item.uom,
+          }));
 
           console.log("combinedData ", combinedData);
           // Set the combined data in state
-            setItems(combinedData);
-            const { data: rfqCharges, error: rfqChargesError } = await supabase
+          setItems(combinedData);
+          const { data: rfqCharges, error: rfqChargesError } = await supabase
             .from("rfq_response_item_charges")
             .select("*")
             .eq("rfq_response_id", id)
             .eq("vendor_id", vendorId)
             .single();
-            if (rfqChargesError) throw rfqChargesError;
+          if (rfqChargesError) throw rfqChargesError;
 
-            setCharges({
+          setCharges({
             shipment_charges: rfqCharges?.shipment_charges || "",
             custom_charges: rfqCharges?.custom_charges || "",
-            port_connectivity_charges: rfqCharges?.port_connectivity_charges || "",
+            port_connectivity_charges:
+              rfqCharges?.port_connectivity_charges || "",
             other_charges: rfqCharges?.other_charges || "",
             freight_charges: rfqCharges?.freight_charges || "",
             remark_charges: rfqCharges?.remark_charges || "",
-            });
-            console.log("charges ", rfqCharges);
-
+          });
+          console.log("charges ", rfqCharges);
         } else {
           // If no response exists, just set the items
           const { data: items, error: itemsError } = await supabase
@@ -587,14 +585,8 @@ export default function ViewRfq() {
 
     async function fetchVendorRFQs() {
       const supabase = createClient();
-
+console.log("rfq Id",id);
       try {
-        // Get the current logged-in user
-        const { data: user, error: userError } = await supabase.auth.getUser();
-        if (userError) throw userError;
-
-        const userId = user?.user?.id;
-
         // Fetch RFQs
         const { data: rfqs, error: rfqsError } = await supabase
           .from("rfq")
@@ -604,6 +596,7 @@ export default function ViewRfq() {
         if (rfqsError) throw rfqsError;
 
         setSelectedRfq(rfqs?.[0] ?? []);
+        console.log("Rfq Item", rfqs);
       } catch (err) {
         console.error("Error fetching RFQs:", (err as Error).message);
       }
@@ -694,7 +687,7 @@ export default function ViewRfq() {
       setSuccessMessage("Successfully delivered!");
     }
   };
-  
+
   const submitVendorResponse = async () => {
     setIsLoading(true);
     setErrorMessage(null);
@@ -794,18 +787,10 @@ export default function ViewRfq() {
 
   const handleSubmit = async () => {
     setIsLoading(true);
-    const isUpdated = await updateAllItems(); // ✅ Step 1: Update rfq_items
-    if (!isUpdated) return; // ❌ Stop if update fails
-    await submitVendorResponse(); // ✅ Step 2: Insert into rfq_response
-  };
-
-  const handleChange = (e: any, itemId: any) => {
-    const { name, value } = e.target;
-    setItems((prevItems) =>
-      prevItems.map((item) =>
-        item.id === itemId ? { ...item, [name]: value } : item
-      )
-    );
+    const isUpdated = await updateAllItems();
+    if (!isUpdated) return;
+    await submitVendorResponse();
+    Router.push("/dashboard/vendor/rfqs");
   };
 
   if (!isMem)
@@ -827,7 +812,7 @@ export default function ViewRfq() {
       )}
       <main className="grid">
         <div className="pt-4 max-w-6xl w-full grid justify-self-center">
-          <h1 className="text-3xl font-bold">Create RFQ</h1>
+          <h1 className="text-3xl font-bold">Send Quotation</h1>
           <h3 className="mt-2"></h3>
         </div>
 
@@ -1019,7 +1004,7 @@ export default function ViewRfq() {
           </div>
 
           <div className="text-right mt-3">
-            {!viewMode ? null:(
+            {!viewMode ? null : (
               <Button
                 className="bg-red-600 mt-3 mx-2"
                 onClick={handleUpdateSupplierStatus}
@@ -1041,8 +1026,9 @@ export default function ViewRfq() {
                 {isloading ? "Sending Send Qutotaion" : "Send Qutotaion"}
               </Button>
             )}
-             {viewMode ? null : (
-            <Button className="bg-blue-600 mt-3 mx-2">Print Invoice</Button>)}
+            {viewMode ? null : (
+              <Button className="bg-blue-600 mt-3 mx-2">Print Invoice</Button>
+            )}
           </div>
         </div>
       </main>

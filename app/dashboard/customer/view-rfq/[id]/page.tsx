@@ -70,11 +70,12 @@ function RFQInfoCard({ rfqData }: { rfqData: RfqData }) {
               {/* Row 1 */}
               <div className="flex flex-col col-span-1">
               <Label htmlFor="vesselName">
-                Vessel Name <span className="text-red-500">*</span>
+                Vessel Name 
               </Label>
               <Input
                 type="text"
                 id="vessel_name"
+                className="mt-2"
                 placeholder="Enter Vessel Name"
                 value={rfqData.vessel_name}
                 disabled
@@ -84,6 +85,7 @@ function RFQInfoCard({ rfqData }: { rfqData: RfqData }) {
               <Label htmlFor="vesselExName">Vessel Ex Name</Label>
               <Input
                 type="text"
+                className="mt-2"
                 id="vessel_ex_name"
                 placeholder="Enter Vessel Ex Name"
                 value={rfqData.vessel_ex_name || ""}
@@ -92,11 +94,12 @@ function RFQInfoCard({ rfqData }: { rfqData: RfqData }) {
               </div>
               <div className="flex flex-col col-span-1">
               <Label htmlFor="imoNo">
-                IMO No <span className="text-red-500">*</span>
+                IMO No 
               </Label>
               <Input
                 type="text"
                 id="imoNo"
+                className="mt-2"
                 placeholder="Enter IMO No."
                 value={rfqData.imo_no}
                 disabled
@@ -104,11 +107,12 @@ function RFQInfoCard({ rfqData }: { rfqData: RfqData }) {
               </div>
               <div className="flex flex-col col-span-1">
               <Label htmlFor="supplyPort">
-                Supply Port <span className="text-red-500">*</span>
+                Supply Port 
               </Label>
               <Input
                 type="text"
                 id="supplyport"
+                className="mt-2"
                 value={rfqData?.supply_port || ""}
                 disabled
               />
@@ -128,7 +132,7 @@ function RFQInfoCard({ rfqData }: { rfqData: RfqData }) {
               </div>
               <div className="flex flex-col col-span-1">
               <Label htmlFor="category">
-                Category <span className="text-red-500">*</span>
+                Category 
               </Label>
               <Input
                 type="text"
@@ -141,7 +145,7 @@ function RFQInfoCard({ rfqData }: { rfqData: RfqData }) {
               </div>
               <div className="flex flex-col col-span-1">
               <Label htmlFor="brand">
-                Brand <span className="text-red-500">*</span>
+                Brand 
               </Label>
               <Input
                 type="text"
@@ -154,7 +158,7 @@ function RFQInfoCard({ rfqData }: { rfqData: RfqData }) {
               </div>
               <div className="flex flex-col col-span-1">
               <Label htmlFor="model">
-                Model <span className="text-red-500">*</span>
+                Model 
               </Label>
               <Input
                 type="text"
@@ -169,24 +173,14 @@ function RFQInfoCard({ rfqData }: { rfqData: RfqData }) {
               {/* Row 3 */}
               <div className="flex flex-col col-span-1">
               <Label htmlFor="hullNo">
-                HULL No <span className="text-red-500">*</span>
+                HULL No 
               </Label>
               <Input
                 type="text"
                 id="hull_no"
+                className="mt-2"
                 placeholder="Enter HULL No."
                 value={rfqData.hull_no}
-                disabled
-              />
-              </div>
-              <div className="flex flex-col col-span-1">
-              <Label htmlFor="drawingNumber">Drawing Number</Label>
-              <Input
-                type="text"
-                id="drawing_number"
-                placeholder="Enter Drawing Number"
-                value={rfqData.drawing_number}
-                className="mt-2"
                 disabled
               />
               </div>
@@ -202,8 +196,20 @@ function RFQInfoCard({ rfqData }: { rfqData: RfqData }) {
               />
               </div>
               <div className="flex flex-col col-span-1">
+              <Label htmlFor="drawingNumber">Drawing Number</Label>
+              <Input
+                type="text"
+                id="drawing_number"
+                placeholder="Enter Drawing Number"
+                value={rfqData.drawing_number}
+                className="mt-2"
+                disabled
+              />
+              </div>
+              
+              <div className="flex flex-col col-span-1">
               <Label htmlFor="offerQuality">
-                Offered Quality <span className="text-red-500">*</span>
+               Preffered Quality 
               </Label>
               <Input
                 type="text"
@@ -214,29 +220,8 @@ function RFQInfoCard({ rfqData }: { rfqData: RfqData }) {
                 disabled
               />
               </div>
-
-              {/* Row 4 */}
               <div className="flex flex-col col-span-1">
-              <Label htmlFor="createDate">Create Date</Label>
-              <Input
-                type="date"
-                id="create_date"
-                value={rfqData?.create_date?.split("T")[0] || ""}
-                disabled
-              />
-              </div>
-              <div className="flex flex-col col-span-1"></div>
-              <Label htmlFor="leadDate">Lead Date</Label>
-              <Input
-                type="date"
-                className="mt-2"
-                id="leadDate"
-                value={rfqData?.lead_date?.split("T")[0] || ""}
-                disabled
-              />
-              </div>
-              <div className="flex flex-col col-span-1">
-              <Label htmlFor="remarks">General Remarks</Label>
+              <Label htmlFor="remarks">Remarks</Label>
               <Input
                 type="text"
                 id="remarks"
@@ -246,6 +231,63 @@ function RFQInfoCard({ rfqData }: { rfqData: RfqData }) {
                 disabled
               />
               </div>
+              <div className="flex flex-col">
+                <Label htmlFor="incoterm">Type of Incoterm</Label>
+                <Input
+                  type="text"
+                  className="mt-2"
+                  id="incoterm"
+                  name="incoterm"
+                  value={rfqData?.incoterm || ""}
+                  disabled
+                />
+              </div>
+
+ <div className="flex flex-col ">
+                <Label htmlFor="logistic_container">
+                  Type of Logistic Container
+                </Label>
+                <Input
+                  type="text"
+                  className="mt-2"
+                  id="logistics_containers"
+                  name="logistics_containers"
+                  value={rfqData?.logistics_containers || ""}
+                  disabled
+                />
+              </div>
+              <div className="flex flex-col">
+                <Label htmlFor="leadDate">Lead Date</Label>
+                <Input
+                  type="date"
+                  className="mt-2"
+                  id="leadDate"
+                  value={rfqData?.lead_date?.split("T")[0] || ""}
+                  disabled
+                />
+              </div>
+              {/* Row 4 */}
+              <div className="flex flex-col col-span-1">
+              <Label htmlFor="createDate">Create Date</Label>
+              <Input
+                type="date"
+                id="create_date"
+                className="mt-2"
+                value={rfqData?.created_date?.split("T")[0] || ""}
+                disabled
+              />
+              </div>
+              <div className="flex flex-col col-span-1">
+              <Label htmlFor="leadDate">Lead Date</Label>
+              <Input
+                type="date"
+                className="mt-2"
+                id="leadDate"
+                value={rfqData?.lead_date?.split("T")[0] || ""}
+                disabled
+              />
+              </div>
+              
               <div className="flex flex-col col-span-1 items-center">
               <Label htmlFor="upload">Uploaded Image</Label>
               {rfqData?.upload ? (
@@ -264,6 +306,8 @@ function RFQInfoCard({ rfqData }: { rfqData: RfqData }) {
             </div>
           </div>
         </div>
+        </div>
+
       {/* </div> */}
     </>
   );
@@ -1032,7 +1076,7 @@ export default function ViewRfq() {
       // 4. Update remaining suppliers as canceled
       const { error: remainingSuppliersError } = await supabase
         .from("rfq_supplier")
-        .update({ status: "canceled" })
+        .update({ status: "cancelled" })
         .match({ rfq_id: id })
         .neq("vendor_id", approvedVendorId);
       if (remainingSuppliersError) throw remainingSuppliersError;
@@ -1193,7 +1237,7 @@ export default function ViewRfq() {
         {" "}
         {/* Added padding-bottom to prevent overlap */}
         <div className="pt-4 max-w-6xl w-full grid justify-self-center">
-          <h1 className="text-3xl font-bold">View RFQ</h1>
+          <h1 className="text-3xl font-bold">View RFQ & Send Order</h1>
           <h3 className="mt-2"></h3>
         </div>
         <main className="grid justify-self-center max-w-6xl w-full md:grid-cols-3 gap-4 mt-4">
@@ -1408,8 +1452,8 @@ export default function ViewRfq() {
               <div>
                 <p className="text-gray-700 font-medium">
                   {enableConfirmDelivery
-                    ? "Director approved."
-                    : "Waiting for Director's approval."}
+                    ? "Owner approved."
+                    : "Waiting for Owner's approval."}
                 </p>
               </div>
             )}
@@ -1421,7 +1465,7 @@ export default function ViewRfq() {
                     handleForwardToDirector();
                   }}
                 >
-                  Forward to Director
+                  Forward to Owner 
                 </button>
               )}
 
