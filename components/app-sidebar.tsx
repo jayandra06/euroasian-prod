@@ -186,7 +186,7 @@ const customerData = {
   navMain: [
     {
       title: "Fleet Overview",
-      url: "/dashboard/customer",
+      url: "/dashboard/customer/fleet-overview",
     },
     {
       title: "Financial & Procurement",
@@ -237,9 +237,12 @@ url:"/dashboard/customer/vessel_management",
   url:"/dashboard/customer/role_management",
   
   },
-    
+  {
+    title:"Claim Management",
+    url:"/dashboard/customer/claim_management",
+  },
 
-   
+
     {
       title: "Branch",
       url: "/dashboard/customer/branch",
