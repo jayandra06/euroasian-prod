@@ -211,7 +211,7 @@ const getStatusColor = (status: string) => {
   return (
     <div className="container mx-auto py-8">
       <div className="mb-6">
-        <h1 className="text-3xl font-semibold text-gray-800 text-gray-550">
+        <h1 className="text-3xl font-semibold text-gray-800 text-center">
           Request for Quotes
         </h1>
       </div>
@@ -257,12 +257,11 @@ const getStatusColor = (status: string) => {
         <table className="min-w-full divide-y divide-gray-200 bg-white">
           <thead className="bg-gray-50">
             <tr>
-            
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Date
+                #
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-               time
+                RFQ Date
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Supply Port
@@ -309,25 +308,14 @@ const getStatusColor = (status: string) => {
                     (window.location.href = `/dashboard/vendor/vendorRfq/${rfq.id}`)
                   }
                 >
-                  
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                    {index + 1}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                     {rfq.created_at
-                      ? new Date(rfq.created_at).toLocaleDateString("en-US", {
-                      year: "numeric",
-                      month: "short",
-                      day: "numeric",
-                      })
+                      ? new Date(rfq.created_at).toLocaleDateString()
                       : "-"}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                      {rfq.created_at
-                      ? new Date(rfq.created_at).toLocaleTimeString("en-US", {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        hour12: true,
-                        })
-                      : "-"}
-                    </td>
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                     {rfq.supply_port || "-"}
                   </td>

@@ -25,14 +25,25 @@ import { DotsVerticalIcon } from "@radix-ui/react-icons";
 import { Loader2 } from "lucide-react";
 import * as XLSX from "xlsx"; // Import the xlsx library
 import toast  from "react-hot-toast";
+import axios from "axios";
+
 
 interface Vessel {
-  id: string;
+  id?: string;
   imoNumber: string;
   vesselName: string;
   exVesselName?: string;
   vesselType?: string; // Added vesselType
 }
+
+interface ApiResponse {
+  input:string,
+  vesselsList:{
+    name:string,
+    imo:string,
+    msi?:string,
+  }[];
+};
 
 function VesselCard({
   vessel,
@@ -52,8 +63,7 @@ function VesselCard({
   const [updating, setUpdating] = useState(false); // State for update loading
   const [deleting, setDeleting] = useState(false); // State for delete loading
   const [userId, setUserId] = useState<string | null>(null);
- 
- 
+  
 
   async function handleDeleteVessel() {
     const supabase = createClient();
@@ -112,6 +122,9 @@ function VesselCard({
     setEditExVesselName(vessel.exVesselName || "");
     setEditVesselType(vessel.vesselType || ""); // Initialize editVesselType
   }, [vessel]);
+
+
+
 
   return (
     <>
@@ -265,22 +278,12 @@ function VesselCard({
 export default function VesselPage() {
   const [vessels, setVessels] = useState<Vessel[]>([]);
   const [loading, setLoading] = useState(true); // Initialize loading as true
-  const [newVessels, setNewVessels] = useState<
-    {
-      imoNumber: string;
-      vesselName: string;
-      exVesselName?: string;
-      vesselType?: string; // Added vesselType to newVessel state
-      // Add other relevant vessel properties here for creation
-    }[]
-  >([
-    {
-      imoNumber: "",
-      vesselName: "",
-      exVesselName: "",
-      vesselType: "",
-    },
+  const [newVessels, setNewVessels] = useState<Vessel[]>([
+    { imoNumber: "", vesselName: "", exVesselName: "", vesselType: "" }
   ]);
+  
+  
+  
   const [isAddVesselDialogOpen, setIsAddVesselDialogOpen] = useState(false); // State for controlling the add vessel dialog
   const [isBulkAddVesselDialogOpen, setIsBulkAddVesselDialogOpen] =
     useState(false); // State for controlling the bulk add vessel dialog
@@ -306,6 +309,9 @@ const [filledVesselsCount, setFilledVesselsCount] = useState<number | null>(
 const [vesselCountLoading, setVesselCountLoading] = useState(true);
 const [vesselCountError, setVesselCountError] = useState<string | null>(null);
 const [searchTerm, setSearchTerm] = useState("");
+
+
+const debounceTimers = useRef<{ [key: number]: NodeJS.Timeout }>({});
 
 
 
@@ -385,17 +391,65 @@ useEffect(() => {
     setNewVessels((prev) => prev.filter((_, i) => i !== index));
   };
 
+  
+
+
   const handleNewVesselInputChange = (
     index: number,
-    field: keyof (typeof newVessels)[0],
+    field: keyof Vessel,
     value: string
   ) => {
-    setNewVessels((prev) =>
-      prev.map((vessel, i) =>
-        i === index ? { ...vessel, [field]: value } : vessel
-      )
-    );
+    setNewVessels((prev) => {
+      const updated = [...prev];
+      updated[index][field] = value;
+      return updated;
+    });
+  
+    if (field === "imoNumber") {
+      // Clear previous debounce timer
+      if (debounceTimers.current[index]) {
+        clearTimeout(debounceTimers.current[index]);
+      }
+  
+      // Set new debounce timer
+      debounceTimers.current[index] = setTimeout(() => {
+        fetchVesselByIMO(value, index);
+      }, 500); // debounce delay
+    }
   };
+  
+
+const fetchVesselByIMO = async (imo: string, index: number) => {
+  if (!imo) return;
+
+  try {
+    const response = await axios.get<ApiResponse>(
+      `https://hqebhtqdpmpyouzxtsgk.supabase.co/functions/v1/fetch-vessel-data`,
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
+        },
+        params: {
+          vesselNameOrCode: imo,
+        },
+      }
+    );
+
+    const vessel = response.data.vesselsList?.[0];
+
+    if (vessel) {
+      setNewVessels((prev) => {
+        const updated = [...prev];
+        updated[index].vesselName = vessel.name || updated[index].vesselName;
+        // You can also set other fields like imo or mmsi here
+        return updated;
+      });
+    }
+  } catch (error) {
+    console.error("Error fetching vessel:", error);
+  }
+};
+
 
   async function addVessel() {
     setLoading(true);

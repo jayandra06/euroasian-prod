@@ -12,7 +12,7 @@ import {
   TableBody,
   TableCell,
 } from "@/components/ui/table";
-import {ManageRoleOne} from "./ManageRoleOne/page";
+import ManageRoleOne from "./ManageRoleOne/page";
 import ManageRoleTwo from "./ManageRoleTwo/page";
 import ManageRoleThree from "./ManageRoleThree/page";
 
@@ -66,7 +66,7 @@ export default function RoleManagement() {
             Manage Roles
           </Button>
           <Button onClick={() => setActiveComponent(2)}>Manage Permission</Button>
-          <Button onClick={() => setActiveComponent(3)}>Manage Role 3</Button>
+          {/* <Button onClick={() => setActiveComponent(3)}>Manage Role 3</Button> */}
         </div>
       </div>
       {activeComponent === null && (
