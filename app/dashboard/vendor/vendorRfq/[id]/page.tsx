@@ -124,6 +124,17 @@ function RFQInfoCard({
                   disabled
                 />
               </div>
+              <div className="flex flex-col">
+                <Label htmlFor="category"> Sub Category</Label>
+                <Input
+                  type="text"
+                  id="category"
+                  className="mt-2"
+                  placeholder="category"
+                  value="Main Engine"
+                  disabled
+                />
+              </div>
 
               <div className="flex flex-col">
                 <Label htmlFor="brand">Brand</Label>

@@ -294,6 +294,33 @@ function RFQInfoCard({
                   <p className="text-red-500 text-sm">{errors.category}</p>
                 )}
               </div>
+              <div className="flex flex-col">
+                <Label htmlFor="category">
+                  Sub Category <span className="text-red-500">*</span>
+                </Label>
+                <Select
+                  name="category"
+                 
+                >
+                  <SelectTrigger
+                    className={`border mt-2 ${
+                      errors.category ? "border-red-500" : "border-gray-300"
+                    }`}
+                  >
+                    <SelectValue placeholder="Select Category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {category.map((cat, i) => (
+                      <SelectItem value="Main Engine" >
+                       Main Engine
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {errors.category && (
+                  <p className="text-red-500 text-sm">{errors.category}</p>
+                )}
+              </div>
 
               <div className="flex flex-col">
                 <Label htmlFor="brand">

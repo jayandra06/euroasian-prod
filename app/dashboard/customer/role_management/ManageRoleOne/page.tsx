@@ -19,7 +19,7 @@ interface User {
   status?: "DISABLED" | "ACTIVE";
 }
 
-export function ManageRoleOne() {
+const ManageRoleOne=()=>{
   const [users, setUsers] = useState<User[]>([]);
   const [customRoleInputs, setCustomRoleInputs] = useState<Record<string, string>>({});
   const [editingRoles, setEditingRoles] = useState<Record<string, boolean>>({});
@@ -202,3 +202,5 @@ export function ManageRoleOne() {
     </div>
   );
 }
+
+export default ManageRoleOne;

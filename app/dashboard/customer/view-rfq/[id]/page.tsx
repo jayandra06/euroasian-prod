@@ -144,6 +144,19 @@ function RFQInfoCard({ rfqData }: { rfqData: RfqData }) {
               />
               </div>
               <div className="flex flex-col col-span-1">
+              <Label htmlFor="Sub Category">
+                Sub Category
+              </Label>
+              <Input
+                type="text"
+                id="Category"
+                placeholder="Enter Category"
+                value="Main Engine"
+                className="mt-2"
+                disabled
+              />
+              </div>
+              <div className="flex flex-col col-span-1">
               <Label htmlFor="brand">
                 Brand 
               </Label>
