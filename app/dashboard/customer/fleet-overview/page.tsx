@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectTrigger, SelectContent, SelectItem } from '@/components/ui/select';
 import { FiDownload, FiFilter, FiBell, FiFileText, FiCpu } from 'react-icons/fi';
+import { GraphChart } from './graph-chart';
+import { PieChart } from './pie-chart';
 
 const FleetOverview = () => {
   return (
@@ -85,8 +87,11 @@ const FleetOverview = () => {
 
           {/* Analytics */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card><CardContent className="p-4">Analytics (Coming Soon)</CardContent></Card>
-            <Card><CardContent className="p-4">Analytics (Coming Soon)</CardContent></Card>
+            <Card><CardContent className="p-4">Analytics</CardContent>
+            <GraphChart/>
+            </Card>
+            <Card><CardContent className="p-4">Analytics</CardContent>
+            <PieChart/></Card>
           </div>
         </div>
 
