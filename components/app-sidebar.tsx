@@ -239,11 +239,7 @@ url:"/dashboard/customer/vessel_management",
   },
     
 
-    {
-      title: "Vessel Management",
-      url: "/dashboard/customer/vessel_management",
-    },
-
+   
     {
       title: "Branch",
       url: "/dashboard/customer/branch",
