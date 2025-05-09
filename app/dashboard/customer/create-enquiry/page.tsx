@@ -43,8 +43,8 @@ function RFQInfoCard({
   models,
   brands,
   category,
-  setSelectedFile,
-
+  setSelectedFiles,
+  selectedFiles,
   errors,
   setErrors,
 }: {
@@ -53,7 +53,8 @@ function RFQInfoCard({
   models: any[];
   brands: any[];
   category: any[];
-  setSelectedFile: React.Dispatch<React.SetStateAction<File | null>>;
+  selectedFiles: File[];
+  setSelectedFiles: React.Dispatch<React.SetStateAction<File[]>>;
 
   errors: any;
   setErrors: React.Dispatch<React.SetStateAction<any>>;
@@ -102,6 +103,18 @@ function RFQInfoCard({
       console.error("Error fetching vessels:", error);
       setVessels([]);
     }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const newFiles = Array.from(e.target.files);
+      setSelectedFiles((prevFiles) => [...prevFiles, ...newFiles]);
+      setErrors((prev: any) => ({ ...prev, upload: "" }));
+    }
+  };
+
+  const removeFile = (index: number) => {
+    setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
   useEffect(() => {
@@ -298,10 +311,7 @@ function RFQInfoCard({
                 <Label htmlFor="category">
                   Sub Category <span className="text-red-500">*</span>
                 </Label>
-                <Select
-                  name="category"
-                 
-                >
+                <Select name="category">
                   <SelectTrigger
                     className={`border mt-2 ${
                       errors.category ? "border-red-500" : "border-gray-300"
@@ -311,9 +321,7 @@ function RFQInfoCard({
                   </SelectTrigger>
                   <SelectContent>
                     {category.map((cat, i) => (
-                      <SelectItem value="Main Engine" >
-                       Main Engine
-                      </SelectItem>
+                      <SelectItem value="Main Engine">Main Engine</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -637,24 +645,51 @@ function RFQInfoCard({
                   <p className="text-red-500 text-sm">{errors.lead_date}</p>
                 )}
               </div>
+            </div>
+            <div  className="mt-4 ">
 
-              <div className="flex flex-col">
-                <Label htmlFor="upload">Upload File</Label>
-                <Input
-                  id="upload"
-                  type="file"
-                  className="mt-2"
-                  onChange={(e) => {
-                    if (e.target.files && e.target.files[0]) {
-                      setSelectedFile(e.target.files[0]);
-                      setErrors({ ...errors, upload: "" }); // Clear upload error
-                    }
-                  }}
-                />
-                {errors.upload && (
-                  <p className="text-red-500 text-sm">{errors.upload}</p>
-                )}
-              </div>
+          
+            <label >Add Attachments</label>
+            <div  className="border mb-4 py-5 px-5">
+
+        
+            <div className="flex flex-col">
+
+              <Label htmlFor="upload">Upload Files</Label>
+              <Input
+                id="upload"
+                type="file"
+                className="mt-2"
+                multiple
+                onChange={handleFileChange}
+              />
+              {errors.upload && (
+                <p className="text-red-500 text-sm">{errors.upload}</p>
+              )}
+
+              {selectedFiles.length > 0 && (
+                <ul className="mt-4 space-y-2">
+                  {selectedFiles.map((file, index) => (
+                    <li
+                      key={index}
+                      className="flex justify-between items-center p-2 border rounded-md bg-gray-50"
+                    >
+                      <span className="truncate w-4/5 text-sm">
+                        {file.name}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => removeFile(index)}
+                        className="text-red-500 hover:text-red-700 text-sm"
+                      >
+                        ✖
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+            </div>
             </div>
           </div>
         </div>
@@ -872,8 +907,8 @@ export default function CreateEnquiryPage() {
     serial_no: "",
     vessel_ex_name: "",
     upload: "",
-    incoterm:"",
-    logistic_container:""
+    incoterm: "",
+    logistic_container: "",
   });
   const [items, setItems] = useState<any>([
     {
@@ -897,6 +932,9 @@ export default function CreateEnquiryPage() {
 
   const [isMem, setIsMem] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [errorss, setErrorss] = useState<{ upload?: string }>({});
+
   const [errors, setErrors] = useState({ supply_port: "", items: [] });
   const handleUpdateItem = (id: number, key: any, value: any) => {
     setItems((prevItems: any) =>
@@ -915,37 +953,6 @@ export default function CreateEnquiryPage() {
       setIsLoading(true);
       setErrorMessage("");
       setSuccessMessage("");
-
-      let fileUrl = "";
-
-      if (!selectedFile) {
-        console.warn("⚠️ No file selected. Skipping file upload.");
-      } else {
-        try {
-          console.log("📁 Uploading selected file...");
-
-          const fileExt = selectedFile.name.split(".").pop();
-          const fileName = `${Math.random()}.${fileExt}`;
-          const { data: uploadData, error: uploadError } =
-            await supabase.storage
-              .from("rfq-image")
-              .upload(`uploads/${fileName}`, selectedFile);
-
-          if (uploadError) throw uploadError;
-
-          const { data: publicUrlData } = supabase.storage
-            .from("rfq-image")
-            .getPublicUrl(uploadData.path);
-
-          fileUrl = publicUrlData.publicUrl;
-          console.log("✅ File uploaded. Public URL:", fileUrl);
-        } catch (uploadErr) {
-          console.error("❌ File upload failed:", uploadErr);
-          setErrorMessage("Failed to upload file.");
-          setIsLoading(false);
-          return;
-        }
-      }
 
       let user,
         branchValues = [];
@@ -994,7 +1001,6 @@ export default function CreateEnquiryPage() {
               remarks: createRfq.remarks,
               serial_no: createRfq.serial_no,
               vessel_ex_name: createRfq.vessel_ex_name,
-              upload: fileUrl,
               requested_by: user.id,
               created_at: new Date().toISOString(),
               branch: branchValues[0] ?? null,
@@ -1015,6 +1021,69 @@ export default function CreateEnquiryPage() {
         setErrorMessage("Failed to create RFQ.");
         setIsLoading(false);
         return;
+      }
+
+      let uploadedUrls: string[] = [];
+
+      if (!selectedFiles || selectedFiles.length === 0) {
+        console.warn("⚠️ No files selected. Skipping upload.");
+      } else {
+        try {
+          console.log("📁 Uploading selected files...");
+
+          for (const file of selectedFiles) {
+            const fileExt = file.name.split(".").pop();
+            const fileName = `${Math.random()
+              .toString(36)
+              .substring(2)}.${fileExt}`;
+
+            const { data: uploadData, error: uploadError } =
+              await supabase.storage
+                .from("rfq-image")
+                .upload(`uploads/${fileName}`, file);
+
+            if (uploadError) {
+              console.error(
+                "❌ Upload error for file:",
+                file.name,
+                uploadError
+              );
+              continue; // skip this file
+            }
+
+            const { data: publicUrlData } = supabase.storage
+              .from("rfq-image")
+              .getPublicUrl(uploadData.path);
+
+            const fileUrl = publicUrlData.publicUrl;
+            uploadedUrls.push(fileUrl);
+
+            console.log("✅ Uploaded:", file.name, "URL:", fileUrl);
+          }
+
+          // Insert uploaded file records into rfq_attachment table
+          const attachmentRecords = uploadedUrls.map((url) => ({
+            rfq_id: rfqData.id, // make sure `rfqId` is defined in your component
+            document_address: url,
+          }));
+
+          const { error: insertError } = await supabase
+            .from("rfq_attachments")
+            .insert(attachmentRecords);
+
+          if (insertError) {
+            console.error("❌ Failed to save attachment records:", insertError);
+            setErrorMessage("Failed to save uploaded document references.");
+            setIsLoading(false);
+            return;
+          }
+
+          console.log("✅ Attachments saved to database.");
+        } catch (err) {
+          console.error("❌ Error during upload or DB insert:", err);
+          setErrorMessage("An unexpected error occurred during upload.");
+          setIsLoading(false);
+        }
       }
 
       const ADMIN_ID =
@@ -1302,7 +1371,8 @@ export default function CreateEnquiryPage() {
             setcreateRfq={setCreateRfq}
             models={model}
             brands={brands}
-            setSelectedFile={setSelectedFile}
+            selectedFiles={selectedFiles}
+            setSelectedFiles={setSelectedFiles}
             category={category}
             errors={errors}
             setErrors={setErrors}

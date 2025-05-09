@@ -212,6 +212,10 @@ const customerData = {
       url: "/dashboard/customer",
     },
     {
+      title: "Port Mangement",
+      url: "/dashboard/customer/port_mangement",
+    },
+    {
       title: "Complaince & Certifcation",
       url: "/dashboard/customer",
     },
@@ -229,6 +233,10 @@ const customerData = {
     },
 
 {
+title:"Port Management",
+url:"/dashboard/customer/port",
+},
+{
 title:"Vessel Management",
 url:"/dashboard/customer/vessel_management",
 },
@@ -240,14 +248,8 @@ url:"/dashboard/customer/vessel_management",
   {
     title:"Claim Management",
     url:"/dashboard/customer/claim_management",
-    
-    },
-  {
-    title:"Port Management",
-    url:"/dashboard/customer/port_management",
-    
-    },
-    
+  },
+
 
     {
       title: "Branch",
