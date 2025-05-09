@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { motion } from "framer-motion";
+import { motion, useResetProjection } from "framer-motion";
 // import { useRouter } from "next/router";
 import { Separator } from "@/components/ui/separator";
 
@@ -26,23 +26,63 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2Icon, Router } from "lucide-react";
+import { Loader2Icon } from "lucide-react";
 import ErrorToast from "@/components/ui/errorToast";
 import SuccessToast from "@/components/ui/successToast";
-import Image from "next/image";
-
-import { useParams, useSearchParams } from "next/navigation";
+import { useParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 
 // @ts-ignore
 function RFQInfoCard({
   rfqInfo,
+  id,
+
+  setRfqInfo,
 }: {
   rfqInfo: any;
 
   setRfqInfo: any;
+  id: any;
 }) {
   const supabase = createClient();
+  const [files, setFiles] = useState<File[] | null>(null);
+
+  useEffect(() => {
+    const supabase = createClient();
+
+    const fetchAttachments = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("rfq_attachments")
+          .select("document_address")
+          .eq("rfq_id", id);
+
+        if (error) {
+          console.error("Error fetching attachments:", error.message);
+          return;
+        }
+        setFiles(data?.map((file) => file.document_address) || []);
+        console.log(
+          "Thsi is the files",
+          data?.map((file) => file.document_address) || []
+        );
+      } catch (err) {
+        console.error("Error fetching attachments:", (err as Error).message);
+      }
+    };
+
+    fetchAttachments();
+  }, [id]);
+
+  function getFileType(url: string): string {
+    const extension = url.split(".").pop()?.toLowerCase();
+    const imageExtensions = ["jpg", "jpeg", "png", "gif", "bmp", "webp"];
+
+    if (extension && imageExtensions.includes(extension)) {
+      return "image";
+    }
+    return extension || "file";
+  }
 
   return (
     <>
@@ -252,7 +292,6 @@ function RFQInfoCard({
                   disabled
                 />
               </div>
-             
 
               <div className="flex flex-col">
                 <Label htmlFor="expireDate">Valid Until</Label>
@@ -274,26 +313,6 @@ function RFQInfoCard({
                   }
                   disabled
                 />
-              </div>
-              
-              <div className="flex flex-col items-center">
-                {" "}
-                {/* Center the image and label */}
-                <Label htmlFor="upload">Uploaded Image</Label>{" "}
-                {/* More descriptive label */}
-                {rfqInfo?.upload ? (
-                  <div className="relative w-32 h-32 mt-2 overflow-hidden rounded-md shadow-md">
-                    {/* Fixed square container with overflow hidden and styling */}
-                    <Image
-                      src={rfqInfo.upload}
-                      alt="Uploaded File"
-                      layout="fill" // Make the image fill the container
-                      objectFit="cover" // Maintain aspect ratio and cover the container
-                    />
-                  </div>
-                ) : (
-                  <p className="mt-2">No file uploaded</p>
-                )}
               </div>
             </div>
           </div>
@@ -483,6 +502,38 @@ export default function ViewRfq() {
     remark_charges: "",
   });
 
+  const [portAgent, setPortAgent] = useState({
+    name: "",
+    condtions: "",
+    delivery_address: "",
+    phone_number: "",
+    remarks: "",
+    email: "",
+  });
+
+  const deliveryOptions = [
+    "DHL Express",
+    "FedEx",
+    "UPS (United Parcel Service)",
+    "Blue Dart",
+    "Aramex",
+    "TNT Express",
+    "SF Express",
+    "Japan Post EMS",
+    "Royal Mail",
+    "Parcelforce Worldwide",
+    "Chronopost (La Poste Group)",
+    "Canada Post",
+    "Australia Post",
+    "Korea Post",
+    "EMS (Universal Postal Union network)",
+    "DPD",
+    "GLS (General Logistics Systems)",
+    "YRC Worldwide",
+    "Purolator",
+    "Cainiao (Alibaba Group)",
+  ];
+
   const [viewMode, setViewMode] = useState(false);
   const Router = useRouter();
 
@@ -496,6 +547,11 @@ export default function ViewRfq() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isloading, setIsLoading] = useState(false);
+  const [showDeliveryService, setDeliveryService] = useState(true);
+  const [selectDelivery, setSelectDelivery] = useState("");
+  const [selectedDeliveryLink, setSelectedDeliveryLink] = useState("");
+  const [showDeliveryDialog, setShowDeliveryDialog] = useState(false);
+
   useEffect(() => {
     const supabase = createClient();
 
@@ -592,11 +648,9 @@ export default function ViewRfq() {
   }, [id]);
 
   useEffect(() => {
-    if (!id) return;
-
     async function fetchVendorRFQs() {
       const supabase = createClient();
-console.log("rfq Id",id);
+      console.log("rfq Id", id);
       try {
         // Fetch RFQs
         const { data: rfqs, error: rfqsError } = await supabase
@@ -608,8 +662,25 @@ console.log("rfq Id",id);
 
         setSelectedRfq(rfqs?.[0] ?? []);
         console.log("Rfq Item", rfqs);
+
+        // Fetch Port Agent details using rfq.port_agent_id
+        if (rfqs?.[0]?.port_agent_id) {
+          const { data: portAgent, error: portAgentError } = await supabase
+            .from("port_agent")
+            .select("*")
+            .eq("id", rfqs[0].port_agent_id)
+            .single();
+
+          if (portAgentError) throw portAgentError;
+
+          console.log("Port Agent Details", portAgent);
+          setPortAgent(portAgent);
+        }
       } catch (err) {
-        console.error("Error fetching RFQs:", (err as Error).message);
+        console.error(
+          "Error fetching RFQs or Port Agent:",
+          (err as Error).message
+        );
       }
     }
 
@@ -804,6 +875,53 @@ console.log("rfq Id",id);
     Router.push("/dashboard/vendor/rfqs");
   };
 
+  const handleUpdateRfqSupplier = async () => {
+    const supabase = createClient();
+
+    try {
+      // Get logged-in user
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError || !userData?.user?.id) {
+        throw new Error("Failed to retrieve user.");
+      }
+
+      const userId = userData.user.id;
+
+      // Get vendor/merchant ID
+      const { data: merchant, error: merchantError } = await supabase
+        .from("merchant")
+        .select("id")
+        .eq("merchant_profile", userId)
+        .single();
+
+      if (merchantError || !merchant?.id) {
+        throw new Error("Merchant ID not found.");
+      }
+
+      const vendorId = merchant.id;
+
+      // Update rfq_supplier table with shipping_service and shipping_link
+      const { error: updateError } = await supabase
+        .from("rfq_supplier")
+        .update({
+          shipping_services: selectDelivery,
+          shipping_link: selectedDeliveryLink,
+        })
+        .eq("rfq_id", id)
+        .eq("vendor_id", vendorId);
+
+      if (updateError) {
+        console.error("Error updating rfq_supplier:", updateError.message);
+        throw new Error("Failed to update shipping details.");
+      }
+
+      setSuccessMessage("Shipping details updated successfully!");
+    } catch (error) {
+      console.error("Error updating shipping details:", error);
+      setErrorMessage("Failed to update shipping details. Please try again.");
+    }
+  };
+
   if (!isMem)
     return "Create a Branch or be the Part of any Branch to Create Enquiry...";
 
@@ -828,7 +946,11 @@ console.log("rfq Id",id);
         </div>
 
         <main className="grid justify-self-center max-w-6xl w-full md:grid-cols-3 gap-4 mt-4">
-          <RFQInfoCard rfqInfo={selectedRfq} setRfqInfo={setSelectedRfq} />
+          <RFQInfoCard
+            rfqInfo={selectedRfq}
+            id={id}
+            setRfqInfo={setSelectedRfq}
+          />
         </main>
 
         <div className="grid justify-self-center max-w-6xl w-full mt-8">
@@ -1014,15 +1136,206 @@ console.log("rfq Id",id);
             </div>
           </div>
 
-          <div className="text-right mt-3">
-            {!viewMode ? null : (
-              <Button
-                className="bg-red-600 mt-3 mx-2"
-                onClick={handleUpdateSupplierStatus}
-              >
-                Complete Delivery
-              </Button>
+          <Label className="mt-4 text-xl bold mb-2">Port Agent Details</Label>
+          <div className="border py-4 px-2">
+            <div className="flex gap-4 items-center mx-auto mt-4">
+              <div>
+                <label
+                  htmlFor="name"
+                  className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                >
+                  Name
+                </label>
+                <input
+                  type="text"
+                  id="name"
+                  value={portAgent.name || ""}
+                  onChange={(e) =>
+                    setPortAgent({ ...portAgent, name: e.target.value })
+                  }
+                  name="name"
+                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                  placeholder="Name"
+                  required
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="email"
+                  className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                >
+                  Email
+                </label>
+                <input
+                  type="email"
+                  id="email"
+                  value={portAgent.email || ""}
+                  onChange={(e) =>
+                    setPortAgent({ ...portAgent, email: e.target.value })
+                  }
+                  name="email"
+                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                  placeholder="Email"
+                  required
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="phone_number"
+                  className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                >
+                  Phone Number
+                </label>
+                <input
+                  type="text"
+                  id="phone_number"
+                  value={portAgent.phone_number || ""}
+                  onChange={(e) =>
+                    setPortAgent({ ...portAgent, phone_number: e.target.value })
+                  }
+                  name="phone_number"
+                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                  placeholder="Phone Number"
+                  required
+                />
+              </div>
+            </div>
+            {showDeliveryDialog && (
+              <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+                <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+                  <h2 className="text-lg font-bold mb-4">
+                    Select a Delivery Service
+                  </h2>
+
+                  <select
+                    value={selectDelivery}
+                    onChange={(e) => setSelectDelivery(e.target.value)}
+                    className="w-full p-2 border border-gray-300 rounded-md mb-4"
+                  >
+                    <option value="" disabled>
+                      Select Delivery Service
+                    </option>
+                    {deliveryOptions.map((option) => (
+                      <option key={option} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+
+                  <input
+                    type="text"
+                    value={selectedDeliveryLink}
+                    onChange={(e) => setSelectedDeliveryLink(e.target.value)}
+                    placeholder="Enter Delivery Tracking Link"
+                    className="w-full p-2 border border-gray-300 rounded-md mb-4"
+                  />
+
+                  <div className="flex justify-end mt-4 space-x-2">
+                    <Button
+                      onClick={() => setShowDeliveryDialog(false)}
+                      className="bg-gray-300 hover:bg-gray-400 text-black font-medium px-4 py-2 rounded-md"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        setShowDeliveryDialog(false);
+                        handleUpdateRfqSupplier();
+                      }}
+                      className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-md"
+                    >
+                      Confirm
+                    </Button>
+                  </div>
+                </div>
+              </div>
             )}
+            <div className="mt-4 flex justify-around ">
+              <div>
+                <label
+                  htmlFor="condition"
+                  className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                >
+                  Condition
+                </label>
+                <textarea
+                  id="condition"
+                  value={portAgent.condtions || ""}
+                  onChange={(e) =>
+                    setPortAgent({ ...portAgent, condtions: e.target.value })
+                  }
+                  name="condition"
+                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                  placeholder="Condition"
+                  rows={4}
+                  required
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="remarks"
+                  className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                >
+                  Remarks
+                </label>
+                <textarea
+                  id="remarks"
+                  value={portAgent.remarks || ""}
+                  onChange={(e) =>
+                    setPortAgent({ ...portAgent, remarks: e.target.value })
+                  }
+                  name="remarks"
+                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                  placeholder="Remarks"
+                  rows={4}
+                  required
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="delivery_address"
+                  className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                >
+                  Delivery Address
+                </label>
+                <textarea
+                  id="delivery_address"
+                  value={portAgent.delivery_address || ""}
+                  onChange={(e) =>
+                    setPortAgent({
+                      ...portAgent,
+                      delivery_address: e.target.value,
+                    })
+                  }
+                  name="delivery_address"
+                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                  placeholder="Delivery Address"
+                  rows={4}
+                  required
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="text-right mt-3">
+            {viewMode ? (
+              <>
+                <Button
+                  className="bg-blue-600 mt-3 mx-2"
+                  onClick={() => setShowDeliveryDialog(true)}
+                >
+                  Transit
+                </Button>
+                <Button
+                  className="bg-red-600 mt-3 mx-2"
+                  onClick={handleUpdateSupplierStatus}
+                >
+                  Complete Delivery
+                </Button>
+              </>
+            ) : null}
 
             {viewMode ? null : (
               <Button
