@@ -547,10 +547,10 @@ export default function ViewRfq() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isloading, setIsLoading] = useState(false);
-  const [showDeliveryService, setDeliveryService] = useState(true);
   const [selectDelivery, setSelectDelivery] = useState("");
   const [selectedDeliveryLink, setSelectedDeliveryLink] = useState("");
   const [showDeliveryDialog, setShowDeliveryDialog] = useState(false);
+  const [showPortAgent, SetShowPortAgent] = useState(false);
 
   useEffect(() => {
     const supabase = createClient();
@@ -665,16 +665,19 @@ export default function ViewRfq() {
 
         // Fetch Port Agent details using rfq.port_agent_id
         if (rfqs?.[0]?.port_agent_id) {
+          
           const { data: portAgent, error: portAgentError } = await supabase
             .from("port_agent")
             .select("*")
             .eq("id", rfqs[0].port_agent_id)
             .single();
 
+            SetShowPortAgent(true);
+
           if (portAgentError) throw portAgentError;
 
           console.log("Port Agent Details", portAgent);
-          setPortAgent(portAgent);
+         
         }
       } catch (err) {
         console.error(
@@ -880,7 +883,8 @@ export default function ViewRfq() {
 
     try {
       // Get logged-in user
-      const { data: userData, error: userError } = await supabase.auth.getUser();
+      const { data: userData, error: userError } =
+        await supabase.auth.getUser();
       if (userError || !userData?.user?.id) {
         throw new Error("Failed to retrieve user.");
       }
@@ -1136,188 +1140,201 @@ export default function ViewRfq() {
             </div>
           </div>
 
-          <Label className="mt-4 text-xl bold mb-2">Port Agent Details</Label>
-          <div className="border py-4 px-2">
-            <div className="flex gap-4 items-center mx-auto mt-4">
-              <div>
-                <label
-                  htmlFor="name"
-                  className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                >
-                  Name
-                </label>
-                <input
-                  type="text"
-                  id="name"
-                  value={portAgent.name || ""}
-                  onChange={(e) =>
-                    setPortAgent({ ...portAgent, name: e.target.value })
-                  }
-                  name="name"
-                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                  placeholder="Name"
-                  required
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="email"
-                  className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                >
-                  Email
-                </label>
-                <input
-                  type="email"
-                  id="email"
-                  value={portAgent.email || ""}
-                  onChange={(e) =>
-                    setPortAgent({ ...portAgent, email: e.target.value })
-                  }
-                  name="email"
-                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                  placeholder="Email"
-                  required
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="phone_number"
-                  className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                >
-                  Phone Number
-                </label>
-                <input
-                  type="text"
-                  id="phone_number"
-                  value={portAgent.phone_number || ""}
-                  onChange={(e) =>
-                    setPortAgent({ ...portAgent, phone_number: e.target.value })
-                  }
-                  name="phone_number"
-                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                  placeholder="Phone Number"
-                  required
-                />
-              </div>
-            </div>
-            {showDeliveryDialog && (
-              <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-                <div className="bg-white p-6 rounded-lg shadow-lg w-96">
-                  <h2 className="text-lg font-bold mb-4">
-                    Select a Delivery Service
-                  </h2>
-
-                  <select
-                    value={selectDelivery}
-                    onChange={(e) => setSelectDelivery(e.target.value)}
-                    className="w-full p-2 border border-gray-300 rounded-md mb-4"
-                  >
-                    <option value="" disabled>
-                      Select Delivery Service
-                    </option>
-                    {deliveryOptions.map((option) => (
-                      <option key={option} value={option}>
-                        {option}
-                      </option>
-                    ))}
-                  </select>
-
-                  <input
-                    type="text"
-                    value={selectedDeliveryLink}
-                    onChange={(e) => setSelectedDeliveryLink(e.target.value)}
-                    placeholder="Enter Delivery Tracking Link"
-                    className="w-full p-2 border border-gray-300 rounded-md mb-4"
-                  />
-
-                  <div className="flex justify-end mt-4 space-x-2">
-                    <Button
-                      onClick={() => setShowDeliveryDialog(false)}
-                      className="bg-gray-300 hover:bg-gray-400 text-black font-medium px-4 py-2 rounded-md"
+          {showPortAgent && (
+            <>
+              <Label className="mt-4 text-xl bold mb-2">
+                Port Agent Details
+              </Label>
+              <div className="border py-4 px-2">
+                <div className="flex gap-4 items-center mx-auto mt-4">
+                  <div>
+                    <label
+                      htmlFor="name"
+                      className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
                     >
-                      Cancel
-                    </Button>
-                    <Button
-                      onClick={() => {
-                        setShowDeliveryDialog(false);
-                        handleUpdateRfqSupplier();
-                      }}
-                      className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-md"
+                      Name
+                    </label>
+                    <input
+                      type="text"
+                      id="name"
+                      value={portAgent.name || ""}
+                      onChange={(e) =>
+                        setPortAgent({ ...portAgent, name: e.target.value })
+                      }
+                      name="name"
+                      className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                      placeholder="Name"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="email"
+                      className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
                     >
-                      Confirm
-                    </Button>
+                      Email
+                    </label>
+                    <input
+                      type="email"
+                      id="email"
+                      value={portAgent.email || ""}
+                      onChange={(e) =>
+                        setPortAgent({ ...portAgent, email: e.target.value })
+                      }
+                      name="email"
+                      className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                      placeholder="Email"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="phone_number"
+                      className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                    >
+                      Phone Number
+                    </label>
+                    <input
+                      type="text"
+                      id="phone_number"
+                      value={portAgent.phone_number || ""}
+                      onChange={(e) =>
+                        setPortAgent({
+                          ...portAgent,
+                          phone_number: e.target.value,
+                        })
+                      }
+                      name="phone_number"
+                      className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                      placeholder="Phone Number"
+                      required
+                    />
+                  </div>
+                </div>
+                {showDeliveryDialog && (
+                  <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+                    <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+                      <h2 className="text-lg font-bold mb-4">
+                        Select a Delivery Service
+                      </h2>
+
+                      <select
+                        value={selectDelivery}
+                        onChange={(e) => setSelectDelivery(e.target.value)}
+                        className="w-full p-2 border border-gray-300 rounded-md mb-4"
+                      >
+                        <option value="" disabled>
+                          Select Delivery Service
+                        </option>
+                        {deliveryOptions.map((option) => (
+                          <option key={option} value={option}>
+                            {option}
+                          </option>
+                        ))}
+                      </select>
+
+                      <input
+                        type="text"
+                        value={selectedDeliveryLink}
+                        onChange={(e) =>
+                          setSelectedDeliveryLink(e.target.value)
+                        }
+                        placeholder="Enter Delivery Tracking Link"
+                        className="w-full p-2 border border-gray-300 rounded-md mb-4"
+                      />
+
+                      <div className="flex justify-end mt-4 space-x-2"></div>
+                      <Button
+                        onClick={() => setShowDeliveryDialog(false)}
+                        className="bg-gray-300 hover:bg-gray-400 text-black font-medium px-4 py-2 rounded-md"
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          setShowDeliveryDialog(false);
+                          handleUpdateRfqSupplier();
+                        }}
+                        className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-md"
+                      >
+                        Confirm
+                      </Button>
+                    </div>
+                  </div>
+                )}
+                <div className="mt-4 flex justify-around">
+                  <div>
+                    <label
+                      htmlFor="condition"
+                      className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                    >
+                      Condition
+                    </label>
+                    <textarea
+                      id="condition"
+                      value={portAgent.condtions || ""}
+                      onChange={(e) =>
+                        setPortAgent({
+                          ...portAgent,
+                          condtions: e.target.value,
+                        })
+                      }
+                      name="condition"
+                      className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                      placeholder="Condition"
+                      rows={4}
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="remarks"
+                      className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                    >
+                      Remarks
+                    </label>
+                    <textarea
+                      id="remarks"
+                      value={portAgent.remarks || ""}
+                      onChange={(e) =>
+                        setPortAgent({ ...portAgent, remarks: e.target.value })
+                      }
+                      name="remarks"
+                      className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                      placeholder="Remarks"
+                      rows={4}
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="delivery_address"
+                      className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                    >
+                      Delivery Address
+                    </label>
+                    <textarea
+                      id="delivery_address"
+                      value={portAgent.delivery_address || ""}
+                      onChange={(e) =>
+                        setPortAgent({
+                          ...portAgent,
+                          delivery_address: e.target.value,
+                        })
+                      }
+                      name="delivery_address"
+                      className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                      placeholder="Delivery Address"
+                      rows={4}
+                      required
+                    />
                   </div>
                 </div>
               </div>
-            )}
-            <div className="mt-4 flex justify-around ">
-              <div>
-                <label
-                  htmlFor="condition"
-                  className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                >
-                  Condition
-                </label>
-                <textarea
-                  id="condition"
-                  value={portAgent.condtions || ""}
-                  onChange={(e) =>
-                    setPortAgent({ ...portAgent, condtions: e.target.value })
-                  }
-                  name="condition"
-                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                  placeholder="Condition"
-                  rows={4}
-                  required
-                />
-              </div>
-
-              <div>
-                <label
-                  htmlFor="remarks"
-                  className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                >
-                  Remarks
-                </label>
-                <textarea
-                  id="remarks"
-                  value={portAgent.remarks || ""}
-                  onChange={(e) =>
-                    setPortAgent({ ...portAgent, remarks: e.target.value })
-                  }
-                  name="remarks"
-                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                  placeholder="Remarks"
-                  rows={4}
-                  required
-                />
-              </div>
-
-              <div>
-                <label
-                  htmlFor="delivery_address"
-                  className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                >
-                  Delivery Address
-                </label>
-                <textarea
-                  id="delivery_address"
-                  value={portAgent.delivery_address || ""}
-                  onChange={(e) =>
-                    setPortAgent({
-                      ...portAgent,
-                      delivery_address: e.target.value,
-                    })
-                  }
-                  name="delivery_address"
-                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                  placeholder="Delivery Address"
-                  rows={4}
-                  required
-                />
-              </div>
-            </div>
-          </div>
+            </>
+          )}
 
           <div className="text-right mt-3">
             {viewMode ? (
