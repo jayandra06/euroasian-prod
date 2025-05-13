@@ -1,10 +1,13 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { User, Menu, X, ChevronDown } from "lucide-react"
+import { User, Menu, X, ChevronDown, Sun, Moon } from "lucide-react"
 import { useNavigate } from "./Navigation"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { Button } from "../ui/button"
+import { ModeToggle } from "../ModeToggle"
+
 
 // import {AboutUs} from "./AboutUs.tsx"
 // import {ContactForm} from "./ContactForm.tsx"
@@ -59,14 +62,14 @@ export function Header() {
   // Function to check if a link is active
   const isActive = (route: string) => pathname === route
   return (
-<header className="bg-black shadow-md fixed w-full top-0 z-50">
+<header  className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
 <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center space-x-2 ml-2" onClick={() => navigate("/")} role="button">
             <img
               src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Untitled%20design-J0WPGEf7CFqGMh5nyQUWW4o8AyW4i0.png"
               alt="Logo"
-              className="h-16 w-auto"
+              className="h-16 w-auto bg-transparent"
             />
           </div>
 
@@ -113,39 +116,50 @@ export function Header() {
           href='/'
             className={`text-cyan-100 hover:text-cyan-400 py-2 ${isActive("/") ? "border-b-2 border-cyan-400" : ""}`}
           >
-                Home
+                About
               </Link>
             <button onClick={() => navigate("/maintenance")} className="text-cyan-100 hover:text-cyan-400">
-              Buyers
+              Key Modules
             </button>
             <Link href="/about"
               className={`text-cyan-100 hover:text-cyan-400 py-2 ${isActive("/dashboard/become-a-seller") ? "border-b-2 border-cyan-400" : ""}`}
             >
-              Vendors
+              Stakeholder
             </Link>
             <Link
               href="/about"
               className={`text-cyan-100 hover:text-cyan-400 py-2 ${isActive("/about") ? "border-b-2 border-cyan-400" : ""}`}
             >
-              About
+              Request Demo
             </Link>
-            <Link href="/contact" className="text-cyan-100 hover:text-cyan-400 py-2">
+            {/* <Link href="/contact" className="text-cyan-100 hover:text-cyan-400 py-2">
               Contact Us
-            </Link>
+            </Link> */}
           </nav>
 
           {/* Desktop login dropdown */}
-          <div className="hidden md:relative md:flex">
-            <button
-              className="flex items-center space-x-2 bg-cyan-600 text-white px-4 py-2 rounded-md hover:bg-cyan-700 login-dropdown"
+          <div className="hidden md:relative md:flex gap-2">
+             <ModeToggle />
+            <Button variant="outline" size="sm"
+             
             >
               <Link href="/sign-in">
               <div className="flex items-center gap-2">
               <User className="h-4 w-4" />
-              <span>Login</span>
+              <span>Login as Vednor</span>
               </div>
               </Link>
-            </button>
+            </Button>
+            <Button  size="sm"
+              
+            >
+              <Link href="/sign-in">
+              <div className="flex items-center gap-2">
+              <User className="h-4 w-4" />
+              <span>Login as Customer</span>
+              </div>
+              </Link>
+            </Button>
 </div>
 
         </div>

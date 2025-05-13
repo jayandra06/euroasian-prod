@@ -8,6 +8,15 @@ import { useEffect, useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "react-hot-toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 interface User {
   id: string;
@@ -19,7 +28,9 @@ interface User {
   status?: "DISABLED" | "ACTIVE";
 }
 
-const ManageRoleOne=()=>{
+const ManageRoleOne = () => {
+  const [newRole, setNewRole] = useState("");
+  const [allRoles, setAllRoles] = useState<string[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [customRoleInputs, setCustomRoleInputs] = useState<Record<string, string>>({});
   const [editingRoles, setEditingRoles] = useState<Record<string, boolean>>({});
@@ -29,93 +40,130 @@ const ManageRoleOne=()=>{
 
   const standardRoles = ["Admin", "Manager", "User", "Branch Admin"];
 
-  const getUsers = async () => {
+  const fetchUsersAndRoles = async () => {
     try {
-      setLoading(true);
       const res = await fetch("/api/fetch-all-user-role");
-      
-      if (!res.ok) throw new Error("Failed to fetch users");
-      
-      const { users: fetchedUsers } = await res.json();
-      
-      setUsers(fetchedUsers.map((user: any) => ({
-        id: user.id,
-        name: user.user_metadata?.full_name || user.email,
-        email: user.email,
-        role: user.role || "Basic user",
-        originalRole: user.role || "Basic user",
-        status: user.confirmed_at ? "ACTIVE" : "DISABLED",
-        lastActive: user.last_sign_in_at 
-          ? new Date(user.last_sign_in_at).toLocaleDateString() 
-          : "Never"
-      })));
-      
+      if (!res.ok) throw new Error("Failed to fetch users and roles");
+
+      const { users: fetchedUsers, allRoles } = await res.json();
+
+      setUsers(
+        fetchedUsers.map((user: any) => ({
+          id: user.id,
+          name: user.user_metadata?.full_name || user.email,
+          email: user.email,
+          role: user.role || "Basic user",
+          originalRole: user.role || "Basic user",
+          status: user.confirmed_at ? "ACTIVE" : "DISABLED",
+          lastActive: user.last_sign_in_at
+            ? new Date(user.last_sign_in_at).toLocaleDateString()
+            : "Never",
+        }))
+      );
+      setAllRoles(allRoles);
       setHasChanges(false);
     } catch (error) {
-      toast.error("Failed to fetch users");
+      toast.error("Failed to fetch users or roles");
     } finally {
       setLoading(false);
     }
   };
 
+  useEffect(() => {
+    fetchUsersAndRoles();
+  }, []);
+
+  const createRole = async () => {
+    const res = await fetch("/api/create-role", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ role: newRole }),
+    });
+    const json = await res.json();
+
+    if (json.success) {
+      toast.success("Role created successfully");
+      setNewRole("");
+    } else {
+      toast.error("Failed to create role");
+    }
+  };
+
   const updateRoles = async () => {
     try {
-      const changedUsers = users.filter(user => user.role !== user.originalRole);
+      const changedUsers = users.filter((user) => user.role !== user.originalRole);
       if (changedUsers.length === 0) {
         toast.success("No changes to save");
         return;
       }
-  
-      await Promise.all(changedUsers.map(async (user) => {
-        const res = await fetch("/api/update-role", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId: user.id, role: user.role }),
-        });
 
-        if (!res.ok) throw new Error("Failed to update role");
-      }));
-      
+      await Promise.all(
+        changedUsers.map(async (user) => {
+          const res = await fetch("/api/update-role", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ userId: user.id, role: user.role }),
+          });
+
+         if (!res.ok) {
+  const errorText = await res.text();
+  console.error(`Error updating user ${user.id}:`, errorText);
+  throw new Error("Failed to update role");
+}
+
+        })
+      );
+
       toast.success("Roles updated successfully");
-      setUsers(prev => prev.map(user => ({ ...user, originalRole: user.role })));
+      setUsers((prev) =>
+        prev.map((user) => ({ ...user, originalRole: user.role }))
+      );
       setHasChanges(false);
     } catch (err) {
       toast.error("Failed to update roles");
-      getUsers();
+      fetchUsersAndRoles();
     }
   };
 
-  useEffect(() => { getUsers(); }, []);
-
   const handleRoleChange = (userId: string, email: string, newRole: string) => {
-    setUsers(prev => prev.map(user => 
-      user.email === email ? { ...user, role: newRole } : user
-    ));
-
-    if (newRole !== "Create custom role...") {
-      setEditingRoles(prev => ({ ...prev, [email]: false }));
-      setHasChanges(true);
-    } else {
-      setEditingRoles(prev => ({ ...prev, [email]: true }));
-      setCustomRoleInputs(prev => ({ ...prev, [email]: "" }));
+    if (standardRoles.includes(newRole)) {
+      return; // Prevent changing to a standard role
     }
 
-    setDropdownOpen(prev => ({ ...prev, [email]: false }));
+    setUsers((prev) =>
+      prev.map((user) =>
+        user.email === email ? { ...user, role: newRole } : user
+      )
+    );
+
+    if (newRole !== "Create custom role...") {
+      setEditingRoles((prev) => ({ ...prev, [email]: false }));
+      setHasChanges(true);
+    } else {
+      setEditingRoles((prev) => ({ ...prev, [email]: true }));
+      setCustomRoleInputs((prev) => ({ ...prev, [email]: "" }));
+    }
+
+    setDropdownOpen((prev) => ({ ...prev, [email]: false }));
   };
 
   const handleCustomRoleSubmit = (email: string) => {
     const role = customRoleInputs[email]?.trim();
     if (role) {
-      setUsers(prev => prev.map(user => 
-        user.email === email ? { ...user, role } : user
-      ));
-      setEditingRoles(prev => ({ ...prev, [email]: false }));
+      setUsers((prev) =>
+        prev.map((user) =>
+          user.email === email ? { ...user, role } : user
+        )
+      );
+      setEditingRoles((prev) => ({ ...prev, [email]: false }));
       setHasChanges(true);
     }
   };
 
   const handleCustomRoleChange = (email: string, value: string) => {
-    setCustomRoleInputs(prev => ({ ...prev, [email]: value }));
+    setCustomRoleInputs((prev) => ({ ...prev, [email]: value }));
   };
 
   if (loading) return <div className="flex justify-center items-center h-64"><p>Loading users...</p></div>;
@@ -123,8 +171,35 @@ const ManageRoleOne=()=>{
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
-        <Button 
+      <div className="flex justify-between">
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button variant="outline" className="mb-4">
+              Create Role
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Create New Role</DialogTitle>
+              <DialogDescription>
+                Enter the name of the role you want to create.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex flex-col gap-2 py-4">
+              <Input
+                value={newRole}
+                onChange={(e) => setNewRole(e.target.value)}
+                placeholder="e.g. Senior Manager"
+              />
+            </div>
+            <DialogFooter>
+              <Button onClick={createRole}>
+                Create Role
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        <Button
           onClick={updateRoles}
           disabled={!hasChanges}
           className={hasChanges ? "bg-green-600 hover:bg-green-700" : ""}
@@ -132,7 +207,7 @@ const ManageRoleOne=()=>{
           Save All Changes
         </Button>
       </div>
-      
+
       <div className="border overflow-hidden">
         <Table>
           <TableHeader>
@@ -176,7 +251,7 @@ const ManageRoleOne=()=>{
                         {dropdownOpen[user.email] ? <ChevronUp className="ml-1 h-4 w-4" /> : <ChevronDown className="ml-1 h-4 w-4" />}
                       </DropdownMenuTrigger>
                       <DropdownMenuContent>
-                        {standardRoles.map((role) => (
+                        {[...new Set([...standardRoles , ...allRoles])].map((role) => (
                           <DropdownMenuItem key={role} onSelect={() => handleRoleChange(user.id, user.email, role)}>
                             {role}
                           </DropdownMenuItem>
@@ -201,6 +276,6 @@ const ManageRoleOne=()=>{
       </div>
     </div>
   );
-}
+};
 
 export default ManageRoleOne;
