@@ -69,180 +69,162 @@ function RFQInfoCard({ rfqData }: { rfqData: RfqData }) {
             <div className="grid grid-cols-4 gap-6">
               {/* Row 1 */}
               <div className="flex flex-col col-span-1">
-              <Label htmlFor="vesselName">
-                Vessel Name 
-              </Label>
-              <Input
-                type="text"
-                id="vessel_name"
-                className="mt-2"
-                placeholder="Enter Vessel Name"
-                value={rfqData.vessel_name}
-                disabled
-              />
+                <Label htmlFor="vesselName">Vessel Name</Label>
+                <Input
+                  type="text"
+                  id="vessel_name"
+                  className="mt-2"
+                  placeholder="Enter Vessel Name"
+                  value={rfqData.vessel_name}
+                  disabled
+                />
               </div>
               <div className="flex flex-col col-span-1">
-              <Label htmlFor="vesselExName">Vessel Ex Name</Label>
-              <Input
-                type="text"
-                className="mt-2"
-                id="vessel_ex_name"
-                placeholder="Enter Vessel Ex Name"
-                value={rfqData.vessel_ex_name || ""}
-                disabled
-              />
+                <Label htmlFor="vesselExName">Vessel Ex Name</Label>
+                <Input
+                  type="text"
+                  className="mt-2"
+                  id="vessel_ex_name"
+                  placeholder="Enter Vessel Ex Name"
+                  value={rfqData.vessel_ex_name || ""}
+                  disabled
+                />
               </div>
               <div className="flex flex-col col-span-1">
-              <Label htmlFor="imoNo">
-                IMO No 
-              </Label>
-              <Input
-                type="text"
-                id="imoNo"
-                className="mt-2"
-                placeholder="Enter IMO No."
-                value={rfqData.imo_no}
-                disabled
-              />
+                <Label htmlFor="imoNo">IMO No</Label>
+                <Input
+                  type="text"
+                  id="imoNo"
+                  className="mt-2"
+                  placeholder="Enter IMO No."
+                  value={rfqData.imo_no}
+                  disabled
+                />
               </div>
               <div className="flex flex-col col-span-1">
-              <Label htmlFor="supplyPort">
-                Supply Port 
-              </Label>
-              <Input
-                type="text"
-                id="supplyport"
-                className="mt-2"
-                value={rfqData?.supply_port || ""}
-                disabled
-              />
+                <Label htmlFor="supplyPort">Supply Port</Label>
+                <Input
+                  type="text"
+                  id="supplyport"
+                  className="mt-2"
+                  value={rfqData?.supply_port || ""}
+                  disabled
+                />
               </div>
 
               {/* Row 2 */}
               <div className="flex flex-col col-span-1">
-              <Label htmlFor="equipementTag">Equipment Tags</Label>
-              <Input
-                type="text"
-                id="equipement_tag"
-                placeholder="Enter Equipment Tags"
-                value={rfqData.equipement_tag}
-                className="mt-2"
-                disabled
-              />
+                <Label htmlFor="equipementTag">Equipment Tags</Label>
+                <Input
+                  type="text"
+                  id="equipement_tag"
+                  placeholder="Enter Equipment Tags"
+                  value={rfqData.equipement_tag}
+                  className="mt-2"
+                  disabled
+                />
               </div>
               <div className="flex flex-col col-span-1">
-              <Label htmlFor="category">
-                Category 
-              </Label>
-              <Input
-                type="text"
-                id="Category"
-                placeholder="Enter Category"
-                value={rfqData.category}
-                className="mt-2"
-                disabled
-              />
+                <Label htmlFor="category">Category</Label>
+                <Input
+                  type="text"
+                  id="Category"
+                  placeholder="Enter Category"
+                  value={rfqData.category}
+                  className="mt-2"
+                  disabled
+                />
               </div>
               <div className="flex flex-col col-span-1">
-              <Label htmlFor="Sub Category">
-                Sub Category
-              </Label>
-              <Input
-                type="text"
-                id="Category"
-                placeholder="Enter Category"
-                value="Main Engine"
-                className="mt-2"
-                disabled
-              />
+                <Label htmlFor="Sub Category">Sub Category</Label>
+                <Input
+                  type="text"
+                  id="Category"
+                  placeholder="Enter Category"
+                  value="Main Engine"
+                  className="mt-2"
+                  disabled
+                />
               </div>
               <div className="flex flex-col col-span-1">
-              <Label htmlFor="brand">
-                Brand 
-              </Label>
-              <Input
-                type="text"
-                id="brand"
-                placeholder="brand"
-                value={rfqData.brand}
-                className="mt-2"
-                disabled
-              />
+                <Label htmlFor="brand">Brand</Label>
+                <Input
+                  type="text"
+                  id="brand"
+                  placeholder="brand"
+                  value={rfqData.brand}
+                  className="mt-2"
+                  disabled
+                />
               </div>
               <div className="flex flex-col col-span-1">
-              <Label htmlFor="model">
-                Model 
-              </Label>
-              <Input
-                type="text"
-                id="model"
-                placeholder="Enter Model"
-                value={rfqData.model}
-                className="mt-2"
-                disabled
-              />
+                <Label htmlFor="model">Model</Label>
+                <Input
+                  type="text"
+                  id="model"
+                  placeholder="Enter Model"
+                  value={rfqData.model}
+                  className="mt-2"
+                  disabled
+                />
               </div>
 
               {/* Row 3 */}
               <div className="flex flex-col col-span-1">
-              <Label htmlFor="hullNo">
-                HULL No 
-              </Label>
-              <Input
-                type="text"
-                id="hull_no"
-                className="mt-2"
-                placeholder="Enter HULL No."
-                value={rfqData.hull_no}
-                disabled
-              />
+                <Label htmlFor="hullNo">HULL No</Label>
+                <Input
+                  type="text"
+                  id="hull_no"
+                  className="mt-2"
+                  placeholder="Enter HULL No."
+                  value={rfqData.hull_no}
+                  disabled
+                />
               </div>
               <div className="flex flex-col col-span-1">
-              <Label htmlFor="serialNumber">Serial Number</Label>
-              <Input
-                type="text"
-                id="serial_number"
-                placeholder="Enter Serial No"
-                value={rfqData.serial_no}
-                className="mt-2"
-                disabled
-              />
+                <Label htmlFor="serialNumber">Serial Number</Label>
+                <Input
+                  type="text"
+                  id="serial_number"
+                  placeholder="Enter Serial No"
+                  value={rfqData.serial_no}
+                  className="mt-2"
+                  disabled
+                />
               </div>
               <div className="flex flex-col col-span-1">
-              <Label htmlFor="drawingNumber">Drawing Number</Label>
-              <Input
-                type="text"
-                id="drawing_number"
-                placeholder="Enter Drawing Number"
-                value={rfqData.drawing_number}
-                className="mt-2"
-                disabled
-              />
+                <Label htmlFor="drawingNumber">Drawing Number</Label>
+                <Input
+                  type="text"
+                  id="drawing_number"
+                  placeholder="Enter Drawing Number"
+                  value={rfqData.drawing_number}
+                  className="mt-2"
+                  disabled
+                />
               </div>
-              
+
               <div className="flex flex-col col-span-1">
-              <Label htmlFor="offerQuality">
-               Preffered Quality 
-              </Label>
-              <Input
-                type="text"
-                id="offer_quality"
-                placeholder="Enter Offer_quality"
-                value={rfqData.offer_quality}
-                className="mt-2"
-                disabled
-              />
+                <Label htmlFor="offerQuality">Preffered Quality</Label>
+                <Input
+                  type="text"
+                  id="offer_quality"
+                  placeholder="Enter Offer_quality"
+                  value={rfqData.offer_quality}
+                  className="mt-2"
+                  disabled
+                />
               </div>
               <div className="flex flex-col col-span-1">
-              <Label htmlFor="remarks">Remarks</Label>
-              <Input
-                type="text"
-                id="remarks"
-                placeholder="Enter Remarks"
-                value={rfqData.remarks}
-                className="mt-2"
-                disabled
-              />
+                <Label htmlFor="remarks">Remarks</Label>
+                <Input
+                  type="text"
+                  id="remarks"
+                  placeholder="Enter Remarks"
+                  value={rfqData.remarks}
+                  className="mt-2"
+                  disabled
+                />
               </div>
               <div className="flex flex-col">
                 <Label htmlFor="incoterm">Type of Incoterm</Label>
@@ -256,7 +238,7 @@ function RFQInfoCard({ rfqData }: { rfqData: RfqData }) {
                 />
               </div>
 
- <div className="flex flex-col ">
+              <div className="flex flex-col ">
                 <Label htmlFor="logistic_container">
                   Type of Logistic Container
                 </Label>
@@ -281,45 +263,45 @@ function RFQInfoCard({ rfqData }: { rfqData: RfqData }) {
               </div>
               {/* Row 4 */}
               <div className="flex flex-col col-span-1">
-              <Label htmlFor="createDate">Create Date</Label>
-              <Input
-                type="date"
-                id="create_date"
-                className="mt-2"
-                value={rfqData?.created_date?.split("T")[0] || ""}
-                disabled
-              />
+                <Label htmlFor="createDate">Create Date</Label>
+                <Input
+                  type="date"
+                  id="create_date"
+                  className="mt-2"
+                  value={rfqData?.created_date?.split("T")[0] || ""}
+                  disabled
+                />
               </div>
               <div className="flex flex-col col-span-1">
-              <Label htmlFor="leadDate">Lead Date</Label>
-              <Input
-                type="date"
-                className="mt-2"
-                id="leadDate"
-                value={rfqData?.lead_date?.split("T")[0] || ""}
-                disabled
-              />
-              </div>
-              
-              <div className="flex flex-col col-span-1 items-center">
-              <Label htmlFor="upload">Uploaded Image</Label>
-              {rfqData?.upload ? (
-                <div className="relative w-32 h-32 mt-2 overflow-hidden rounded-md shadow-md">
-                <Image
-                  src={rfqData.upload}
-                  alt="Uploaded File"
-                  layout="fill"
-                  objectFit="cover"
+                <Label htmlFor="leadDate">Lead Date</Label>
+                <Input
+                  type="date"
+                  className="mt-2"
+                  id="leadDate"
+                  value={rfqData?.lead_date?.split("T")[0] || ""}
+                  disabled
                 />
-                </div>
-              ) : (
-                <p className="mt-2">No file uploaded</p>
-              )}
+              </div>
+
+              <div className="flex flex-col col-span-1 items-center">
+                <Label htmlFor="upload">Uploaded Image</Label>
+                {rfqData?.upload ? (
+                  <div className="relative w-32 h-32 mt-2 overflow-hidden rounded-md shadow-md">
+                    <Image
+                      src={rfqData.upload}
+                      alt="Uploaded File"
+                      layout="fill"
+                      objectFit="cover"
+                    />
+                  </div>
+                ) : (
+                  <p className="mt-2">No file uploaded</p>
+                )}
               </div>
             </div>
           </div>
         </div>
-        </div>
+      </div>
 
       {/* </div> */}
     </>
@@ -482,6 +464,15 @@ export default function ViewRfq() {
   const [initiator_role, setInitiatorRole] = useState<string | null>(null);
   const [isforwardToDirector, setIsForwardToDirector] = useState(false);
   const [directorEmails, setDirectorEmails] = useState<string[]>([]);
+  const [portAgents, setPortAgent] = useState<{ id: string; name: string }[]>(
+    []
+  );
+  const [selectedPortAgent, setSelectedPortAgent] = useState<string | null>(
+    null
+  );
+  const [showPortAgentDialog, setShowPortAgentDialog] = useState(false);
+  const [shippingLink,setShippingLink]=useState("");
+  const [shippingService,setShippingService]=useState("");
 
   interface ChargeData {
     vendor_id: string;
@@ -537,24 +528,25 @@ export default function ViewRfq() {
         return;
       }
 
-      const [profileResponse, rfqResponse, approvalResponse] =
-        await Promise.all([
-          supabase
-            .from("profiles")
-            .select("user_role")
-            .eq("id", userId)
-            .single(),
-          supabase
-            .from("rfq")
-            .select("initiator_role, forward_to_director, vessel_id")
-            .eq("id", id)
-            .single(),
-          supabase
-            .from("rfq_approval_flow")
-            .select("role, status,email, created_at")
-            .eq("rfq_id", id)
-            .order("created_at", { ascending: true }),
-        ]);
+      const [
+        profileResponse,
+        rfqResponse,
+        approvalResponse,
+        portAgentResponse,
+      ] = await Promise.all([
+        supabase.from("profiles").select("user_role").eq("id", userId).single(),
+        supabase
+          .from("rfq")
+          .select("initiator_role, forward_to_director, vessel_id")
+          .eq("id", id)
+          .single(),
+        supabase
+          .from("rfq_approval_flow")
+          .select("role, status,email, created_at")
+          .eq("rfq_id", id)
+          .order("created_at", { ascending: true }),
+        supabase.from("port_agent").select("id,name").eq("customer_id", userId),
+      ]);
 
       const vesselId = rfqResponse.data?.vessel_id;
 
@@ -586,8 +578,14 @@ export default function ViewRfq() {
       const { data: approvalData } = approvalResponse as {
         data: ApprovalEntry[];
       };
+      const { data: portAgentData } = portAgentResponse as {
+        data: { id: string; name: string }[];
+      };
+      setPortAgent(portAgentData || []);
 
+      console.log(portAgentData);
       console.log("Profile Data:", profileData);
+      console.log("Port Agent Data:", portAgentData);
       console.log("RFQ Data:", rfqData);
       console.log("Approval Data:", approvalData);
 
@@ -657,13 +655,6 @@ export default function ViewRfq() {
       } else {
         setShowRequestButton(false);
       }
-
-      // console.log("=== DEBUG START ===");
-      // console.log("Approval Flow:", approvalFlow);
-      // console.log("Director Emails:", directorEmails);
-      // console.log("Approval Data:", approvalData);
-      // console.log("Current User Role:", currentUserRole);
-      // console.log("Initiator Role:", initiatorRole);
 
       const allApproved = approvalFlow.every((role) => {
         if (role === "director") {
@@ -753,6 +744,40 @@ export default function ViewRfq() {
 
     fetchRfqDecision();
   }, [id]);
+  useEffect(() => {
+    const fetchTransitDetailsOfAllVendors = async () => {
+      console.log("ie execute tsdfsadfasfesaef")
+      try {
+        const { data, error } = await supabase
+          .from("rfq_supplier")
+          .select("shipping_link, shipping_services")
+          .eq("rfq_id", id)
+          .not("shipping_link", "is", null)
+          .not("shipping_services", "is", null);
+
+         
+          if (data && data.length > 0) {
+            setShippingLink(data[0].shipping_link);
+            setShippingService(data[0].shipping_services);
+          }
+         
+        if (error) {
+          console.error("Error fetching transit details:", error);
+          return;
+        }
+
+
+        console.log("Transit details of all vendors:", data);
+      } catch (err) {
+        console.error("Unexpected error fetching transit details:", err);
+      }
+    };
+
+    if (id) {
+      fetchTransitDetailsOfAllVendors();
+    }
+  }, [id]);
+
   const handleForwardToDirector = async () => {
     try {
       // 1. Update the RFQ to mark it as forwarded to director
@@ -1010,7 +1035,18 @@ export default function ViewRfq() {
     if (id) fetchApprovalStatus();
   }, [id]);
 
+  const handleSetPortAgent = () => {
+    setShowPortAgentDialog(true);
+  };
+
   const handleConfirmDelivery = async (approvalStatus = "approved") => {
+    //first update port agent
+    const { error: rfqStatusError } = await supabase
+      .from("rfq")
+      .update({ port_agent_id: selectedPortAgent })
+      .eq("id", id);
+    if (rfqStatusError) throw rfqStatusError;
+
     if (userRole === "customer" && !approvedVendorId) {
       toast.error("Please select one vendor for approval.");
       return;
@@ -1034,8 +1070,10 @@ export default function ViewRfq() {
             (!rejectionReasons[vendor_id] ||
               rejectionReasons[vendor_id].trim() === "")
           ) {
-            toast(`Please provide a rejection reason for vendor ${vendor_id}`);
-            return undefined;
+            // toast.error(
+            //   `Please provide a rejection reason for vendor ${vendor_id}`
+            // );
+            return null;
           }
 
           return {
@@ -1055,7 +1093,7 @@ export default function ViewRfq() {
             status: string;
             reason: string;
             action_by: string;
-          } => Boolean(d)
+          } => d !== null
         );
     }
 
@@ -1350,6 +1388,46 @@ export default function ViewRfq() {
               })}
           </div>
         </div>
+        {showPortAgentDialog && (
+          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+            <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+              <h2 className="text-lg font-bold mb-4">Select a Port Agent</h2>
+              <select
+                value={selectedPortAgent || ""}
+                onChange={(e) => setSelectedPortAgent(e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-md"
+              >
+                <option value="" disabled>
+                  Select a Port Agent
+                </option>
+                {portAgents.map((agent) => (
+                  <option key={agent.id} value={agent.id}>
+                    {agent.name}
+                  </option>
+                ))}
+              </select>
+              <div className="flex justify-end mt-4 space-x-2">
+                <Button
+                  onClick={() => setShowPortAgentDialog(false)}
+                  className="bg-gray-300 hover:bg-gray-400 text-black font-medium px-4 py-2 rounded-md"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() => {
+                    setShowPortAgentDialog(false);
+                    console.log("This is the valuexcxvxc", selectedPortAgent);
+                    handleConfirmDelivery("approved");
+                    toast.success("Port Agent selected successfully!");
+                  }}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-md"
+                >
+                  Confirm
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
         <div className="grid justify-self-center max-w-6xl w-full mt-8">
           <div className="flex justify-between items-center">
             <h1 className="text-xl font-bold">Items</h1>
@@ -1460,6 +1538,36 @@ export default function ViewRfq() {
               )}
           </div>
 
+        {shippingService && (
+          <>
+            <label className="mt-4 mb-4 text-xl font-bold ">Transit Details</label>
+            <div className="py-4 px-4 border mb-10">
+                <div className="flex flex-col space-y-4">
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                  Shipping Service
+                  </label>
+                  <p className="text-gray-800">{shippingService}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                  Shipping Link
+                  </label>
+                  <a
+                  href={shippingLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:underline"
+                  >
+                  {shippingLink}
+                  </a>
+                </div>
+                </div>
+            </div>
+          </>
+        )}
+
           <div className="border-t border-gray-300 pt-4 fixed bottom-0 left-[calc(250px)] right-0 bg-white shadow-lg shadow-blue-500/50 px-6 z-50">
             {userRole === "customer" && isforwardToDirector && (
               <div>
@@ -1478,7 +1586,7 @@ export default function ViewRfq() {
                     handleForwardToDirector();
                   }}
                 >
-                  Forward to Owner 
+                  Forward to Owner
                 </button>
               )}
 
@@ -1490,7 +1598,7 @@ export default function ViewRfq() {
                       : "bg-gray-400 text-gray-200"
                   }`}
                   onClick={() => {
-                    handleConfirmDelivery("approved");
+                    handleSetPortAgent();
                   }}
                 >
                   Confirm Order

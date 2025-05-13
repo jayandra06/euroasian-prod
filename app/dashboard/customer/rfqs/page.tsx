@@ -247,76 +247,81 @@ export default function RFQsPage() {
               Your RFQs
             </h1>
 
-
             <div className="flex justify-between ml-4">
-            <button
+              <button
                 onClick={() => setShowFilters((prev) => !prev)}
                 className="bg-indigo-600 text-white px-4 py-2 rounded-md font-semibold hover:bg-indigo-700 transition duration-200 flex items-center"
-                >
+              >
                 {showFilters ? (
                   <>
-                   <ChevronDownIcon className="ml-2 h-4 w-4 rotate-180 transform" />
+                    <ChevronDownIcon className="ml-2 h-4 w-4 rotate-180 transform" />
                   </>
                 ) : (
                   <>
-                 <ChevronDownIcon className="ml-2 h-4 w-4 transform" />
+                    <ChevronDownIcon className="ml-2 h-4 w-4 transform" />
                   </>
                 )}
-                </button>
-            <Button   className="ml-4"asChild>
-              <Link
-                href={"/dashboard/customer/create-enquiry"}
-                className="inline-flex items-center bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-md shadow-sm transition duration-200 px-4 py-2"
+              </button>
+              <Button className="ml-4 mr-4" asChild>
+                <Link
+                  href={"/dashboard/customer/create-enquiry"}
+                  className="inline-flex items-center bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-md shadow-sm transition duration-200 px-4 py-2"
+                >
+                  <PlusIcon className="mr-2 h-4 w-4" />
+                  Create Enquiry
+                </Link>
+              </Button>
+              <a
+                href="/downloads/bulk-template.xlsx"
+                download
+                className="mr-4 inline-block"
               >
-                <PlusIcon className="mr-2 h-4 w-4" />
-                Create Enquiry
-              </Link>
-            </Button>
+                <Button>Bulk Add (Excel)</Button>
+              </a>
             </div>
           </div>
-            <div className="flex flex-wrap items-center justify-between mb-6 gap-4">
-               
-              {showFilters && (
+          <div className="flex flex-wrap items-center justify-between mb-6 gap-4">
+            {showFilters && (
               <div className="flex flex-wrap items-center justify-between gap-4 w-full">
                 <div className="flex items-center gap-4">
-                <label
-                  htmlFor="statusFilter"
-                  className="text-sm font-medium text-gray-700 dark:text-gray-300"
-                >
-                  Filter by Status:
-                </label>
-                <select
-                  id="statusFilter"
-                  value={selectedStatus}
-                  onChange={(e) => setSelectedStatus(e.target.value)}
-                  className="border border-gray-300 dark:border-gray-700 rounded-md px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-800 dark:text-gray-300"
-                >
-                  <option value="">All Status</option>
-                  <option value="sent">Sent</option>
-                  <option value="ordered">Ordered</option>
-                  <option value="quoted">Quoted</option>
-                  <option value="delivered">Delivered</option>
-                </select>
+                  <label
+                    htmlFor="statusFilter"
+                    className="text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >
+                    Filter by Status:
+                  </label>
+                  <select
+                    id="statusFilter"
+                    value={selectedStatus}
+                    onChange={(e) => setSelectedStatus(e.target.value)}
+                    className="border border-gray-300 dark:border-gray-700 rounded-md px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-800 dark:text-gray-300"
+                  >
+                    <option value="">All Status</option>
+                    <option value="sent">Sent</option>
+                    <option value="ordered">Ordered</option>
+                    <option value="quoted">Quoted</option>
+                    <option value="delivered">Delivered</option>
+                  </select>
                 </div>
                 <div className="flex items-center gap-4 w-full md:w-auto">
-                <label
-                  htmlFor="searchInput"
-                  className="text-sm font-medium text-gray-700 dark:text-gray-300"
-                >
-                  Search RFQs:
-                </label>
-                <input
-                  id="searchInput"
-                  type="text"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Vessel Name, Supply Port, Brand, or Category"
-                  className="border border-gray-300 dark:border-gray-700 rounded-md px-3 py-2 text-sm w-full md:w-96 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-800 dark:text-gray-300"
-                />
+                  <label
+                    htmlFor="searchInput"
+                    className="text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >
+                    Search RFQs:
+                  </label>
+                  <input
+                    id="searchInput"
+                    type="text"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="Vessel Name, Supply Port, Brand, or Category"
+                    className="border border-gray-300 dark:border-gray-700 rounded-md px-3 py-2 text-sm w-full md:w-96 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-800 dark:text-gray-300"
+                  />
                 </div>
               </div>
-              )}
-            </div>
+            )}
+          </div>
 
           <div className="overflow-x-auto">
             <Table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
@@ -334,7 +339,7 @@ export default function RFQsPage() {
                   <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Supply Port
                   </TableHead>
-                
+
                   <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Brand
                   </TableHead>
@@ -384,7 +389,7 @@ export default function RFQsPage() {
                       <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-400">
                         {rfq.supply_port || "-"}
                       </TableCell>
-                    
+
                       <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-400">
                         {rfq.brand || "-"}
                       </TableCell>

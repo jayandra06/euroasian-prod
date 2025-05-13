@@ -52,9 +52,10 @@ export async function POST(req: NextRequest) {
       let vesselName = vessel.vesselName; // fallback
 
       // === Fetch vessel name using Edge Function ===
-      if (imoNumber) {
+      if (imoNumber || vesselName) {
+        const data = imoNumber ? imoNumber : vesselName;
         try {
-          const edgeUrl = `https://hqebhtqdpmpyouzxtsgk.supabase.co/functions/v1/fetch-vessel-data?vesselNameOrCode=${imoNumber}`;
+          const edgeUrl = `https://hqebhtqdpmpyouzxtsgk.supabase.co/functions/v1/fetch-vessel-data?vesselNameOrCode=${data}`;
 
           const response = await fetch(edgeUrl, {
             method: "GET",
@@ -71,27 +72,27 @@ export async function POST(req: NextRequest) {
               vesselName = fetchedVessel.name;
             }
           } else {
-            console.warn(`Failed to fetch vessel data for IMO: ${imoNumber}`);
+            console.warn(`Failed to fetch vessel data for IMO: ${data}`);
           }
         } catch (fetchErr) {
           console.error("Error calling Edge Function:", fetchErr);
         }
       }
 
-      if (!vesselName || !imoNumber) {
-        errors.push({
-          message: "Missing required fields (vesselName or imoNumber).",
-          vessel,
-        });
-        continue;
-      }
+      // if (!vesselName || !imoNumber) {
+      //   errors.push({
+      //     message: "Missing required fields (vesselName or imoNumber).",
+      //     vessel,
+      //   });
+      //   continue;
+      // }
 
       const { data, error } = await supabase
         .from("vessel_management")
         .insert([
           {
             vessel_name: vesselName,
-            imo_number: imoNumber,
+            imo_number: imoNumber ,
             ex_vessel_name: exVesselName || null,
             vessel_type: vesselType || null,
             customer_id,
