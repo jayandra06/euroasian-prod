@@ -665,19 +665,18 @@ export default function ViewRfq() {
 
         // Fetch Port Agent details using rfq.port_agent_id
         if (rfqs?.[0]?.port_agent_id) {
-          
           const { data: portAgent, error: portAgentError } = await supabase
             .from("port_agent")
             .select("*")
             .eq("id", rfqs[0].port_agent_id)
             .single();
 
-            SetShowPortAgent(true);
-
+          SetShowPortAgent(true);
+         
+         setPortAgent(portAgent);
           if (portAgentError) throw portAgentError;
 
           console.log("Port Agent Details", portAgent);
-         
         }
       } catch (err) {
         console.error(
@@ -1211,129 +1210,81 @@ export default function ViewRfq() {
                     />
                   </div>
                 </div>
-                {showDeliveryDialog && (
-                  <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-                    <div className="bg-white p-6 rounded-lg shadow-lg w-96">
-                      <h2 className="text-lg font-bold mb-4">
-                        Select a Delivery Service
-                      </h2>
 
-                      <select
-                        value={selectDelivery}
-                        onChange={(e) => setSelectDelivery(e.target.value)}
-                        className="w-full p-2 border border-gray-300 rounded-md mb-4"
-                      >
-                        <option value="" disabled>
-                          Select Delivery Service
-                        </option>
-                        {deliveryOptions.map((option) => (
-                          <option key={option} value={option}>
-                            {option}
-                          </option>
-                        ))}
-                      </select>
-
-                      <input
-                        type="text"
-                        value={selectedDeliveryLink}
-                        onChange={(e) =>
-                          setSelectedDeliveryLink(e.target.value)
-                        }
-                        placeholder="Enter Delivery Tracking Link"
-                        className="w-full p-2 border border-gray-300 rounded-md mb-4"
-                      />
-
-                      <div className="flex justify-end mt-4 space-x-2"></div>
-                      <Button
-                        onClick={() => setShowDeliveryDialog(false)}
-                        className="bg-gray-300 hover:bg-gray-400 text-black font-medium px-4 py-2 rounded-md"
-                      >
-                        Cancel
-                      </Button>
-                      <Button
-                        onClick={() => {
-                          setShowDeliveryDialog(false);
-                          handleUpdateRfqSupplier();
-                        }}
-                        className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-md"
-                      >
-                        Confirm
-                      </Button>
-                    </div>
-                  </div>
-                )}
-                <div className="mt-4 flex justify-around">
-                  <div>
-                    <label
-                      htmlFor="condition"
-                      className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                    >
-                      Condition
-                    </label>
-                    <textarea
-                      id="condition"
-                      value={portAgent.condtions || ""}
-                      onChange={(e) =>
-                        setPortAgent({
-                          ...portAgent,
-                          condtions: e.target.value,
-                        })
-                      }
-                      name="condition"
-                      className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                      placeholder="Condition"
-                      rows={4}
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label
-                      htmlFor="remarks"
-                      className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                    >
-                      Remarks
-                    </label>
-                    <textarea
-                      id="remarks"
-                      value={portAgent.remarks || ""}
-                      onChange={(e) =>
-                        setPortAgent({ ...portAgent, remarks: e.target.value })
-                      }
-                      name="remarks"
-                      className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                      placeholder="Remarks"
-                      rows={4}
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label
-                      htmlFor="delivery_address"
-                      className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                    >
-                      Delivery Address
-                    </label>
-                    <textarea
-                      id="delivery_address"
-                      value={portAgent.delivery_address || ""}
-                      onChange={(e) =>
-                        setPortAgent({
-                          ...portAgent,
-                          delivery_address: e.target.value,
-                        })
-                      }
-                      name="delivery_address"
-                      className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                      placeholder="Delivery Address"
-                      rows={4}
-                      required
-                    />
-                  </div>
+                <div>
+                  <label
+                    htmlFor="delivery_address"
+                    className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                  >
+                    Delivery Address
+                  </label>
+                  <textarea
+                    id="delivery_address"
+                    value={portAgent.delivery_address || ""}
+                    onChange={(e) =>
+                      setPortAgent({
+                        ...portAgent,
+                        delivery_address: e.target.value,
+                      })
+                    }
+                    name="delivery_address"
+                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                    placeholder="Delivery Address"
+                    rows={4}
+                    required
+                  />
                 </div>
               </div>
             </>
+          )}
+          {showDeliveryDialog && (
+            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+              <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+                <h2 className="text-lg font-bold mb-4">
+                  Select a Delivery Service
+                </h2>
+
+                <select
+                  value={selectDelivery}
+                  onChange={(e) => setSelectDelivery(e.target.value)}
+                  className="w-full p-2 border border-gray-300 rounded-md mb-4"
+                >
+                  <option value="" disabled>
+                    Select Delivery Service
+                  </option>
+                  {deliveryOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+
+                <input
+                  type="text"
+                  value={selectedDeliveryLink}
+                  onChange={(e) => setSelectedDeliveryLink(e.target.value)}
+                  placeholder="Enter Delivery Tracking Link"
+                  className="w-full p-2 border border-gray-300 rounded-md mb-4"
+                />
+
+                <div className="flex justify-end mt-4 space-x-2"></div>
+                <Button
+                  onClick={() => setShowDeliveryDialog(false)}
+                  className="bg-gray-300 hover:bg-gray-400 text-black font-medium px-4 py-2 rounded-md"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() => {
+                    setShowDeliveryDialog(false);
+                    handleUpdateRfqSupplier();
+                  }}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-md"
+                >
+                  Confirm
+                </Button>
+              </div>
+            </div>
           )}
 
           <div className="text-right mt-3">
