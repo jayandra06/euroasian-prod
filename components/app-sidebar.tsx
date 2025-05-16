@@ -112,6 +112,10 @@ const vendorData = {
           url: "/dashboard/vendor/rfqs",
         },
         {
+          title: "Claim Requests",
+          url: "/dashboard/vendor/claim",
+        },
+        {
           title: "Categories",
           url: "/dashboard/vendor/categories",
         },
@@ -201,6 +205,10 @@ const customerData = {
           title: "Vendor Management",
           url: "/dashboard/customer/vendorManagement",
         },
+        {
+          title:"Claim Rasied",
+          url:"/dashboard/customer/claimManagment"
+        }
       ],
     },
     {
@@ -245,10 +253,7 @@ url:"/dashboard/customer/vessel_management",
   url:"/dashboard/customer/role_management",
   
   },
-  {
-    title:"Claim Management",
-    url:"/dashboard/customer/claim_management",
-  },
+
 
 
     {

@@ -585,7 +585,7 @@ export default function ViewRfq() {
           .single();
 
         if (responseError) {
-          console.error("Error fetching RFQ response:", responseError.message);
+          console.error("Error fetching RFQ responcse:", responseError.message);
         }
         if (response) {
           setViewMode(true);
@@ -761,6 +761,8 @@ export default function ViewRfq() {
       .update({ status: "completed" })
       .eq("rfq_id", id)
       .eq("vendor_id", vendorId);
+
+    
 
     if (rfqSupplierStatusError) {
       console.error(
