@@ -39,6 +39,18 @@ export async function GET(req: Request) {
     }
 
     console.log('[FETCH-USERS] Found', rolesData.length, 'role records');
+
+    // Get all available roles from all_role table
+    const { data: allRolesData, error: allRolesError } = await supabaseAdmin
+      .from('all_role')
+      .select('role');
+    
+    if (allRolesError) {
+      console.error('[FETCH-USERS] All roles error:', allRolesError);
+      throw allRolesError;
+    }
+
+    console.log('[FETCH-USERS] Found', allRolesData.length, 'roles in all_role table');
     
     // Map roles to users
     const usersWithRoles = authUsers.users.map(user => {
@@ -52,7 +64,8 @@ export async function GET(req: Request) {
     console.log('[FETCH-USERS] Returning users:', usersWithRoles.length);
     return new Response(JSON.stringify({ 
       success: true, 
-      users: usersWithRoles 
+      users: usersWithRoles,
+      allRoles: allRolesData.map(role => role.role) // Include all available roles
     }), {
       status: 200,
     });

@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/table";
 import ManageRoleOne from "./ManageRoleOne/page";
 import ManageRoleTwo from "./ManageRoleTwo/page";
-import ManageRoleThree from "./ManageRoleThree/page";
+
 
 interface Vendor {
   id: string;
@@ -108,7 +108,7 @@ export default function RoleManagement() {
       {/* IF button clicked -> Show Selected ManageRole Page */}
       {activeComponent === 1 && <ManageRoleOne />}
       {activeComponent === 2 && <ManageRoleTwo />}
-      {activeComponent === 3 && <ManageRoleThree />}
+      
     </div>
   );
 }

@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectTrigger, SelectContent, SelectItem } from '@/components/ui/select';
 import { FiDownload, FiFilter, FiBell, FiFileText, FiCpu } from 'react-icons/fi';
+import { GraphChart } from './graph-chart';
+import { PieChart } from './pie-chart';
 
 const FleetOverview = () => {
   return (
@@ -28,10 +30,10 @@ const FleetOverview = () => {
             </CardHeader>
             <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
-                { label: 'Total Vessels', value: '25' },
-                { label: 'Active Vessels', value: '20' },
-                { label: 'In Dry Dock', value: '5' },
-                { label: 'Fleet Hours', value: '14,350 h' }
+                { label: 'Total Vessels', value: '0' },
+                { label: 'Active Vessels', value: '0' },
+                { label: 'In Dry Dock', value: '0' },
+                { label: 'Fleet Hours', value: '00,000 h' }
               ].map((item, idx) => (
                 <div key={idx} className="p-3 border rounded text-center bg-muted">
                   <div className="text-xl font-bold">{item.value}</div>
@@ -68,9 +70,9 @@ const FleetOverview = () => {
                 </thead>
                 <tbody>
                   {[
-                    ['Main Engines', '5', '1', '28-Apr-2025'],
-                    ['Bilge Pumps', '12', '1', '27-Apr-2025'],
-                    ['Purifiers', '9', '—', '28-Apr-2025']
+                    ['Main Engines', '0', '0', '28-Apr-2025'],
+                    ['Bilge Pumps', '0', '0', '27-Apr-2025'],
+                    ['Purifiers', '0', '—', '28-Apr-2025']
                   ].map((row, idx) => (
                     <tr key={idx}>
                       {row.map((cell, i) => (
@@ -85,8 +87,11 @@ const FleetOverview = () => {
 
           {/* Analytics */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card><CardContent className="p-4">Analytics (Coming Soon)</CardContent></Card>
-            <Card><CardContent className="p-4">Analytics (Coming Soon)</CardContent></Card>
+            <Card><CardContent className="p-4">Analytics</CardContent>
+            <GraphChart/>
+            </Card>
+            <Card><CardContent className="p-4">Analytics</CardContent>
+            <PieChart/></Card>
           </div>
         </div>
 

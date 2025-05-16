@@ -30,8 +30,8 @@ const getIpAddress = (req: NextRequest): string => {
         return realIp;
     }
 
-    // Get IP from NextRequest
-    const ip = req.headers.get("x-forwarded-for") || "Unknown IP";
+    // Get IP from NextRequest with null check
+    const ip = req.headers.get("x-forwarded-for") || "";
     if (ip) {
         // Convert IPv6 localhost to IPv4 localhost
         if (ip === '::1') {

@@ -39,7 +39,8 @@ export function PopularServices() {
   }, [])
 
   return (
-    <section className="py-20 bg-gray-900 relative overflow-hidden">
+    <section className="py-20 bg-gray-900 relative overflow-hidden z-10">
+
       {/* Parallax background */}
       <div 
         className="absolute inset-0 z-0"

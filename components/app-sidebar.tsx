@@ -219,10 +219,10 @@ const customerData = {
       title: "Vessel Finder & Route Opimization ",
       url: "/dashboard/customer",
     },
-    {
-      title: "Port Mangement",
-      url: "/dashboard/customer/port_mangement",
-    },
+    // {
+    //   title: "Port Mangement",
+    //   url: "/dashboard/customer/port_mangement",
+    // },
     {
       title: "Complaince & Certifcation",
       url: "/dashboard/customer",
