@@ -126,7 +126,7 @@ const RequestDemo = () => {
                     {...register('firstName', { required: 'First name is required', minLength: { value: 2, message: 'Minimum 2 characters' } })}
                     className={errors.firstName ? 'border-destructive' : ''}
                   />
-                  {errors.firstName && <p className="text-sm text-destructive">{errors.firstName.message}</p>}
+                  {errors.firstName && <p className="text-sm text-destructive">{errors.firstName.message?.toString()}</p>}
                 </div>
 
                 <div className="space-y-2">
@@ -137,7 +137,7 @@ const RequestDemo = () => {
                     {...register('lastName', { required: 'Last name is required', minLength: { value: 2, message: 'Minimum 2 characters' } })}
                     className={errors.lastName ? 'border-destructive' : ''}
                   />
-                  {errors.lastName && <p className="text-sm text-destructive">{errors.lastName.message}</p>}
+                  {errors.lastName && <p className="text-sm text-destructive">{errors.lastName.message?.toString()}</p>}
                 </div>
               </div>
 
@@ -149,7 +149,7 @@ const RequestDemo = () => {
                   {...register('company', { required: 'Company is required', minLength: { value: 2, message: 'Minimum 2 characters' } })}
                   className={errors.company ? 'border-destructive' : ''}
                 />
-                {errors.company && <p className="text-sm text-destructive">{errors.company.message}</p>}
+                {errors.company && <p className="text-sm text-destructive">{errors.company.message?.toString()}</p>}
               </div>
 
               <div className="space-y-2">
@@ -161,7 +161,7 @@ const RequestDemo = () => {
                   {...register('email', { required: 'Email is required' })}
                   className={errors.email ? 'border-destructive' : ''}
                 />
-                {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
+                {errors.email && <p className="text-sm text-destructive">{errors.email.message?.toString()}</p>}
               </div>
 
               <div className="space-y-2">
@@ -180,7 +180,7 @@ const RequestDemo = () => {
                     <SelectItem value="50+">50+ vessels</SelectItem>
                   </SelectContent>
                 </Select>
-                {errors.fleetSize && <p className="text-sm text-destructive">{errors.fleetSize.message}</p>}
+                {errors.fleetSize && <p className="text-sm text-destructive">{errors.fleetSize.message?.toString()}</p>}
               </div>
 
               <input type="hidden" {...register('fleetSize', { required: 'Please select your fleet size' })} />
@@ -227,3 +227,5 @@ const RequestDemo = () => {
 }
 
 export default RequestDemo
+
+
