@@ -429,6 +429,16 @@ export default function RFQsPage() {
                                 Edit
                               </Link>
                             </DropdownMenuItem>
+                            {rfq.status === 'delivered' && (
+                              <DropdownMenuItem asChild>
+                                <Link
+                                  href={`/dashboard/customer/claimManagment/viewOrderDetails/${rfq.id}`}
+                                  className="w-full text-left"
+                                >
+                                  Claim
+                                </Link>
+                              </DropdownMenuItem>
+                            )}
                             <DropdownMenuItem asChild>
                               <button
                                 onClick={() => {
