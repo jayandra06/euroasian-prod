@@ -2,9 +2,8 @@
 import Link from "next/link";
 import { createClient } from "@/utils/supabase/client";
 import { useEffect, useState, useCallback } from "react";
-import { Button } from "@/components/ui/button";
 import React from "react";
-import { PlusIcon, ChevronDownIcon } from "@radix-ui/react-icons";
+import { ChevronDownIcon } from "@radix-ui/react-icons";
 import {
   Table,
   TableHeader,
@@ -19,24 +18,27 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Badge } from "@/components/ui/badge";
 import { Loader2 } from "lucide-react";
 
-interface RFQ {
-  id: number;
-  created_at: string;
-  supply_port: string | null;
-  vessel_name: string | null;
-  brand: string | null;
-  category: string | null;
-  status: string | null;
-}
+type OrderedRfq = {
+  order_id: string;
+  rfq_id: string;
+  shipping_company_name: string;
+  rfq_item_count: number;
+  model: string;
+  category: string;
+  vessel_name: string;
+  brand: string;
+  createdAt: Date;
+  status: string;
+  claim_id: string;
+};
 
 export default function RFQsPage() {
-  const [rfqs, setRfqs] = useState<RFQ[]>([]);
-  const [waitingForApprovalRfqs, setWaitingForApprovalRfqs] = useState<RFQ[]>(
-    []
-  );
+  const [rfqs, setRfqs] = useState<OrderedRfq[]>([]);
+  const [waitingForApprovalRfqs, setWaitingForApprovalRfqs] = useState<
+    OrderedRfq[]
+  >([]);
   const [activeTab, setActiveTab] = useState("yourRfqs");
   const [user, setUser] = useState(null); // State to hold user data
   const [userRole, setUserRole] = useState(null); // State to hold user role
@@ -52,15 +54,15 @@ export default function RFQsPage() {
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
-      case "sent":
+      case "pending":
         return "bg-blue-500";
-      case "quoted":
+      case "appoved":
         return "bg-purple-500";
-      case "ordered":
+      case "rejected":
         return "bg-green-500";
-      case "delivered":
+      case "in_progress":
         return "bg-teal-500";
-      case "cancelled":
+      case "completed":
         return "bg-red-500";
       default:
         return "bg-gray-300";
@@ -81,56 +83,109 @@ export default function RFQsPage() {
 
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
-        .select("user_role") // <-- Adjust field name if needed
-        .eq("id", user.id) // Assuming 'id' is the primary key in 'profile'
-        .single(); // Only one record expected
+        .select("user_role")
+        .eq("id", user.id)
+        .single();
+
       if (profileError) {
         console.error("Error fetching user role:", profileError.message);
         return;
       }
+
       if (!profile?.user_role) {
         console.error("User role not found.");
         return;
       }
-      setUserRole(profile.user_role); // Set user role in state
+
+      setUserRole(profile.user_role);
 
       const from = (currentPage - 1) * pageSize;
       const to = from + pageSize - 1;
 
       let query = supabase
-        .from("rfq")
-        .select("*", { count: "exact" }) // Include count
-        .eq("requested_by", user.id)
-        .order("created_at", { ascending: false }) // Sort by date, new to old
+        .from("claim")
+        .select(
+          `
+        id,
+        status,
+        created_at,
+        rfq:rfq_id (
+          rfq_id:id,
+          vessel_name,
+          category,
+          brand,
+          model
+        ),
+       customer_details:customer_id(
+      *
+        )
+          `,
+          { count: "exact" }
+        )
+
+        .order("created_at", { ascending: false })
         .range(from, to);
 
-      // Apply status filter if selected
-      if (selectedStatus) {
-        query = query.eq("status", selectedStatus);
-      }
-
-      // Apply search filter
-      if (searchTerm) {
-        query = query.or(
-          `vessel_name.ilike.%${searchTerm}%,supply_port.ilike.%${searchTerm}%,brand.ilike.%${searchTerm}%,category.ilike.%${searchTerm}%`
-        );
-      }
-
       const { data: rfqsData, error: rfqsError, count } = await query;
+
+      console.log("rfqsData", rfqsData);
 
       if (rfqsError) {
         console.error("Error fetching RFQs:", rfqsError);
         return;
       }
 
-      setRfqs(rfqsData as RFQ[]);
+      // Extract rfq_ids
+      const rfqIds = rfqsData
+        .map((item: any) => item.rfq?.rfq_id)
+        .filter(Boolean);
+
+      // Get counts for rfq_items by rfq_id
+      const itemCountsMap: Record<string, number> = {};
+      await Promise.all(
+        rfqIds.map(async (rfqId) => {
+          const { count, error } = await supabase
+            .from("rfq_items")
+            .select("*", { count: "exact", head: true })
+            .eq("rfq_id", rfqId);
+
+          if (!error) {
+            itemCountsMap[rfqId] = count ?? 0;
+          } else {
+            console.error(
+              `Error fetching item count for rfq_id ${rfqId}:`,
+              error.message
+            );
+            itemCountsMap[rfqId] = 0;
+          }
+        })
+      );
+
+      // Flatten and format the data
+      const flattenedData = rfqsData.map((item: any) => ({
+        order_id: item.id,
+        rfq_id: item.rfq?.rfq_id,
+        shipping_company_name:
+          item.customer_details?.shipping_company_name || "Company A",
+        vessel_name: item.rfq?.vessel_name || "Unknown Vessel",
+        category: item.rfq?.category || "Unknown Category",
+        brand: item.rfq?.brand || "Unknown Brand",
+        model: item.rfq?.model || "Unknown Model",
+        rfq_item_count: itemCountsMap[item.rfq?.rfq_id] || 0,
+        createdAt: item.created_at,
+        status: item.status,
+        claim_id: item.claim_id,
+      }));
+
+      console.log("This is the flattend data", flattenedData);
+      setRfqs(flattenedData);
       setTotalCount(count || 0);
     } catch (e) {
       console.error("Unable to fetch RFQs:", e);
     } finally {
       setLoading(false);
     }
-  }, [supabase, selectedStatus, searchTerm, currentPage, pageSize]);
+  }, [supabase, currentPage, pageSize]);
 
   useEffect(() => {
     fetchRfqs();
@@ -213,38 +268,13 @@ export default function RFQsPage() {
 
   return (
     <div className="p-6">
-      <div className="mb-6">
-        <div className="flex border-b border-gray-200 dark:border-gray-700">
-          <button
-            onClick={() => setActiveTab("yourRfqs")}
-            className={`px-4 py-2 -mb-px font-semibold ${
-              activeTab === "yourRfqs"
-                ? "border-b-2 border-indigo-600 text-indigo-600 dark:text-indigo-400"
-                : "text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400"
-            }`}
-          >
-            Your RFQs
-          </button>
-          {userRole !== "manager" && (
-            <button
-              onClick={() => setActiveTab("waitingApproval")}
-              className={`px-4 py-2 -mb-px font-semibold ${
-                activeTab === "waitingApproval"
-                  ? "border-b-2 border-indigo-600 text-indigo-600 dark:text-indigo-400"
-                  : "text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400"
-              }`}
-            >
-              Waiting for Approval
-            </button>
-          )}
-        </div>
-      </div>
+      <div className="mb-6"></div>
 
       {activeTab === "yourRfqs" && (
         <div>
           <div className="flex items-center justify-between mb-2">
             <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-100">
-              Your RFQs
+              Claim Requests
             </h1>
 
             <div className="flex justify-between ml-4">
@@ -262,47 +292,11 @@ export default function RFQsPage() {
                   </>
                 )}
               </button>
-              <Button className="ml-4 mr-4" asChild>
-                <Link
-                  href={"/dashboard/customer/create-enquiry"}
-                  className="inline-flex items-center bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-md shadow-sm transition duration-200 px-4 py-2"
-                >
-                  <PlusIcon className="mr-2 h-4 w-4" />
-                  Create Enquiry
-                </Link>
-              </Button>
-              <a
-                href="/downloads/bulk-template.xlsx"
-                download
-                className="mr-4 inline-block"
-              >
-                <Button>Bulk Add (Excel)</Button>
-              </a>
             </div>
           </div>
           <div className="flex flex-wrap items-center justify-between mb-6 gap-4">
             {showFilters && (
               <div className="flex flex-wrap items-center justify-between gap-4 w-full">
-                <div className="flex items-center gap-4">
-                  <label
-                    htmlFor="statusFilter"
-                    className="text-sm font-medium text-gray-700 dark:text-gray-300"
-                  >
-                    Filter by Status:
-                  </label>
-                  <select
-                    id="statusFilter"
-                    value={selectedStatus}
-                    onChange={(e) => setSelectedStatus(e.target.value)}
-                    className="border border-gray-300 dark:border-gray-700 rounded-md px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-800 dark:text-gray-300"
-                  >
-                    <option value="">All Status</option>
-                    <option value="sent">Sent</option>
-                    <option value="ordered">Ordered</option>
-                    <option value="quoted">Quoted</option>
-                    <option value="delivered">Delivered</option>
-                  </select>
-                </div>
                 <div className="flex items-center gap-4 w-full md:w-auto">
                   <label
                     htmlFor="searchInput"
@@ -328,29 +322,35 @@ export default function RFQsPage() {
               <TableHeader className="bg-gray-50 dark:bg-gray-800 dark:text-gray-300">
                 <TableRow>
                   <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Lead Date
+                    Date
                   </TableHead>
                   <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Time
                   </TableHead>
+
                   <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Vessel Name
                   </TableHead>
-                  <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Supply Port
-                  </TableHead>
 
-                  <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Brand
-                  </TableHead>
                   <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Category
                   </TableHead>
                   <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Status
+                    Brand
                   </TableHead>
-                  <TableHead className="relative px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    <span className="sr-only">Actions</span>
+                  <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    Model
+                  </TableHead>
+                  <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    Company Name
+                  </TableHead>
+
+                  <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    status
+                  </TableHead>
+
+                  <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    Action
                   </TableHead>
                 </TableRow>
               </TableHeader>
@@ -358,52 +358,87 @@ export default function RFQsPage() {
                 {loading ? (
                   <tr>
                     <td
-                      colSpan={8}
+                      colSpan={9}
                       className="px-6 py-4 whitespace-nowrap text-center text-gray-500"
                     >
                       <div className="flex justify-center items-center">
                         <Loader2 className="animate-spin w-5 h-5 mr-2" />
-                        Loading RFQs...
+                        Loading claim requests
                       </div>
                     </td>
                   </tr>
                 ) : (
                   rfqs.map((rfq) => (
-                    <TableRow key={rfq.id}>
-                      <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                        {new Date(rfq.created_at).toLocaleDateString("en-US", {
-                          year: "numeric",
-                          month: "short",
-                          day: "2-digit",
-                        })}
+                    <TableRow key={rfq.order_id}>
+                      {/* <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                        {rfq.rfq_id || "-"}
+                      </TableCell> */}
+
+                      <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-400">
+                        {rfq.createdAt
+                          ? new Date(rfq.createdAt).toLocaleDateString(
+                              "en-GB",
+                              {
+                                day: "numeric",
+                                month: "long",
+                                year: "numeric",
+                              }
+                            )
+                          : "-"}
                       </TableCell>
-                      <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                        {new Date(rfq.created_at).toLocaleTimeString("en-US", {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
+
+                      <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-400">
+                        {rfq.createdAt
+                          ? new Date(rfq.createdAt).toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })
+                          : "-"}
                       </TableCell>
                       <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-400">
                         {rfq.vessel_name || "-"}
                       </TableCell>
                       <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-400">
-                        {rfq.supply_port || "-"}
+                        {rfq.category || "-"}
                       </TableCell>
-
                       <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-400">
                         {rfq.brand || "-"}
                       </TableCell>
                       <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-400">
-                        {rfq.category || "-"}
+                        {rfq.model || "-"}
                       </TableCell>
-                      <TableCell className="px-6 py-4 whitespace-nowrap text-sm">
-                        <Badge
-                          className={`${getStatusColor(
-                            rfq.status || ""
-                          )} text-white rounded-full px-3 py-1 text-xs font-semibold`}
+                      <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-400">
+                        {rfq.shipping_company_name || "-"}
+                      </TableCell>
+
+                      <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-400">
+                        <span
+                          className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                            rfq.status === "pending"
+                              ? "bg-yellow-100 text-yellow-800"
+                              : rfq.status === "approved"
+                              ? "bg-green-100 text-green-800"
+                              : rfq.status === "rejected"
+                              ? "bg-red-100 text-red-800"
+                              : rfq.status === "in_progress"
+                              ? "bg-blue-100 text-blue-800"
+                              : rfq.status === "completed"
+                              ? "bg-gray-100 text-gray-800"
+                              : "bg-gray-100 text-gray-800"
+                          }`}
                         >
-                          {rfq.status || "Pending"}
-                        </Badge>
+                          {rfq.status === "pending"
+                            ? "Pending"
+                            : rfq.status === "approved"
+                            ? "Approved"
+                            : rfq.status === "rejected"
+                            ? "Rejected"
+                            : rfq.status === "in_progress"
+                            ? "In Progress"
+                            : rfq.status === "completed"
+                            ? "Completed"
+                            : rfq.status || "N/A"}
+                        </span>
                       </TableCell>
                       <TableCell className="relative px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <DropdownMenu>
@@ -415,7 +450,7 @@ export default function RFQsPage() {
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem asChild>
                               <Link
-                                href={`/dashboard/customer/view-rfq/${rfq.id}`}
+                                href={`/dashboard/vendor/claim/claimDetails/${rfq.order_id}`}
                                 className="w-full"
                               >
                                 View
@@ -423,22 +458,12 @@ export default function RFQsPage() {
                             </DropdownMenuItem>
                             <DropdownMenuItem asChild>
                               <Link
-                                href={`/dashboard/customer/edit-rfq/${rfq.id}`}
+                                href={`/dashboard/customer/edit-rfq/${rfq.order_id}`}
                                 className="w-full"
                               >
                                 Edit
                               </Link>
                             </DropdownMenuItem>
-                            {rfq.status === 'delivered' && (
-                              <DropdownMenuItem asChild>
-                                <Link
-                                  href={`/dashboard/customer/claimManagment/viewOrderDetails/${rfq.id}`}
-                                  className="w-full text-left"
-                                >
-                                  Claim
-                                </Link>
-                              </DropdownMenuItem>
-                            )}
                             <DropdownMenuItem asChild>
                               <button
                                 onClick={() => {
@@ -449,7 +474,7 @@ export default function RFQsPage() {
                                   ) {
                                     // Add delete logic here
                                     console.log(
-                                      `Deleting RFQ with ID: ${rfq.id}`
+                                      `Deleting RFQ with ID: ${rfq.order_id}`
                                     );
                                   }
                                 }}
@@ -470,100 +495,6 @@ export default function RFQsPage() {
         </div>
       )}
 
-      {activeTab === "waitingApproval" && (
-        <div>
-          <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-6">
-            RFQs Waiting for Your Approval
-          </h1>
-          <div className="overflow-x-auto">
-            <Table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-              <TableHeader className="bg-gray-50 dark:bg-gray-800 dark:text-gray-300">
-                <TableRow>
-                  <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Lead Date
-                  </TableHead>
-                  <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Supply Port
-                  </TableHead>
-                  <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Vessel Name
-                  </TableHead>
-                  <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Brand
-                  </TableHead>
-                  <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Status
-                  </TableHead>
-                  <TableHead className="relative px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    <span className="sr-only">Actions</span>
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
-                {waitingForApprovalRfqs.map((rfq) => (
-                  <TableRow key={rfq.id}>
-                    <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                      {new Date(rfq.created_at).toLocaleDateString("en-US", {
-                        year: "numeric",
-                        month: "short",
-                        day: "2-digit",
-                      })}
-                    </TableCell>
-                    <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                      {rfq.supply_port || "-"}
-                    </TableCell>
-                    <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                      {rfq.vessel_name || "-"}
-                    </TableCell>
-                    <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                      {rfq.brand || "-"}
-                    </TableCell>
-                    <TableCell className="px-6 py-4 whitespace-nowrap text-sm">
-                      <span
-                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                          rfq.status === "ordered"
-                            ? "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100"
-                            : rfq.status === "sent"
-                            ? "bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100"
-                            : rfq.status === "quoted"
-                            ? "bg-purple-100 text-purple-800 dark:bg-purple-800 dark:text-purple-100"
-                            : rfq.status === "delivered"
-                            ? "bg-teal-100 text-teal-800 dark:bg-teal-800 dark:text-teal-100"
-                            : rfq.status === "cancelled"
-                            ? "bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100"
-                            : "bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100"
-                        }`}
-                      >
-                        {rfq.status || "Pending"}
-                      </span>
-                    </TableCell>
-                    <TableCell className="relative px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="outline" size="sm">
-                            Actions <ChevronDownIcon className="ml-2 h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem asChild>
-                            <Link
-                              href={`/dashboard/customer/view-rfq/${rfq.id}`}
-                              className="w-full"
-                            >
-                              View
-                            </Link>
-                          </DropdownMenuItem>
-                          {/* You can add more actions here (e.g., Approve, Reject) */}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </div>
-      )}
       <div className="flex justify-between items-center mt-4">
         <button
           onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
