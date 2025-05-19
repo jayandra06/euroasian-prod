@@ -63,11 +63,11 @@ export async function POST(req: Request) {
 
     // Update role in `role_management`
     const { error: upsertError } = await (await supabase)
-      .from("role_management")
-      .upsert(
-        { user_id: userId, role },
-       { onConflict: 'user_id' }
-      );
+  .from("role_management")
+  .upsert(
+    { user_id: userId, role },
+    { onConflict: "user_id" } // Avoid conflict based on `user_id`
+  );
 
     if (upsertError) {
       return NextResponse.json(

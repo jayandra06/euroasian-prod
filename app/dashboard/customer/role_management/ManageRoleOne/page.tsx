@@ -128,26 +128,22 @@ const ManageRoleOne = () => {
   };
 
   const handleRoleChange = (userId: string, email: string, newRole: string) => {
-    if (standardRoles.includes(newRole)) {
-      return; // Prevent changing to a standard role
-    }
-
+  if (newRole === "Create custom role...") {
+    setEditingRoles((prev) => ({ ...prev, [email]: true }));
+    setCustomRoleInputs((prev) => ({ ...prev, [email]: "" }));
+  } else {
     setUsers((prev) =>
       prev.map((user) =>
         user.email === email ? { ...user, role: newRole } : user
       )
     );
+    setEditingRoles((prev) => ({ ...prev, [email]: false }));
+    setHasChanges(true);
+  }
 
-    if (newRole !== "Create custom role...") {
-      setEditingRoles((prev) => ({ ...prev, [email]: false }));
-      setHasChanges(true);
-    } else {
-      setEditingRoles((prev) => ({ ...prev, [email]: true }));
-      setCustomRoleInputs((prev) => ({ ...prev, [email]: "" }));
-    }
+  setDropdownOpen((prev) => ({ ...prev, [email]: false }));
+};
 
-    setDropdownOpen((prev) => ({ ...prev, [email]: false }));
-  };
 
   const handleCustomRoleSubmit = (email: string) => {
     const role = customRoleInputs[email]?.trim();

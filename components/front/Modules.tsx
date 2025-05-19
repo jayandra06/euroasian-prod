@@ -101,50 +101,58 @@ const Modules = () => {
 
         {/* Modules grid with staggered animation */}
         <motion.div
-          variants={container}
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true, margin: "-100px" }}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
-        >
-          {modules.map((module, index) => (
-            <motion.div key={index} variants={item}>
-              <Card className={cn(
-                "border-none shadow-lg hover:shadow-xl transition-all duration-300 group",
-                "hover:-translate-y-2 relative overflow-hidden h-full",
-                "before:absolute before:inset-0 before:bg-gradient-to-br before:opacity-0 before:transition-opacity before:duration-300",
-                "group-hover:before:opacity-100",
-                `before:${module.bgGradient}`
-              )}>
-                <div className="relative z-10 h-full flex flex-col">
-                  <CardHeader>
-                    <div className={cn(
-                      "rounded-xl p-3 w-12 h-12 flex items-center justify-center mb-4 transition-all duration-300",
-                      "group-hover:bg-primary/10 group-hover:scale-110",
-                      `bg-${module.bgGradient.split(' ')[0].replace('/10', '/5')}`
-                    )}>
-                      {React.cloneElement(module.icon, { className: "h-6 w-6 text-primary group-hover:scale-110 transition-transform" })}
-                    </div>
-                    <CardTitle className="text-2xl font-bold tracking-tight">{module.title}</CardTitle>
-                    <CardDescription className="text-lg mt-2">{module.description}</CardDescription>
-                  </CardHeader>
-                  <CardContent className="flex-1">
-                    <ul className="space-y-3">
-                      {module.features.map((feature, i) => (
-                        <li key={i} className="flex items-start">
-                          <div className="flex-shrink-0 mt-1 mr-3">
-                            <div className="h-2 w-2 rounded-full bg-primary"></div>
-                          </div>
-                          <span className="text-muted-foreground">{feature}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </CardContent>
-                </div>
-              </Card>
-            </motion.div>
-          ))}
-        </motion.div>
+  variants={container}
+  initial="hidden"
+  whileInView="show"
+  viewport={{ once: true, margin: "-100px" }}
+  className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 px-4" // Added padding here
+>
+  {modules.map((module, index) => (
+    <motion.div key={index} variants={item} className="mb-8"> {/* Added margin-bottom to give space between cards */}
+      <Card
+        className={cn(
+          "border-none shadow-lg hover:shadow-xl transition-all duration-300 group",
+          "hover:-translate-y-2 relative overflow-hidden h-full",
+          "before:absolute before:inset-0 before:bg-gradient-to-br before:opacity-0 before:transition-opacity before:duration-300",
+          "group-hover:before:opacity-100",
+          `before:${module.bgGradient}`,
+          "px-6 py-4" // Add padding to the card for more space inside
+        )}
+      >
+        <div className="relative z-10 h-full flex flex-col">
+          <CardHeader>
+            <div
+              className={cn(
+                "rounded-xl p-3 w-12 h-12 flex items-center justify-center mb-4 transition-all duration-300",
+                "group-hover:bg-primary/10 group-hover:scale-110",
+                `bg-${module.bgGradient.split(' ')[0].replace('/10', '/5')}`
+              )}
+            >
+              {React.cloneElement(module.icon, {
+                className: "h-6 w-6 text-primary group-hover:scale-110 transition-transform",
+              })}
+            </div>
+            <CardTitle className="text-2xl font-bold tracking-tight">{module.title}</CardTitle>
+            <CardDescription className="text-lg mt-2">{module.description}</CardDescription>
+          </CardHeader>
+          <CardContent className="flex-1">
+            <ul className="space-y-3">
+              {module.features.map((feature, i) => (
+                <li key={i} className="flex items-start">
+                  <div className="flex-shrink-0 mt-1 mr-3">
+                    <div className="h-2 w-2 rounded-full bg-primary"></div>
+                  </div>
+                  <span className="text-muted-foreground">{feature}</span>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </div>
+      </Card>
+    </motion.div>
+  ))}
+</motion.div>
+
 
         {/* CTA at bottom */}
         <motion.div
