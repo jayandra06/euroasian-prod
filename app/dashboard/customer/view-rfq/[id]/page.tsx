@@ -13,6 +13,19 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 // import { useRouter } from "next/router";
 import { Separator } from "@/components/ui/separator";
+import { Trash } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+
 
 import {
   Table,
@@ -52,7 +65,10 @@ interface RfqData {
 }
 
 // @ts-ignore
-function RFQInfoCard({ rfqData }: { rfqData: RfqData }) {
+function RFQInfoCard({ rfqData, setRfqItems }: { rfqData: RfqData; setRfqItems: React.Dispatch<React.SetStateAction<{ id: string }[]>> }) {
+
+
+  
   return (
     <>
       <div className="w-[950px] max-w-7xl mx-auto p-6 bg-white shadow-lg rounded-lg">
@@ -309,11 +325,40 @@ function RFQInfoCard({ rfqData }: { rfqData: RfqData }) {
 }
 
 // @ts-ignore
-function Item({ item, index }: { item: any; index: number }) {
+function Item({ item, index, rfqData, setRfqItems }: { item: any; index: number; rfqData: RfqData; setRfqItems: React.Dispatch<React.SetStateAction<{ id: string }[]>> }) {
+  const supabase = createClient();
+  const handleDeleteItem = async (itemId: string) => {
+    // Reload the page after successful deletion
+
+    console.log("Deleting item with ID:", itemId);
+    try {
+      // Delete with cascade
+      const { error } = await supabase
+        .from('rfq_items')
+        .delete()
+        .eq('id', itemId)
+        
+
+      if (error) {
+        console.error('Error deleting item:', error);
+        toast.error('Failed to delete item and related records');
+        return;
+      }
+
+      toast.success('Item and related records deleted successfully');
+      window.location.reload();
+      // Refresh the items list after deletion
+      setRfqItems((prevItems: { id: string }[]) => prevItems.filter((item: { id: string }) => item.id !== itemId));
+    } catch (err) {
+      console.error('Error deleting item:', err);
+      toast.error('An error occurred while deleting the item');
+    }
+  };
   return (
     <>
       <TableRow key={item.id}>
         <TableCell className="font-medium">{index + 1}</TableCell>
+      
         <TableCell>
           <div className="col-span-4 ">
             <Input
@@ -418,6 +463,34 @@ function Item({ item, index }: { item: any; index: number }) {
             name="offered_price"
             disabled
           />
+        </TableCell>
+        <TableCell>
+       
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="hover:bg-destructive hover:text-destructive-foreground"
+              >
+                <Trash className="h-4 w-4" />
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This action cannot be undone. This will permanently delete the item.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={() => handleDeleteItem(item.item_id)}>
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </TableCell>
       </TableRow>
     </>
@@ -819,7 +892,7 @@ export default function ViewRfq() {
         }
       }
 
-      // 3. Fetch director emails assigned to this RFQ’s vessel
+      // 3. Fetch director emails assigned to this RFQ's vessel
       const rfqRes = await supabase
         .from("rfq")
         .select("vessel_id")
@@ -987,6 +1060,8 @@ export default function ViewRfq() {
           .in("id", itemIds);
         if (itemsError) throw itemsError;
 
+        
+
         const mergedResponses = rfqResponses.map((response) => {
           const itemDetails = itemsData.find(
             (item) => item.id === response.item_id
@@ -996,7 +1071,7 @@ export default function ViewRfq() {
             item: itemDetails || null, // attach full item details
           };
         });
-
+       console.log(mergedResponses);
         setRfqData(rfq);
         setRfqItems(mergedResponses);
       } catch (err) {
@@ -1207,7 +1282,7 @@ export default function ViewRfq() {
           return;
         }
 
-        // Update the most recent flow’s status to “approved”
+        // Update the most recent flow's status to "approved"
         const lastFlow = flows[flows.length - 1];
         const { error: updateError } = await supabase
           .from("rfq_approval_flow")
@@ -1217,7 +1292,7 @@ export default function ViewRfq() {
         if (updateError) throw updateError;
       }
 
-      // In both cases, insert a new “requested” flow for the current user
+      // In both cases, insert a new "requested" flow for the current user
       const { error: approvalError } = await supabase
         .from("rfq_approval_flow")
         .insert({
@@ -1292,7 +1367,7 @@ export default function ViewRfq() {
           <h3 className="mt-2"></h3>
         </div>
         <main className="grid justify-self-center max-w-6xl w-full md:grid-cols-3 gap-4 mt-4">
-          <RFQInfoCard rfqData={rfqData} />
+          <RFQInfoCard rfqData={rfqData} setRfqItems={setRfqItems} />
         </main>
         <div className="flex w-full max-w-6xl justify-self-center items-center mt-8">
           <h1 className="text-xl font-bold">Choose vendors</h1>
@@ -1461,7 +1536,7 @@ export default function ViewRfq() {
                 <TableBody>
                   {selectedVendor && filteredItems.length > 0 ? (
                     filteredItems.map((item, index) => (
-                      <Item key={item.id} item={item} index={index} />
+                      <Item key={item.id} item={item} index={index} rfqData={rfqData} setRfqItems={setRfqItems} />
                     ))
                   ) : selectedVendor ? (
                     <TableRow>
@@ -1471,7 +1546,7 @@ export default function ViewRfq() {
                     </TableRow>
                   ) : (
                     rfqItems.map((item, index) => (
-                      <Item key={item.id} item={item} index={index} />
+                      <Item key={item.id} item={item} index={index} rfqData={rfqData} setRfqItems={setRfqItems} />
                     ))
                   )}
                 </TableBody>
