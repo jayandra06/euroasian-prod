@@ -110,7 +110,7 @@ const FooterFront = () => {
             <div className="space-y-2">
               <div className="flex items-center gap-3">
                 <Mail className="h-4 w-4 text-primary" />
-                <span>contact@euroasiann.com</span>
+                <span>info@euroasianngroup.com</span>
               </div>
               <div className="flex items-center gap-3">
                 <Phone className="h-4 w-4 text-primary" />
