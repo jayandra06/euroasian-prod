@@ -116,20 +116,25 @@ const FooterFront = () => {
                 <Phone className="h-4 w-4 text-primary" />
                 <span>+49 1521 9712961</span>
               </div>
-              <div className="flex items-center gap-3">
-             <li className="flex items-center space-x-2">
-      <MapPin className="h-5 w-5 text-blue-500" />
-      <span>
-        Teerosenweg 46, 22177 Hamburg, Germany
-      </span>
-    </li>
-    <li className="flex items-center space-x-2">
-      <MapPin className="h-5 w-5 text-blue-500" />
-      <span>
-        3rd Floor, A321, Master Mind 4, Royal Palms, Goregaon East, Mumbai-400065, India
-      </span>
-    </li>
-              </div>
+             
+
+
+              <div className="space-y-2">
+  <div className="flex items-start gap-3">
+    <MapPin className="h-5 w-5 text-blue-500 mt-1" />
+    <span>Teerosenweg 46, 22177 Hamburg, Germany</span>
+  </div>
+  <div className="flex items-start gap-3">
+    <MapPin className="h-5 w-5 text-blue-500 mt-1" />
+    <span>
+      3rd Floor, A321, Master Mind 4, Royal Palms, Goregaon East, Mumbai-400065, India
+    </span>
+  </div>
+</div>
+
+
+
+              
             </div>
           </motion.div>
         </motion.div>
