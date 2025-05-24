@@ -215,7 +215,7 @@ const getStatusColor = (status: string) => {
           Request for Quotes
         </h1>
       </div>
-      <div className="flex justify-end my-4">
+      <div className="flex justify-end my-4 gap-4">
         <input
           type="text"
           placeholder="Search by vessel name, brand, or supply port"
