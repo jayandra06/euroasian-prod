@@ -223,6 +223,11 @@ const getStatusColor = (status: string) => {
           onChange={(e) => setSearchTerm(e.target.value)}
           className="border px-3 py-2 rounded w-full max-w-md"
         />
+        <Button>
+          <Link href={"/dashboard/admin/create-enquiry"}>
+          Create Enquiry
+          </Link>
+        </Button>
       </div>
 
       {/* Styled Tab Navigation */}
