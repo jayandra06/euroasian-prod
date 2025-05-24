@@ -114,11 +114,21 @@ const FooterFront = () => {
               </div>
               <div className="flex items-center gap-3">
                 <Phone className="h-4 w-4 text-primary" />
-                <span>+1 (555) 123-4567</span>
+                <span>+49 1521 9712961</span>
               </div>
               <div className="flex items-center gap-3">
-                <MapPin className="h-4 w-4 text-primary" />
-                <span>123 Harbor Drive, Singapore</span>
+             <li className="flex items-center space-x-2">
+      <MapPin className="h-5 w-5 text-blue-500" />
+      <span>
+        Teerosenweg 46, 22177 Hamburg, Germany
+      </span>
+    </li>
+    <li className="flex items-center space-x-2">
+      <MapPin className="h-5 w-5 text-blue-500" />
+      <span>
+        3rd Floor, A321, Master Mind 4, Royal Palms, Goregaon East, Mumbai-400065, India
+      </span>
+    </li>
               </div>
             </div>
           </motion.div>
