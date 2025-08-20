@@ -112,18 +112,12 @@ const FooterFront = () => {
                 <Mail className="h-4 w-4 text-primary" />
                 <span>info@euroasianngroup.com</span>
               </div>
-              <div className="flex items-center gap-3">
-                <Phone className="h-4 w-4 text-primary" />
-                <span>+49 1521 9712961</span>
-              </div>
+            
              
 
 
               <div className="space-y-2">
-  <div className="flex items-start gap-3">
-    <MapPin className="h-5 w-5 text-blue-500 mt-1" />
-    <span>Teerosenweg 46, 22177 Hamburg, Germany</span>
-  </div>
+
   <div className="flex items-start gap-3">
     <MapPin className="h-5 w-5 text-blue-500 mt-1" />
     <span>
