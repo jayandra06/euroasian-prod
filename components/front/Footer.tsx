@@ -50,12 +50,7 @@ const Footer = () => {
 <div>
   <h3 className="text-lg font-semibold text-white mb-4">Contact Info</h3>
   <ul className="space-y-4">
-  <li className="flex items-center space-x-2">
-      <MapPin className="h-5 w-5 text-blue-500" />
-      <span>
-        Teerosenweg 46, 22177 Hamburg, Germany
-      </span>
-    </li>
+ 
     <li className="flex items-center space-x-2">
       <MapPin className="h-5 w-5 text-blue-500" />
       <span>
